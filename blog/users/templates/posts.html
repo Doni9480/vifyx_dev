@@ -1,0 +1,113 @@
+{% extends "layouts/basic.html" %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Page Title
+============================================= -->
+<section class="page-title bg-transparent">
+    <div class="container">
+        <div class="page-title-row">
+
+            <div class="page-title-content">
+                <h1>Posts</h1>
+                <span>{{ user.get_username }}</span>
+            </div>
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:profile' user.get_username %}">{{ user.get_username }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Posts</li>
+                </ol>
+            </nav>
+
+        </div>
+    </div>
+</section><!-- .page-title end -->
+
+<!-- Content -->
+<section id="content">
+    <div class="content-wrap">
+        <div class="container">
+
+            <div class="row gx-5 col-mb-80">
+                <!-- Post Content
+                ============================================= -->
+                <main class="postcontent col-lg-9">
+
+                    <!-- Posts
+                    ============================================= -->
+                    <div id="posts" class="row grid-container gutter-30">
+
+                        {% for post in page_obj %}
+                            <div class="entry col-12" id="element">
+                                <div class="grid-inner">
+                                    <div class="entry-image">
+                                        <a href="{{ post.preview.url }}" data-lightbox="image"><img src="{{ post.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                    </div>
+                                    <div class="entry-title">
+                                        <h2><a href="{% url 'posts:show' post.slug %}">{{ post.title }}</a></h2>
+                                    </div>
+                                    <div class="entry-meta">
+                                        <ul>
+                                            <li><i class="uil uil-schedule"></i> {{ post.date|date:"d M Y" }}</li>
+                                            <li><a href="{% url 'users:profile' post.user.username %}"><i class="uil uil-user"></i> {{ post.user.username }}</a></li>
+                                            <li><a href="{% url 'posts:show' post.slug %}"><i class="uil uil-comments-alt"></i> {{ post.count_comments }} Comments</a></li>
+                                            <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ post.count_views }}</span></li>
+                                        </ul>
+                                    </div>
+                                    <div class="entry-content">
+                                        <p>{{ post.description }}</p>
+                                        <a href="{% url 'posts:show' post.slug %}" class="more-link">Read More</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+
+                    </div><!-- #posts end -->
+
+                    <!-- Pager
+                    ============================================= -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                        <ul class="pagination" style="overflow: auto;">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item"><a class="page-link" href="{% url 'users:posts_show' user.get_username %}?page={{ page_obj.previous_page_number }}" tabindex="-1" aria-disabled="true">Previous</a></li>
+                            {% endif %}
+
+                            {% for p in page_obj.paginator.page_range %}
+                                {% if p == page_obj.number %}
+                                    <li class="page-item active"><a class="page-link" href="{% url 'users:posts_show' user.get_username %}?page={{ p }}">{{ p }}</a></li> 
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="{% url 'users:posts_show' user.get_username %}?page={{ p }}">{{ p }}</a></li>
+                                {% endif %}                  
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item"><a class="page-link" href="{% url 'users:posts_show' user.get_username %}?page={{ page_obj.next_page_number }}">Next</a></li>
+                            {% endif %}
+                        </ul>
+                    {% endif %}
+                    <!-- .pager end -->
+
+                </main><!-- .postcontent end -->
+
+
+                <!-- Sidebar
+                ============================================= -->
+                <aside class="sidebar col-lg-3">
+                    {% include "layouts/sidebar.html" %}
+                </aside><!-- .sidebar end -->
+            </div>
+
+        </div>
+    </div>
+</section><!-- #content end -->
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/functions.js' %}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+{% endblock %}

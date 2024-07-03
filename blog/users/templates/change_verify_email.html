@@ -1,0 +1,7 @@
+{% autoescape off %}
+
+Hi {{ user.get_username }},
+Please follow the link to reset your password
+<a href="http://{{ domain }}{% url 'posts:change_password' uidb64=uid token=token %}">http://{{ domain }}{% url 'posts:change_password' uidb64=uid token=token %}</a>
+
+{% endautoescape %}

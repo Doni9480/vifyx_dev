@@ -1,0 +1,184 @@
+{% extends 'layouts/basic.html' %}
+{% load static %}
+
+{% block title %}Create a post{% endblock %}
+
+{% block head %}
+  <style>
+    .dz-success-mark,
+    .dz-error-mark,
+    .dz-size {
+      display: none;
+    }
+    
+    .dropzone .dz-preview .dz-image {
+      width: 640px;
+      height: 360px;
+    }
+    
+    .btn_input {
+      border: none;
+      font-size: 14px;
+      margin-left: 4px;
+    }
+    
+    .tag {
+      background-color: rgba(0, 255, 255, 0.5);
+      padding: 5px;
+      border-radius: 5px;
+      color: black;
+      display: inline-block;
+    }
+  </style>
+  <script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+{% endblock %}
+
+{% block content %}
+  <!--   Page Title
+=============================================   -->
+  <section class="page-title bg-transparent">
+    <div class="container">
+      <div class="page-title-row">
+        <div class="page-title-content">
+          <h1>Create a post</h1>
+        </div>
+
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="{% url 'main' %}">Home</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Create a post</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </section>
+  <!-- .page-title end -->
+
+  <!--   Content
+=============================================   -->
+  <section id="content">
+    <div class="content-wrap">
+      <div class="container">
+        <div class="accordion accordion-lg mx-auto mb-0" style="max-width: 1000px;">
+          <div>
+            <form class="row mb-0" id="form_post" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="blog" value="{{ blog.pk }}">
+              {% csrf_token %}
+              <div class="col-12 form-group">
+                <label>Preview:</label>
+                <label for="id_preview" class="bg-dark p-3 text-center text-light" style="word-wrap: break-word; display: block;">
+                  <img src="{% static 'images/upload.svg' %}" width="20" height="20" />
+                  Select a file or drag it here for preview
+                  <div><img style="object-fit: cover; display: none;" src="#" id="ready_image" alt="" width="640" height="360" /></div>
+                </label>
+                <input type="file" id="id_preview" style="display: none;" name="preview" />
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_title">Title:</label>
+                <input type="text" id="id_title" name="title" value="{% if form.title.value %}{{ form.title.value }}{% endif %}" class="form-control" />
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_description">Description:</label>
+                <textarea name="description" class="form-control" id="id_description" cols="30" rows="5">{% if form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_content">Content:</label>
+                {{ form.content }}
+              </div>
+
+              <div class="col-12 form-group">
+                <label>Tags:</label>
+
+                <div id="selected_tags">
+                  {% if tags %}
+                    {% for tag in tags %}
+                      <div class="tag" id="div_{{ tag }}" style="margin-bottom: 5px;">
+                        <span class="tag-text" id="tags.value">{{ tag }}</span>
+                        <img class="img-delete" onclick="delete_tag('{{ tag }}')" src="{% static 'images/cross-svgrepo-com.svg' %}" width="10" height="10" style="margin-top: -1px; cursor: pointer;">
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+                <div class="d-flex" id="block_tags">
+                  {% if tags %}
+                    {% for tag in tags %}
+                      <input name="tags" type="hidden" id="input_{{ tag }}" value="{{ tag }}">
+                    {% endfor %}
+                  {% endif %}
+                  <input type="text" id="tags" class="form-control" />
+                  <button type="button" class="btn btn-primary btn_input">Add</button>
+                </div>
+              </div>
+
+              {% if blog_levels %}
+                <div class="col-12 form-group">
+                  <label for="id_level_access">This is private blog. Select the access level:</label>
+                  <select id="id_level_access" class="form-select">
+                    <option selected disabled>Select the access level</option>
+                    <option value="1">1 (free)</option>
+                    {% for blog_level in blog_levels %}
+                      {% if not blog_level.level == 1 %}
+                        <option value="{{ blog_level.level }}">{{ blog_level.level }} ({{ blog_level.scores }} scores)</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
+              <div class="col-12 form-group">
+                <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+                <div class="d-flex justify-content-between">
+                  <button id="id_publish" class="button button-3d button-black m-0">Publish</button>
+                  <button id="id_save" class="button button-3d button-black m-0">Save</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- #content end -->
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/functions.js' %}"></script>
+  <script src="{% static 'js/tags.js' %}"></script>
+  <script src="{% static 'js/send_post.js' %}"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script>
+    function readURL(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader()
+    
+        reader.onload = function (e) {
+          $('#ready_image').attr('src', e.target.result);
+		  $('#ready_image').css('display', 'inline');
+        }
+    
+        reader.readAsDataURL(input.files[0])
+      }
+    }
+    
+    $('#id_preview').change(function () {
+      readURL(this)
+    })
+  </script>
+  <script>
+    function get_g_token() {
+      //global grecaptcha
+      grecaptcha.ready(function() {
+        grecaptcha.execute('{{recaptcha_site_key}}').then(function(token) {
+            document.getElementById('g_recaptcha_response').value = token;
+        });
+      });
+    }
+  
+    get_g_token();
+  </script>
+{% endblock %}

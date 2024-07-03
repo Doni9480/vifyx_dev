@@ -1,0 +1,191 @@
+{% extends "layouts/basic.html" %}
+{% load static %}
+
+{% block title %}{{ blog.title }}{% endblock %}
+
+{% block head %}
+<script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+{% endblock %}
+
+{% block content %}
+<!-- Page Title
+============================================= -->
+<section class="page-title bg-transparent">
+    <div class="container">
+        <div class="page-title-row">
+
+            <div class="page-title-content">
+                <h1>{{ blog.title }}</h1>
+            </div>
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'main' %}">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Blog</li>
+                </ol>
+            </nav>
+
+        </div>
+    </div>
+</section><!-- .page-title end -->
+
+<!-- Content -->
+<section id="content">
+    <div class="content-wrap">
+        <div class="container">
+
+            <div class="row gx-5 col-mb-80">
+                <!-- Post Content
+                ============================================= -->
+                <main class="postcontent col-lg-9">
+
+                    <!-- Posts
+                    ============================================= -->
+                    <div id="posts" class="row grid-container gutter-30">
+                        {% csrf_token %}
+                        <input type="hidden" name="blog_id" value="{{ blog.pk }}">
+                        <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+
+                        {% for e in page_obj %}
+                            <div class="entry col-12" id="element">
+                                <div class="grid-inner">
+                                    <div class="entry-image">
+                                        <a href="{{ e.preview.url }}" data-lightbox="image"><img src="{{ e.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                    </div>
+                                    <div class="entry-title">
+                                        <h2><a href="/{{ e.namespace }}/show/{{ e.slug }}/">{{ e.title }}</a></h2>
+                                    </div>
+                                    <form class="entry-meta" id="follow_block" method="POST">
+                                        <input type="hidden" name="level" value="{{ e.level_access }}">
+                                        <ul>
+                                            <li><i class="uil uil-schedule"></i> {{ e.date|date:"d M Y" }}</li>
+                                            <li><a href="{% url 'users:profile' e.user.username %}"><i class="uil uil-user"></i> {{ e.user.username }}</a></li>
+                                            <li><a href="/{{ e.namespace }}/show/{{ e.slug }}/"><i class="uil uil-comments-alt"></i> {{ e.count_comments }} Comments</a></li>
+                                            <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ e.count_views }}</span></li>
+                                            {% if e.is_private and blog.user != request.user and not e.is_followed and request.user.is_authenticated %}
+                                                <li><button type="submit" class="btn btn-outline-success" id="follow_btn">Follow</button></li>
+                                                <li>Level {{ e.level_access }}: {{ e.scores_to_follow }} scores</li>
+                                            {% endif %}
+                                        </ul>
+                                        {% if e.is_private and blog.user != request.user and not e.is_followed and request.user.is_authenticated %}
+                                            <div id="follow_radio">
+                                                <div>
+                                                    <input id="{{ e.slug }}-{{ e.id }}" class="radio-style" name="radio-group-mouth" value="1" type="radio">
+                                                    <label for="{{ e.slug }}-{{ e.id }}" class="radio-style-2-label">1 mouth</label>
+                                                </div>
+                                                <div>
+                                                    <input id="{{ e.slug }}-{{ e.id|add:1 }}" class="radio-style" name="radio-group-mouth" value="3" type="radio">
+                                                    <label for="{{ e.slug }}-{{ e.id|add:1 }}" class="radio-style-2-label">3 mouths</label>
+                                                </div>
+                                                <div>
+                                                    <input id="{{ e.slug }}-{{ e.id|add:2 }}" class="radio-style" name="radio-group-mouth" value="6" type="radio">
+                                                    <label for="{{ e.slug }}-{{ e.id|add:2 }}" class="radio-style-2-label">6 mouths</label>
+                                                </div>
+                                                <div>
+                                                    <input id="{{ e.slug }}-{{ e.id|add:3 }}" class="radio-style" name="radio-group-mouth" value="12" type="radio">
+                                                    <label for="{{ e.slug }}-{{ e.id|add:3 }}" class="radio-style-2-label">12 mouths</label>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </form>
+                                    <div class="entry-content">
+                                        <p>{{ e.description }}</p>
+                                        <a href="/{{ e.namespace }}/show/{{ e.slug }}/" class="more-link">Read More</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+
+                    </div><!-- #posts end -->
+
+                    <!-- Pager
+                    ============================================= -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                        <ul class="pagination" style="overflow: auto;">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item"><a class="page-link" href="{% url 'blogs:show' blog.slug %}?page={{ page_obj.previous_page_number }}" tabindex="-1" aria-disabled="true">Previous</a></li>
+                            {% endif %}
+
+                            {% for p in page_obj.paginator.page_range %}
+                                {% if p == page_obj.number %}
+                                    <li class="page-item active"><a class="page-link" href="{% url 'blogs:show' blog.slug %}?page={{ p }}">{{ p }}</a></li> 
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="{% url 'blogs:show' blog.slug %}?page={{ p }}">{{ p }}</a></li>
+                                {% endif %}                  
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item"><a class="page-link" href="{% url 'blogs:show' blog.slug %}?page={{ page_obj.next_page_number }}">Next</a></li>
+                            {% endif %}
+                        </ul>
+                    {% endif %}
+                    <!-- .pager end -->
+
+                </main><!-- .postcontent end -->
+
+
+                <!-- Sidebar
+                ============================================= -->
+                <aside class="sidebar col-lg-3">
+                    {% include "layouts/sidebar.html" %}
+                    {% if request.user == blog.user %}
+                        <form class="sidebar col-lg-3" method="POST" id="delete_all_notifications" style="width: 100%;">
+                            {% csrf_token %}
+                            <a href="{% url 'posts:create' blog.slug %}" class="btn btn-primary mt-2">Create a new post</i></a>
+                            <a href="{% url 'surveys:create' blog.slug %}" class="btn btn-success mt-2">Create a new survey</i></a>
+                        </form>
+                    {% endif %}
+
+                    {% if paid_follow %}
+                        <form class="sidebar col-lg-3" method="POST" id="delete_all_notifications" style="width: 100%;">
+                            {% csrf_token %}
+                            <a style="cursor: pointer;" id="delete_follow" class="btn btn-danger mt-2">Unfollow this blog</i></a>
+                        </form>
+                    {% endif %}
+                </aside><!-- .sidebar end -->
+            </div>
+
+        </div>
+    </div>
+</section><!-- #content end -->
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/functions.js' %}"></script>
+<script src="{% static 'js/send_pay_to_blog.js' %}"></script>
+<script src="{% static 'js/delete_follow_blog.js' %}"></script>
+<script>
+    function get_g_token() {
+      //global grecaptcha
+      grecaptcha.ready(function() {
+        grecaptcha.execute('{{recaptcha_site_key}}').then(function(token) {
+            document.getElementById('g_recaptcha_response').value = token;
+        });
+      });
+    }
+  
+    get_g_token();
+  </script>
+<script>
+    _follow_btns = document.querySelectorAll('#follow_btn');
+    _follow_btns.forEach(_follow_btn => {
+        _follow_btn.disabled = true;
+    });
+    var follow_blocks = document.querySelectorAll('#follow_block');
+
+    if (follow_blocks) {
+        follow_blocks.forEach(follow_block => {
+            var follow_radio = follow_block.querySelector('#follow_radio');
+            
+            if (follow_radio) {
+                follow_radio.addEventListener('change', function() {
+                    follow_block.querySelector('#follow_btn').disabled = false;
+                });
+            }
+        });
+    }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "layouts/basic.html" %}
+{% load static %}
+
+{% block title %}Profile{% endblock %}
+
+{% block head %}
+<style>
+    @media (max-width: 750px) {
+        .scores-class {
+            display: block;
+        }
+    }
+
+    @media (min-width: 750px) {
+        .scores-class {
+            display: flex;
+        }
+    }
+
+    .moderator-class {
+        color: #83b341;
+        cursor: pointer;
+    }
+
+    .moderator-class:hover {
+        color: #000;
+    }
+</style>
+<script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+{% endblock %}
+
+{% block content %}
+<!-- Content
+============================================= -->
+<section id="content">
+    <div class="content-wrap">
+        <div class="container">
+            <div class="row gx-5">
+                <div class="col-md-9">
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <div class="heading-block border-0">
+                        <h3>{{ user.get_username }}</h3>
+                        {% if request.user.is_staff %}
+                            {% if user.is_published_comment %}
+                                <p><a class="moderator-class" id="prohibit_comment">Prohibit a user from writing comments</a></p>
+                            {% else %}
+                                <p><a class="moderator-class" id="allow_comment">Allow a user from writing comments</a></p>   
+                            {% endif %}
+
+                            {% if user.is_published_post %}     
+                                <p><a class="moderator-class" id="prohibit_post">Prohibit a user from publishing posts</a></p>
+                            {% else %}
+                                <p><a class="moderator-class" id="allow_post">Allow a user from publishing posts</a></p>
+                            {% endif %}    
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-12">
+
+                            <div>
+
+                                <ul class="nav canvas-alt-tabs tabs-alt tabs nav-tabs mb-3" id="tabs-profile" role="tablist" style="--bs-nav-link-font-weight: 600;">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="canvas-about-alt-tab" data-bs-toggle="pill" data-bs-target="#about-alt" type="button" role="tab" aria-controls="canvas-about-alt" aria-selected="false"><i class="bi-reply me-1"></i> Scores</a></button>
+                                    </li>
+                                    {% if blogs %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="canvas-contact-alt-tab" data-bs-toggle="pill" data-bs-target="#contact-alt" type="button" role="tab" aria-controls="canvas-contact-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Blogs</a></button>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                                <div id="canvas-TabContent2" class="tab-content">
+                                    <div class="tab-pane fade" id="contact-alt" role="tabpanel" aria-labelledby="canvas-contact-tab" tabindex="0">
+                                        <!-- Surveys
+                                        ============================================= -->
+                                        <div class="row gutter-40 posts-md mt-4">
+                                            {% for blog in blogs %}
+                                                <div class="entry col-12">
+                                                    <div class="grid-inner row align-items-center g-0">
+                                                        <div class="col-md-4">
+                                                            <a class="entry-image" href="{{ blog.preview.url }}" data-lightbox="image"><img src="{{ blog.preview.url }}" alt="Standard blog with Image"></a>
+                                                        </div>
+                                                        <div class="col-md-8 ps-md-4">
+                                                            <div class="entry-title title-sm">
+                                                                <h3><a href="{% url 'blogs:show' blog.slug %}">{{ blog.title }}</a></h2>
+                                                            </div>
+                                                            <div class="entry-meta">
+                                                                <ul>
+                                                                    <li><i class="uil uil-schedule"></i> {{ blog.date|date:"d M Y" }}</li>
+                                                                </ul>
+                                                            </div>
+                                                            <div class="entry-content">
+                                                                <a href="{% url 'blogs:show' blog.slug %}" class="more-link">Read More</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            {% if surveys %}
+                                                <div class="entry col-12">
+                                                    <a href="{% url 'users:surveys_show' user.get_username %}" class="more-link">More Surveys</a>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    {% if request.user.is_authenticated %}
+                                        <div class="tab-pane fade show active" id="about-alt" role="tabpanel" aria-labelledby="canvas-about-tab" tabindex="0">
+                                            <div class="scores-class justify-content-between">
+                                                <form method="POST" id="form_scores">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+                                                    <label>You can give your scores to this user</label>
+                                                    <input type="number" name="scores" placeholder="Enter the number of scores..." class="form-control">
+                                                    <input type="submit" value="Send" class="btn btn-primary mt-2">
+                                                </form>
+                                                <p style="font-size: 20px; font-weight: bold;"><span id="user_scores">{{ user.scores }}</span> scores</p>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="tab-pane fade show active" id="about-alt" role="tabpanel" aria-labelledby="canvas-about-tab" tabindex="0">
+                                            <div class="scores-class justify-content-between">
+                                                <p></p>
+                                                <p style="font-size: 20px; font-weight: bold;"><span id="user_scores">{{ user.scores }}</span> scores</p>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="w-100 line d-block d-md-none"></div>
+
+                <div class="col-md-3">
+                    {% include "layouts/sidebar.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section><!-- #content end -->
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/functions.js' %}"></script>
+<script src="{% static 'js/send_scores_to_user.js' %}"></script>
+<script src="{% static 'js/prohibit.js' %}"></script>
+<script>
+    function get_g_token() {
+        //global grecaptcha
+        grecaptcha.ready(function() {
+            grecaptcha.execute('{{recaptcha_site_key}}').then(function(token) {
+                document.getElementById('g_recaptcha_response').value = token;
+            });
+        });
+    }
+
+    get_g_token();
+</script>
+{% endblock %}

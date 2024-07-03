@@ -1,0 +1,150 @@
+{% extends 'layouts/basic.html' %}
+{% load static %}
+
+{% block title %}Create a question{% endblock %}
+
+{% block head %}
+  <style>
+    .dz-success-mark,
+    .dz-error-mark,
+    .dz-size {
+      display: none;
+    }
+    
+    .dropzone .dz-preview .dz-image {
+      width: 640px;
+      height: 360px;
+    }
+    
+    .btn_input, .btn_remove {
+      border: none;
+      font-size: 14px;
+      margin-left: 4px;
+    }
+    
+    .tag {
+      background-color: rgba(0, 255, 255, 0.5);
+      padding: 5px;
+      border-radius: 5px;
+      color: black;
+      display: inline-block;
+    }
+  </style>
+  <script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+{% endblock %}
+
+{% block content %}
+  <!--   Page Title
+=============================================   -->
+  <section class="page-title bg-transparent">
+    <div class="container">
+      <div class="page-title-row">
+        <div class="page-title-content">
+          <h1>Create a question</h1>
+        </div>
+
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="{% url 'main' %}">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+              <a href="{% url 'detail_test' slug=test_obj.slug %}">{{test_obj.title}}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Create a question</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </section>
+  <!-- .page-title end -->
+
+  <!--   Content
+=============================================   -->
+  <section id="content">
+    <div class="content-wrap">
+      <div class="container">
+        <div class="accordion accordion-lg mx-auto mb-0" style="max-width: 1000px;">
+          <div>
+            <form class="row mb-0" id="form_question" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+
+              <div class="col-12 form-group">
+                <label for="id_question">Question:</label>
+                <input type="text" name="id_test" style="display:none;" value={{test_obj.id}} />
+                <input type="text" name="test_slug" style="display:none;" value={{test_obj.slug}} />
+                <textarea name="question" class="form-control" id="id_question" cols="30" rows="5">{% if form.question.value %}{{ form.question.value }}{% endif %}</textarea>
+              </div>
+
+              <div class="col-12 form-group" id="title_answers">
+                <label>Answer options</label>
+              </div>
+
+              <div class="questions__variants">
+                <div class="questions__item col-12 form-group d-flex">
+                  <input id="is_true_id1" class="radio-style" name="is_true" type="radio">
+                  <label for="is_true_id1" class="radio-style-2-label"></label>
+                  <input type="text" name="variant" id="add_question_text" class="form-control" />
+                </div>
+                <div class="questions__item col-12 form-group d-flex">
+                  <input id="is_true_id2" class="radio-style" name="is_true" type="radio">
+                  <label for="is_true_id2" class="radio-style-2-label"></label>
+                  <input type="text" name="variant" id="add_question_text" class="form-control" />
+                </div>
+                <div class="questions__item col-12 form-group d-flex">
+                  <input id="is_true_id3" class="radio-style" name="is_true" type="radio">
+                  <label for="is_true_id3" class="radio-style-2-label"></label>
+                  <input type="text" name="variant" id="add_question_text" class="form-control" />
+                </div>
+              </div>
+
+              <div class="col-12 form-group">
+                <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+                <div class="d-flex justify-content-between">
+                  <button id="id_save" class="button button-3d button-black m-0">Save</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- #content end -->
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/functions.js' %}"></script>
+  <script src="{% static 'js/send_question.js' %}"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script>
+    function readURL(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader()
+    
+        reader.onload = function (e) {
+          $('#ready_image').attr('src', e.target.result);
+		  $('#ready_image').css('display', 'inline');
+        }
+    
+        reader.readAsDataURL(input.files[0])
+      }
+    }
+    
+    $('#id_preview').change(function () {
+      readURL(this)
+    })
+  </script>
+  <script>
+    function get_g_token() {
+      //global grecaptcha
+      grecaptcha.ready(function() {
+        grecaptcha.execute('{{recaptcha_site_key}}').then(function(token) {
+            document.getElementById('g_recaptcha_response').value = token;
+        });
+      });
+    }
+  
+    get_g_token();
+  </script>
+{% endblock %}
