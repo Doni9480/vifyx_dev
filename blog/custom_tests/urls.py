@@ -4,7 +4,7 @@ from custom_tests.views import (
     detail_test,
     test_create,
     test_edit,
-    test_question_cerate,
+    test_question_create,
     test_question_edit,
     test_run,
 )
@@ -18,7 +18,7 @@ urlpatterns = [
     path("<slug:slug>/run/", test_run, name="test_run"),
     path(
         "<slug:slug>/create_question/",
-        test_question_cerate,
+        test_question_create,
         name="test_create_question",
     ),
     path(

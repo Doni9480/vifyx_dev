@@ -55,22 +55,28 @@
                                 </ul>
                             </div><!-- .entry-meta end -->
                         </div>
-                        <div class="col-md-9">
-                            <p class="text-larger text-muted mt-3">{{ test.description }}</p>
-                        </div>
+                        {% if test.description %}
+                            <div class="col-md-9">
+                                <p class="text-larger text-muted mt-3">{{ test.description }}</p>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="clear"></div>
 
                     <input type="hidden" name="test_id" value="{{ test.id }}">
 
-                    <!-- Entry Image
-                    ============================================= -->
-                    <div class="entry-image align-wide-xl my-3">
-                        <img src="{{ test.preview.url }}" width="500" height="281"
-                                allow="autoplay; fullscreen" allowfullscreen>
-                        <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
-                    </div><!-- .entry-image end -->
+                    {% if test.preview %}
+                        <!-- Entry Image
+                        ============================================= -->
+                        <div class="entry-image align-wide-xl my-3">
+
+                                <img src="{{ test.preview.url }}" width="500" height="281"
+                                        allow="autoplay; fullscreen" allowfullscreen>
+                                <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+
+                        </div><!-- .entry-image end -->
+                    {% endif %}
 
                     <div class="clear"></div>
 
@@ -191,6 +197,7 @@
 
                         <div>
                             <a href="{% url 'test_create_question' test.slug %}" class="btn btn-success">Add_question</a>
+                        </div>
                         
                     </div>
                 {% endif %}

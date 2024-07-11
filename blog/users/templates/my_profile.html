@@ -24,6 +24,7 @@
 <!-- Content
 ============================================= -->
 <section id="content">
+    {% csrf_token %}
     <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
     <div class="content-wrap">
         <div class="container">
@@ -57,7 +58,7 @@
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" id="canvas-about-alt-tab" data-bs-toggle="pill" data-bs-target="#about-alt" type="button" role="tab" aria-controls="canvas-about-alt" aria-selected="false"><i class="bi-reply me-1"></i> Scores</a></button>
                                     </li>
-                                    {% if paid_follows %}
+                                    {% if paid_follows or follows %}
                                         <li class="nav-item" role="presentation">
                                             <button class="nav-link" id="canvas-profile-alt-tab" data-bs-toggle="pill" data-bs-target="#profile-alt" type="button" role="tab" aria-controls="canvas-profile-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Follows</button>
                                         </li>
@@ -93,13 +94,14 @@
                                         <!-- Posts
                                         ============================================= -->
                                         <div class="row gutter-40 posts-md mt-4">
-                                            {% csrf_token %}
 
                                             {% for blog in blogs %}
                                                 <div class="entry col-12">
                                                     <div class="grid-inner row align-items-center g-0">
                                                         <div class="col-md-4">
-                                                            <a class="entry-image" href="{{ blog.preview.url }}" data-lightbox="image"><img src="{{ blog.preview.url }}" alt="Standard blog with Image"></a>
+                                                            {% if blog.preview %}
+                                                                <a class="entry-image" href="{{ blog.preview.url }}" data-lightbox="image"><img src="{{ blog.preview.url }}" alt="Standard blog with Image"></a>
+                                                            {% endif %}
                                                         </div>
                                                         <div class="col-md-8 ps-md-4">
                                                             <div class="entry-title title-sm">
@@ -150,7 +152,9 @@
                                                 <div class="entry col-12">
                                                     <div class="grid-inner row align-items-center g-0">
                                                         <div class="col-md-4">
-                                                            <a class="entry-image" href="{{ paid_follow.blog.preview.url }}" data-lightbox="image"><img src="{{ paid_follow.blog.preview.url }}" alt="Standard blog with Image"></a>
+                                                            {% if paid_follow.blog.preview %}
+                                                                <a class="entry-image" href="{{ paid_follow.blog.preview.url }}" data-lightbox="image"><img src="{{ paid_follow.blog.preview.url }}" alt="Standard blog with Image"></a>
+                                                            {% endif %}
                                                         </div>
                                                         <div class="col-md-8 ps-md-4">
                                                             <div class="entry-title title-sm">
@@ -185,6 +189,33 @@
                 <div class="col-md-3">
                     <div class="list-group">
                         {% include "layouts/sidebar.html" %}
+                        <div id="language" class="mt-2">
+                            <h5>Language:</h3>
+                            <div>
+                                {% if request.user.language == 'english' %}
+                                    <input id="english" class="radio-style" name="radio-group-2" value="english" type="radio" checked>
+                                {% else %}
+                                    <input id="english" class="radio-style" name="radio-group-2" value="english" type="radio">
+                                {% endif %}
+                                <label for="english" class="radio-style-2-label">English</label>
+                            </div>
+                            <div>
+                                {% if request.user.language == 'russian' %}
+                                    <input id="russian" class="radio-style" name="radio-group-2" value="russian" type="radio" checked>
+                                {% else %}
+                                    <input id="russian" class="radio-style" name="radio-group-2" value="russian" type="radio">
+                                {% endif %}
+                                <label for="russian" class="radio-style-2-label">Russian</label>
+                            </div>
+                            <div>
+                                {% if request.user.language == 'any' %}
+                                    <input id="any" class="radio-style" name="radio-group-2" value="any" type="radio" checked>
+                                {% else %}
+                                    <input id="any" class="radio-style" name="radio-group-2" value="any" type="radio">
+                                {% endif %}
+                                <label for="any" class="radio-style-2-label">Any</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -198,7 +229,7 @@
 <script src="{% static 'js/get_scores.js' %}"></script>
 <script src="{% static 'js/get_notifications.js' %}"></script>
 <script src="{% static 'js/autorenewal.js' %}"></script>
-<script src="{% static 'js/unfollow_profile.js' %}"></script>
+<script src="{% static 'js/language.js' %}"></script>
 <script>
 	function get_g_token() {
 		//global grecaptcha

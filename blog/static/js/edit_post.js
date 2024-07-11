@@ -9,11 +9,12 @@ async function post_edit(e) {
 
     let preview = document.querySelector('input[name="preview"');
     let title = document.querySelector('input[name="title"]');
-    let description = document.querySelector('#id_description');
     let content = document.querySelector('#id_content');
+    let add_survey = document.querySelector('input[name="add_survey"]');
+    let answers = document.querySelectorAll('input[name="answers"]');
     let tags = document.querySelectorAll('input[name="tags"]');
     let level_access = document.querySelector('#id_level_access');
-    let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"').value;
+    let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
     tags_list = [];
@@ -25,11 +26,65 @@ async function post_edit(e) {
     if (preview.files[0]) {
         form_data.append('preview', preview.files[0]);
     }
+    
+    if (add_survey.checked) {
+        answers_list = [];
+        answers.forEach(answer => {
+            if (! answer.id) {
+                answers_list.push(answer.value);
+            }
+        });
+
+        let edit_answers = {};
+        answers.forEach(answer => {
+            if (answer.id) {
+                edit_answers[answer.id] = answer.value;
+            }
+        });
+
+        if (answers_list) {
+            form_data.append('answers', answers_list);
+        }
+        if (edit_answers) {
+            form_data.append('edit_answers', JSON.stringify(edit_answers));
+        }
+    }
+
+    if (add_survey.checked) {
+        answers_list = [];
+        let is_empty_answers = true;
+        answers.forEach(answer => {
+            if (answer.value) {
+                is_empty_answers = false;
+                if (answer.id) {
+                    answers_list.push({
+                        'title': answer.value,
+                        'id': answer.id,
+                    });
+                } else {
+                    answers_list.push({
+                        'title': answer.value,
+                    });
+                }
+            }
+        });
+
+        if (! is_empty_answers) {
+            form_data.append('answers_set', JSON.stringify(answers_list));
+        }
+
+        form_data.append('add_survey', 1);
+    }
+
     if (level_access) {
         form_data.append('level_access', level_access.value);
     }
+
+    if (add_survey.checked) {
+        form_data.append('add_survey', 1);
+    }
+
     form_data.append('title', title.value);
-    form_data.append('description', description.value);
     form_data.append('content', content.value);
     form_data.append('tags', tags_list);
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
@@ -66,16 +121,16 @@ async function post_edit(e) {
                 title.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.title}</div>`);
             }
 
-            if (result.description) {
-                description.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.description}</div>`);
-            }
-
             if (result.level_access) {
                 level_access.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.level_access}</div>`);
             }
 
             if (result.content) {
                 content.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.content}</div>`);
+            }
+
+            if (result.answers_set) {
+                document.querySelector('#title_answers').insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.answers_set}</div>`);
             }
 
             if (result.recaptcha) {

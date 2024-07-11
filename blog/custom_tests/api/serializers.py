@@ -2,8 +2,14 @@ from rest_framework import serializers
 # from drf_extra_fields.fields import Base64ImageField
 from custom_tests.models import Test, Question, QuestionAnswer
 
+from blog.validators import check_language
+
+from django.shortcuts import get_object_or_404
+
 
 class QuestionAnswerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    
     class Meta:
         model = QuestionAnswer
         fields = (
@@ -24,6 +30,17 @@ class QuestionSerializer(serializers.ModelSerializer):
             "test",
             "answers_set",
         )
+        
+    def validate(self, attrs):
+        not_id = False
+        for answer in attrs['answers']:
+            if not answer.get('id', False):
+                not_id = True
+                break
+        if self.instance and not_id:
+            raise serializers.ValidationError({'error': 'Something went wrong.'})
+        
+        return attrs
 
     def create(self, validated_data):
         answers_data = validated_data.pop('answers')
@@ -35,6 +52,13 @@ class QuestionSerializer(serializers.ModelSerializer):
         return question
 
     def update(self, instance, validated_data):
+        answers_list = validated_data.pop('answers')
+        for answer in answers_list:
+            question_answer = get_object_or_404(QuestionAnswer, id=answer['id'])
+            question_answer.variant = answer['variant']
+            question_answer.is_true = answer['is_true']
+            question_answer.save()
+        
         question_obj = Question.objects.filter(id=instance.id)[0]
         question_obj.question = validated_data.get("question", instance.question)
         question_obj.save()
@@ -90,6 +114,7 @@ class TestDetailSerializer(serializers.ModelSerializer):
 
 class TestEditSerializer(serializers.ModelSerializer):
     preview = serializers.FileField(required=False)
+    language = serializers.CharField(validators=[check_language])
 
     class Meta:
         model = Test

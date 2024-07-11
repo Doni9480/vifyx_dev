@@ -48,7 +48,6 @@ class QuestViewSet(viewsets.ModelViewSet):
         data = request.data
         data["slug"] = slugify(data["title"])
         data["user"] = request.user.pk
-        data["language"] = str(request.user.language)
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             serializer.save()

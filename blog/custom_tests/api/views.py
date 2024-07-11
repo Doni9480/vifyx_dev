@@ -1,7 +1,7 @@
 import json
 from django.http import Http404
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
@@ -15,6 +15,7 @@ from .serializers import (
 )
 from django.db import transaction
 from django.template.defaultfilters import slugify
+from blog.utils import get_request_data
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
@@ -24,6 +25,7 @@ from drf_yasg import openapi
 class TestViewSet(viewsets.ModelViewSet):
     queryset = Test.objects.all()
     permission_classes = [IsAuthenticated]
+    permission_classes_by_action = dict.fromkeys(['list', 'retrieve'], [AllowAny])
     # parser_classes = [MultiPartParser]
 
     def get_queryset(self):
@@ -62,6 +64,14 @@ class TestViewSet(viewsets.ModelViewSet):
         elif self.action == "question_destroy":
             return QuestionSerializer
         return TestSerializer
+    
+    def get_permissions(self):
+        try:
+            # return permission_classes depending on `action`
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            # action is not set return default permission_classes
+            return [permission() for permission in self.permission_classes]
 
     # @swagger_auto_schema(
     #     operation_description="Создание квеста\nВнимание!\nПри создании теста нужно использовать параметр [Сontent-type: multipart/form-data;]. Так как есть поле для изображения (preview)",
@@ -79,10 +89,9 @@ class TestViewSet(viewsets.ModelViewSet):
     # @transaction.atomic
     def create(self, request, *args, **kwargs):
         response_data = {}
-        data = request.data
+        data = get_request_data(request.data)
         data["slug"] = slugify(data["title"])
         data["user"] = request.user.pk
-        data["language"] = str(request.user.language)
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -97,16 +106,19 @@ class TestViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response({"data": serializer.data})
-
-    def retrieve(self, request, *args, **kwargs):
+    
+    def retrieve(self, request, pk=None, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response({"data": serializer.data})
 
     @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
+        _data = get_request_data(request.data)
+        if _data.get('language', False):
+            del _data['language']
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer = self.get_serializer(instance, data=_data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"data": serializer.data, "success": "ok."})
@@ -148,25 +160,22 @@ class TestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="question/create")
     @transaction.atomic
     def question_create(self, request, *args, **kwargs):
-        response_data = {}
-        test_obj = get_object_or_404(Test, pk=request.data.get("test"))
-        request_data = dict(request.data)
-        request_data["question"] = request_data["question"][0]
-        request_data["test"] = test_obj.pk
-        serializer = self.get_serializer(data=request_data)
+        data = {}
+        
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             valid = True
             err = None
             if valid:
-                response_data["success"] = "ok."
-                response_data["data"] = serializer.data
-                return Response(response_data, status=status.HTTP_201_CREATED)
+                data["success"] = "ok."
+                data["data"] = serializer.data
+                return Response(data, status=status.HTTP_201_CREATED)
             else:
-                response_data["data"] = err
+                data["data"] = err
         else:
-            response_data["data"] = serializer.errors
-        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+            data["data"] = serializer.errors
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=["patch"], url_path="question/<pk>/update")
     @transaction.atomic
@@ -174,9 +183,10 @@ class TestViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if not request.user.id == instance.test.user.id:
             raise Http404()
-        request_data = dict(request.data)
-        request_data["question"] = request_data["question"][0]
-        serializer = self.get_serializer(instance, data=request_data, partial=True)
+        
+        print(request.data)
+        
+        serializer = self.get_serializer(instance=instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"data": serializer.data, "success": "ok."})
@@ -187,7 +197,7 @@ class TestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["delete"], url_path="question/<pk>/delete")
     def question_destroy(self, request, pk=None, *args, **kwargs):
-        instance = self.get_object()
+        instance = get_object_or_404(Question, id=pk)
         if not request.user.id == instance.test.user.id:
             raise Http404()
         instance.delete()

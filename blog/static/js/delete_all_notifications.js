@@ -20,7 +20,7 @@ async function send_delete(e) {
 
     let csrftoken = getCookie('csrftoken');
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/notifications/delete/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/notifications/delete-all/';
 
     let response = await fetch(url, {
         method: 'DELETE',

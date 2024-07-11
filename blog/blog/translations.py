@@ -1,8 +1,14 @@
-main_dict = [
-    {
+main_dict = {
+    'english': {
         "blog": "Blog",
         "our_latest_news": "Our latest news",
         "home": "Home",
     },
-    {"blog": "Блог", "our_latest_news": "Последние новости", "home": "Главная"},
-]
+    'russian': {
+        "blog": "Блог", 
+        "our_latest_news": "Последние новости", 
+        "home": "Главная"
+    },
+}
+
+main_dict['any'] = main_dict['english']

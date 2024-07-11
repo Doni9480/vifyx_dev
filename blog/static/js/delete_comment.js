@@ -1,7 +1,7 @@
 let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
 async function delete_forever(id) {
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/post/comment/delete/' + id + '/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/delete/' + id + '/';
 
     let response = await fetch(url, {
         method: 'DELETE',
@@ -22,7 +22,7 @@ async function delete_forever(id) {
 }
 
 async function delete_from_user(id) {
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/user/comment/delete/' + id + '/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/delete_from_user/' + id + '/';
 
     let response = await fetch(url, {
         method: 'POST',

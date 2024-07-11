@@ -8,6 +8,7 @@ async function blog_edit(e) {
     var blog_id = document.querySelector('input[name="blog_id"]').value;
     var preview = document.querySelector('input[name="preview"');
     var title = document.querySelector('input[name="title"]');
+    var description = document.querySelector('#id_description');
     var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"').value;
     var g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
@@ -17,8 +18,9 @@ async function blog_edit(e) {
     }
     form_data.append('title', title.value);
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
+    form_data.append('description', description.value);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/blogs/edit/' + blog_id + '/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/blogs/' + blog_id + '/update/';
 
     var response = await fetch(url, {
         method: 'PATCH',
@@ -48,6 +50,10 @@ async function blog_edit(e) {
 
             if (result.title) {
                 title.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.title}</div>`);
+            }
+
+            if (result.description) {
+                description.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.description}</div>`);
             }
 
             if (result.recaptcha) {

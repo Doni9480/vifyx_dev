@@ -5,7 +5,7 @@ from django.conf import settings
 from django_cleanup import cleanup
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
-from blogs.models import Blog
+from blogs.models import Blog, LevelAccess
 from blog.managers import LevelAccessManager
 from users.models import User
 
@@ -13,23 +13,18 @@ from users.models import User
 class Survey(models.Model):
     objects = models.Manager()
     level_access_objects = LevelAccessManager()
-
-    languages = (
-        ('1', 'English'),
-        ('2', 'Russian'),
-    )
     
     slug = models.SlugField(verbose_name='URL', max_length=255, unique=True, db_index=True)
-    preview = models.ImageField(verbose_name='Preview', upload_to='uploads/', null=False, blank=False)
+    preview = models.ImageField(verbose_name='Preview', upload_to='uploads/', null=True, blank=True)
     title = models.CharField(verbose_name='Title', null=False, blank=False, max_length=255)
-    description = models.TextField(verbose_name='Description', null=False, blank=False)
+    description = models.TextField(verbose_name='Description', null=True, blank=True)
     content = models.TextField(verbose_name='Content', blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
-    language = models.CharField(verbose_name='Language', max_length=255, choices=languages)
+    language = models.CharField(verbose_name='Language')
     hide_to_user = models.BooleanField(default=False, verbose_name='Hide to user')
     hide_to_moderator = models.BooleanField(default=False, verbose_name='Hide to moderator')
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
-    level_access = models.IntegerField(verbose_name="Level access", default=0)
+    level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
     
     date = models.DateTimeField(auto_now_add=True)
     
@@ -96,11 +91,6 @@ class SurveyVote(models.Model):
 
 @cleanup.ignore
 class DraftSurvey(models.Model):
-    languages = (
-        ("1", "English"),
-        ("2", "Russian"),
-    )
-
     preview = models.ImageField(
         verbose_name="Preview",
         upload_to="uploads_drafts_survey/",
@@ -112,8 +102,9 @@ class DraftSurvey(models.Model):
     )
     description = models.TextField(verbose_name="Description", null=True, blank=True)
     content = models.TextField(verbose_name="Content", blank=True, null=True)
+    language = models.CharField(verbose_name='Language', null=True, blank=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
-    level_access = models.IntegerField(verbose_name="Level access", default=0)
+    level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )

@@ -4,8 +4,6 @@ from users.api.views import (
     LoginViewSet,
     UserViewSet,
     ProfileViewSet,
-    PostViewSet,
-    SurveyViewSet,
     # RegisterView,
     # LoginView,
     # LogoutView,
@@ -23,13 +21,10 @@ from users.api.views import (
 from blog.routers import CustomRouter
 
 router = CustomRouter()
-router.register(r"register", RegisterViewSet, basename="register")
+router.register(r"", RegisterViewSet, basename="registration")
 router.register(r"", LoginViewSet, basename="login")
 router.register(r"", UserViewSet, basename="user")
-router.register(r"profile", ProfileViewSet, basename="profile")
-router.register(r"post", PostViewSet, basename="post")
-router.register(r"survey", SurveyViewSet, basename="survey")
-
+router.register(r"", ProfileViewSet, basename="profile")
 
 
 urlpatterns = router.urls

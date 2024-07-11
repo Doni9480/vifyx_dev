@@ -9,10 +9,10 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 
 from users.forms import ChangeEmailForm, PasswordChangeForm
-from users.models import User, TotalScore, Follow
+from users.models import User, TotalScore
 from users.utils import send_email_for_change, get_user
 
-from blogs.models import Blog, PaidFollow
+from blogs.models import Blog, PaidFollow, BlogFollow
 
 from blog.utils import check_recaptcha
 
@@ -98,7 +98,7 @@ def change_password(request, uidb64, token):
 def my_profile(request):
     blogs = Blog.objects.filter(user=request.user)
 
-    follows = Follow.objects.filter(follower=request.user)
+    follows = BlogFollow.objects.filter(follower=request.user)
     paid_follows = PaidFollow.objects.filter(follower=request.user)
 
     total_scores = TotalScore.objects.all()[0]

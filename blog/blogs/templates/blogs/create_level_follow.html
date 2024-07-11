@@ -1,7 +1,7 @@
 {% extends 'layouts/basic.html' %}
 {% load static %}
 
-{% block title %}Create a question{% endblock %}
+{% block title %}Create a level follow (Level {{ level }}){% endblock %}
 
 {% block head %}
   <style>
@@ -16,7 +16,7 @@
       height: 360px;
     }
     
-    .btn_input, .btn_remove {
+    .btn_input {
       border: none;
       font-size: 14px;
       margin-left: 4px;
@@ -40,7 +40,7 @@
     <div class="container">
       <div class="page-title-row">
         <div class="page-title-content">
-          <h1>Create a question</h1>
+          <h1>Create a level of follow (Level {{ level }})</h1>
         </div>
 
         <nav aria-label="breadcrumb">
@@ -48,10 +48,7 @@
             <li class="breadcrumb-item">
               <a href="{% url 'main' %}">Home</a>
             </li>
-            <li class="breadcrumb-item">
-              <a href="{% url 'detail_test' slug=test_obj.slug %}">{{test_obj.title}}</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Create a question</li>
+            <li class="breadcrumb-item active" aria-current="page">Create a level follow (Level {{ level }})</li>
           </ol>
         </nav>
       </div>
@@ -66,42 +63,39 @@
       <div class="container">
         <div class="accordion accordion-lg mx-auto mb-0" style="max-width: 1000px;">
           <div>
-            <form class="row mb-0" id="form_question" method="POST" enctype="multipart/form-data">
+            <form class="row mb-0" id="form_level_follow" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="blog_id" value="{{ blog.pk }}">
               {% csrf_token %}
 
               <div class="col-12 form-group">
-                <label for="id_question">Question:</label>
-                <input type="text" name="id_test" style="display:none;" value={{test_obj.id}} />
-                <input type="text" name="test_slug" style="display:none;" value={{test_obj.slug}} />
-                <textarea name="question" class="form-control" id="id_question" cols="30" rows="5">{% if form.question.value %}{{ form.question.value }}{% endif %}</textarea>
+                <label>Preview:</label>
+                <label for="id_preview" class="bg-dark p-3 text-center text-light" style="word-wrap: break-word; display: block;">
+                  <img src="{% static 'images/upload.svg' %}" width="20" height="20" />
+                  Select a file or drag it here for preview
+                  <div><img style="object-fit: cover; display: none;" src="#" id="ready_image" alt="" width="640" height="360" /></div>
+                </label>
+                <input type="file" id="id_preview" style="display: none;" name="preview" />
               </div>
 
-              <div class="col-12 form-group" id="title_answers">
-                <label>Answer options</label>
+              <div class="col-12 form-group">
+                <label for="id_title">Title:</label>
+                <input type="text" id="id_title" name="title" value="{% if form.title.value %}{{ form.title.value }}{% endif %}" class="form-control" />
               </div>
 
-              <div class="questions__variants">
-                <div class="questions__item col-12 form-group d-flex">
-                  <input id="is_true_id1" class="radio-style" name="is_true" type="radio">
-                  <label for="is_true_id1" class="radio-style-2-label"></label>
-                  <input type="text" name="variant" id="add_question_text" class="form-control" />
-                </div>
-                <div class="questions__item col-12 form-group d-flex">
-                  <input id="is_true_id2" class="radio-style" name="is_true" type="radio">
-                  <label for="is_true_id2" class="radio-style-2-label"></label>
-                  <input type="text" name="variant" id="add_question_text" class="form-control" />
-                </div>
-                <div class="questions__item col-12 form-group d-flex">
-                  <input id="is_true_id3" class="radio-style" name="is_true" type="radio">
-                  <label for="is_true_id3" class="radio-style-2-label"></label>
-                  <input type="text" name="variant" id="add_question_text" class="form-control" />
-                </div>
+              <div class="col-12 form-group">
+                <label for="id_description">Description:</label>
+                <textarea name="description" class="form-control" id="id_description" cols="30" rows="5">{% if form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_scores">Scores:</label>
+                <input type="number" id="id_scores" name="scores" value="{% if form.scores.value %}{{ form.scores.value }}{% endif %}" class="form-control" />
               </div>
 
               <div class="col-12 form-group">
                 <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
                 <div class="d-flex justify-content-between">
-                  <button id="id_save" class="button button-3d button-black m-0">Save</button>
+                  <button id="id_publish" class="button button-3d button-black m-0">Publish</button>
                 </div>
               </div>
             </form>
@@ -115,7 +109,7 @@
 
 {% block js %}
   <script src="{% static 'js/functions.js' %}"></script>
-  <script src="{% static 'js/send_question.js' %}"></script>
+  <script src="{% static 'js/send_level_follow.js' %}"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script>
     function readURL(input) {

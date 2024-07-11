@@ -70,7 +70,11 @@
                 <label for="id_preview" class="bg-dark p-3 text-center text-light" style="word-wrap: break-word; display: block;">
                   <img src="{% static 'images/upload.svg' %}" width="20" height="20" />
                   Select a file or drag it here for preview
-                  <div><img style="object-fit: cover;" src="{{ form.instance.preview.url }}" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% if form.instance.preview %}
+                    <div><img style="object-fit: cover;" src="{{ form.instance.preview.url }}" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% else %}
+                    <div><img style="object-fit: cover; display: none;" src="#" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% endif %}
                 </label>
                 <input type="file" id="id_preview" style="display: none;" name="preview" />
               </div>

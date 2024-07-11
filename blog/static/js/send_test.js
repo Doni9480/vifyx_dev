@@ -10,12 +10,15 @@ async function send_draft() {
     let title = document.querySelector('input[name="title"]');
     let description = document.querySelector('#id_description');
     let content = document.querySelector('#id_content');
+    let language = document.querySelector('#id_language');
     let tags = document.querySelectorAll('input[name="tags"]');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
     tags_list = [];
+    let is_empty_tags = true;
     tags.forEach(tag => {
+        is_empty_tags = false;
         tags_list.push(tag.value);
     });
 
@@ -32,7 +35,10 @@ async function send_draft() {
     if (content) {
         form_data.append('content', content.value);
     }
-    if (tags_list) {
+    if (language.value == 'english' || language.value == 'russian') {
+        form_data.append('language', language.value);
+    }
+    if (! is_empty_tags) {
         form_data.append('tags', tags_list);
     }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
@@ -85,12 +91,15 @@ async function send_post(e) {
     let title = document.querySelector('input[name="title"]');
     let description = document.querySelector('#id_description');
     let content = document.querySelector('#id_content');
+    let language = document.querySelector('#id_language');
     let tags = document.querySelectorAll('input[name="tags"]');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
     tags_list = [];
+    let is_empty_tags = true;
     tags.forEach(tag => {
+        is_empty_tags = false;
         tags_list.push(tag.value);
     });
 
@@ -100,8 +109,11 @@ async function send_post(e) {
     }
     form_data.append('title', title.value);
     form_data.append('description', description.value);
-    form_data.append('content', content.value)
-    form_data.append('tags', tags_list);
+    form_data.append('content', content.value);
+    form_data.append('language', language.value);
+    if (! is_empty_tags) {
+        form_data.append('tags', tags_list);
+    }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/create';
@@ -146,6 +158,10 @@ async function send_post(e) {
 
             if (result.content) {
                 content.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.content}</div>`);
+            }
+
+            if (result.language) {
+                language.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.language}</div>`);
             }
 
             if (result.recaptcha) {

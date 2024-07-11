@@ -11,18 +11,17 @@ from users.models import User, Percent
 @transaction.atomic
 def paid_follows():
     present = timezone.now()
-
     paid_follows = PaidFollow.objects.all()
     for paid_follow in paid_follows:
         if paid_follow.date <= present:
             user = paid_follow.blog.user
             if user.is_autorenewal:
                 blog = paid_follow.blog
-                price = paid_follow.count_mouths * paid_follow.blog_access_level.scores
+                price = paid_follow.count_months * paid_follow.blog_access_level.scores
                 follower = paid_follow.follower
                 follower.scores -= price
 
-                if follower.scores <= 0:
+                if follower.scores < 0:
                     paid_follow.delete()
                 else:
                     follower.save()
@@ -37,7 +36,7 @@ def paid_follows():
                     blog.user.save()
 
                     paid_follow.date = add_months(
-                        paid_follow.date, paid_follow.count_mouths
+                        paid_follow.date, paid_follow.count_months
                     )
                     paid_follow.save()
             else:

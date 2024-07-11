@@ -12,7 +12,10 @@ from .forms import QuestForm, QuestionForm, QuestionAnswerForm
 
 
 def list_quests(request):
-    obj_set = Quest.objects.filter(language=request.user.language).order_by("scores")
+    filter_kwargs = {}
+    if request.user.language != 'any':
+        filter_kwargs['language'] = request.user.language
+    obj_set = Quest.objects.filter(**filter_kwargs).order_by("scores")
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -28,7 +31,10 @@ def list_quests(request):
 
 
 def detail_quest(request, slug):
-    quest_obj = get_object_or_404(Quest, language=request.user.language, slug=slug)
+    filter_kwargs = {'slug': slug}
+    if request.user.language != 'any':
+        filter_kwargs['language'] = request.user.language
+    quest_obj = get_object_or_404(Quest, **filter_kwargs)
 
     comment = Comment.objects.filter(quest=quest_obj)
     comment_answers = Answer.objects.filter(quest=quest_obj)

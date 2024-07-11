@@ -2,6 +2,8 @@ from blog.utils import check_recaptcha
 from rest_framework import status
 from rest_framework.response import Response
 
+import functools
+
 
 def recaptcha_checking(func):
     def wrapper(request, *args, **kwargs):

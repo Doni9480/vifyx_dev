@@ -18,7 +18,7 @@ async function send_scores(e) {
     }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/send_scores_to_user/' + user_id + '/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/' + user_id + '/send_scores_to_user/';
 
     let response = await fetch(url, {
         method: 'POST',

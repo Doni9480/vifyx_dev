@@ -51,7 +51,14 @@ async function login_send(e) {
         if (result.token) {
             document.cookie =`blog_access_token=${result.token};max-age=31536000;path=/`;
 
-            window.location.replace(window.location.protocol + '//' + window.location.host + '/my/profile/');
+            var url = new URL(window.location.href);
+            var next = url.searchParams.get("next");
+            if (next) {
+                window.location.replace(window.location.protocol + '//' + window.location.host + next);
+            } else {
+                window.location.replace(window.location.protocol + '//' + window.location.host + '/my/profile/');
+            }
+
         } else {
             form_errors = document.querySelectorAll('#form-error');
 
@@ -93,7 +100,8 @@ async function register_send(e) {
     obj.username = username.value;
     obj.password = password.value;
     obj.password2 = password2.value;
-    obj.g_recaptcha_response = g_recaptcha_response.value
+    obj.g_recaptcha_response = g_recaptcha_response.value;
+    obj.language = navigator.language || navigator.userLanguage;
 
     let form_data = JSON.stringify(obj);
 
@@ -117,7 +125,13 @@ async function register_send(e) {
         if (result.token) {
             document.cookie =`blog_access_token=${result.token};max-age=31536000;path=/`;
 
-            window.location.replace(window.location.protocol + '//' + window.location.host + '/my/profile/');
+            var url = new URL(window.location.href);
+            var next = url.searchParams.get("next");
+            if (next) {
+                window.location.replace(window.location.protocol + '//' + window.location.host + next);
+            } else {
+                window.location.replace(window.location.protocol + '//' + window.location.host + '/my/profile/');
+            }
         } else {
             form_errors = document.querySelectorAll('#form-error');
 

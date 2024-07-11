@@ -2,14 +2,15 @@ from rest_framework import serializers
 
 from django.contrib import auth
 
-from users.models import User, Token, Follow
+from users.models import User, Token
 
-from posts.models import Post
+from blogs.models import Blog, PaidFollow, BlogFollow
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(min_length=8)
     password2 = serializers.CharField(write_only=True)
+    language = serializers.CharField(required=False)
 
     class Meta:
         model = User
@@ -19,16 +20,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             "username",
             "password",
             "password2",
+            "language",
         )
         extra_kwargs = {
             "password": {"write_only": True},
         }
 
     def save(self):
+        languages_dict = {'en': 'english', 'ru': 'russian'}
+        if languages_dict.get(self.validated_data.get('language', ''), ''):
+            self.validated_data['language'] = languages_dict[self.validated_data['language']]
+        else:
+            self.validated_data['language'] = 'any'
         self.user = User(
             first_name=self.validated_data["first_name"],
             email=self.validated_data["email"],
             username=self.validated_data["username"],
+            language=self.validated_data['language'],
         )
 
         self.user.set_password(self.validated_data["password"])
@@ -87,35 +95,22 @@ class ScoresSerializer(serializers.Serializer):
     scores = serializers.IntegerField()
 
 
-class PostsSerializer(serializers.ModelSerializer):
+class BlogSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Post
+        model = Blog
         fields = (
-            "id",
-            "preview",
-            "title",
-            "slug",
-            "date",
-            "user",
-            "description",
+            'id',
+            'preview',
+            'title',
         )
+        
 
-
-class SurveysSerializer(serializers.ModelSerializer):
+class PaidFollowSeriailzer(serializers.ModelSerializer):
     class Meta:
-        model = Post
-        fields = (
-            "id",
-            "preview",
-            "title",
-            "slug",
-            "date",
-            "user",
-            "description",
-        )
+        model = PaidFollow
+        
 
-
-class FollowSerializer(serializers.ModelSerializer):
+class BlogFollowSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Follow
-        fields = ("user",)
+        model = BlogFollow
+        fields = ("blog",)

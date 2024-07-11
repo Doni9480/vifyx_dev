@@ -1,32 +1,48 @@
 import json
-from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
 
-from surveys.models import Survey, DraftSurvey, SurveyTag, SurveyRadio
-from notifications.models import NotificationSurvey
-from users.models import Follow
+from surveys.models import Survey, DraftSurvey, SurveyTag, SurveyRadio, DraftSurveyRadio, DraftSurveyTag
+from notifications.models import Notification, NotificationBlog
+
+from blog.validators import check_language
+
+from blogs.models import LevelAccess, BlogFollow
+
+from django.shortcuts import get_object_or_404
+from django.http import Http404
+
+
+class AnswerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    
+    class Meta:
+        model = SurveyRadio
+        fields = [
+            "id",
+            "title",
+        ]
 
 
 class SurveySerializer(serializers.ModelSerializer):
     tags = serializers.CharField(required=False, write_only=True)
-    answers = serializers.CharField(required=False, write_only=True)
-    edit_answers = serializers.CharField(required=False, write_only=True)
+    answers_set = AnswerSerializer(source="answers", many=True)
+    language = serializers.CharField(validators=[check_language])
+    level_access = serializers.IntegerField()
 
     class Meta:
         model = Survey
-        fields = (
+        fields = [
             "preview",
             "title",
             "description",
             "content",
             "language",
             "tags",
-            "answers",
-            "edit_answers",
             "blog",
+            "answers_set",
             "level_access",
-        )
+        ]
 
         extra_kwargs = {
             "preview": {"error_messages": {"invalid": "The image may not be blank."}}
@@ -45,7 +61,7 @@ class SurveySerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", 1)
+        self.user = kwargs.pop("user", None)
         self._instance = kwargs.get("instance", False)
         super().__init__(*args, **kwargs)
 
@@ -67,31 +83,56 @@ class SurveySerializer(serializers.ModelSerializer):
         if attrs.get("blog") and self._instance:
             del attrs["blog"]
 
-        answers = attrs.get("answers", False)
-        edit_answers = attrs.get("edit_answers", False)
-        if not answers and not edit_answers:
-            raise serializers.ValidationError(
-                {"answers": "This fields may not be blank."}
-            )
-
-        self.answers = []
-        self.edit_answers = {}
-
-        if answers:
-            self.answers = answers.split(",")
-            # if '' in answers
-            self.answers = [value for value in self.answers if value]
-            if len(self.answers) > 10:
-                raise serializers.ValidationError(
-                    {"answers": "There should be no more than 10 answer options."}
-                )
-            del attrs["answers"]
-
-        if edit_answers:
-            self.edit_answers = json.loads(edit_answers)
-            del attrs["edit_answers"]
-
         return attrs
+    
+    def create(self, validated_data):
+        answers_data = validated_data.pop('answers')
+        
+        if validated_data.get('level_access', None) and validated_data['level_access'] > 0:
+            validated_data['level_access'] = get_object_or_404(
+                LevelAccess, level=validated_data['level_access'], blog=validated_data['blog']
+            )
+        try:
+            if not (validated_data.get('level_access', None).__class__.__name__ == 'LevelAccess'):
+                del validated_data['level_access']
+        except KeyError as e:
+            pass
+        
+        survey = Survey(**validated_data)
+        survey.user = self.user
+        survey.save()
+        for answer_data in answers_data:
+            answer_data['survey'] = survey
+            SurveyRadio.objects.create(**answer_data)
+
+        return survey
+    
+    def update(self, survey, validated_data):
+        answers_data = validated_data.pop('answers')
+        
+        for attr, value in validated_data.items():
+            setattr(survey, attr, value)
+        survey.save()
+        
+        ids = []
+        for answer_data in answers_data:
+            if answer_data.get('id', False):
+                ids.append(answer_data['id'])
+                answer = get_object_or_404(SurveyRadio, id=answer_data['id'])
+                if answer.survey.user == self.user:
+                    answer.title = answer_data['title']
+                    answer.save()
+            else:
+                answer_data['survey'] = survey
+                option = SurveyRadio.objects.create(**answer_data)
+                ids.append(option.id)
+        
+        options = SurveyRadio.objects.filter(survey=survey)
+        for option in options:
+            if option.id not in ids and option.survey.user == self.user:
+                option.delete()
+
+        return survey
 
     def save(self):
         survey = super(SurveySerializer, self).save()
@@ -106,28 +147,16 @@ class SurveySerializer(serializers.ModelSerializer):
             for tag in self.tags:
                 SurveyTag.objects.create(survey=survey, title=tag)
 
-        if self.edit_answers:
-            answers_survey = SurveyRadio.objects.filter(survey=survey)
-            for answer_survey in answers_survey:
-                if not str(answer_survey.id) in self.edit_answers.keys():
-                    answer_survey.delete()
-                else:
-                    answer_survey.title = self.edit_answers[str(answer_survey.id)]
-                    answer_survey.save()
-
-        if self.answers:
-            for answer in self.answers:
-                SurveyRadio.objects.create(title=answer, survey=survey)
-
         if (
-            not self._instance and survey.level_access < 2
+            not self._instance and not survey.level_access
         ):  # if this not edit to survey and survey is free
-            follows = Follow.objects.filter(user=self.user)
+            follows = BlogFollow.objects.filter(blog=survey.blog)
             for follow in follows:
                 if follow.follower.is_notificated:
-                    NotificationSurvey.objects.create(
-                        survey=survey, user=follow.follower
-                    )
+                    if NotificationBlog.objects.filter(
+                        follower=follow.follower, blog=survey.blog, user=survey.user, get_notifications_blog=True
+                    ):
+                        Notification.objects.create(survey=survey, user=follow.follower)
 
         return survey
 
@@ -175,11 +204,23 @@ class SurveyNoneSerializer(serializers.Serializer):
     pass
 
 
+class DraftAnswerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    
+    class Meta:
+        model = DraftSurveyRadio
+        fields = (
+            "id",
+            "title",
+        )
+
+
 # draft survey
 class DraftSurveySerializer(serializers.ModelSerializer):
     tags = serializers.CharField(required=False, write_only=True)
-    answers = serializers.CharField(required=False, write_only=True)
-    edit_answers = serializers.CharField(required=False, write_only=True)
+    answers_set = DraftAnswerSerializer(source="answers", many=True, required=False)
+    language = serializers.CharField(required=False, validators=[check_language])
+    level_access = serializers.IntegerField(required=False)
 
     class Meta:
         model = DraftSurvey
@@ -188,12 +229,16 @@ class DraftSurveySerializer(serializers.ModelSerializer):
             "title",
             "description",
             "content",
+            "language",
             "tags",
-            "answers",
-            "edit_answers",
             "blog",
+            "answers_set",
             "level_access",
         )
+        
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
         tags = attrs.get("tags")
@@ -210,60 +255,80 @@ class DraftSurveySerializer(serializers.ModelSerializer):
                 {"level_access": "Please select a valid level access"}
             )
 
-        answers = attrs.get("answers", False)
-        edit_answers = attrs.get("edit_answers", False)
-
-        if not answers and not edit_answers:
-            raise serializers.ValidationError(
-                {"answers": "This fields may not be blank."}
-            )
-
-        self.answers = []
-        self.edit_answers = {}
-
-        if answers:
-            self.answers = answers.split(",")
-            # if '' in answers
-            self.answers = [value for value in self.answers if value]
-            if len(self.answers) > 10:
-                raise serializers.ValidationError(
-                    {"answers": "There should be no more than 10 answer options."}
-                )
-            del attrs["answers"]
-
-        if edit_answers:
-            self.edit_answers = json.loads(edit_answers)
-            del attrs["edit_answers"]
-
         return attrs
+    
+    def create(self, validated_data):
+        answers_data = validated_data.get("answers", [])
+        if answers_data:
+            del validated_data['answers']
+            
+        if validated_data.get('level_access', None) and validated_data['level_access'] > 0:
+            validated_data['level_access'] = get_object_or_404(
+                LevelAccess, level=validated_data['level_access'], blog=validated_data['blog']
+            )
+        try:
+            if not (validated_data.get('level_access', None).__class__.__name__ == 'LevelAccess'):
+                del validated_data['level_access']
+        except KeyError as e:
+            pass
+            
+        draft_survey = DraftSurvey(**validated_data)
+        draft_survey.user = self.user
+        draft_survey.save()
+        for answer_data in answers_data:
+            answer_data['draft_survey'] = draft_survey
+            DraftSurveyRadio.objects.create(**answer_data)
+    
+        return draft_survey
+    
+    def update(self, draft_survey, validated_data):
+        answers_data = validated_data.get("answers", [])
+        if answers_data:
+            del validated_data['answers']
+        
+        for attr, value in validated_data.items():
+            if attr == 'level_access':
+                if value <= 0:
+                    value = None
+                else:
+                    value = get_object_or_404(
+                        LevelAccess, level=value, blog=draft_survey.blog
+                    )
+            setattr(draft_survey, attr, value)
+        draft_survey.save()
+        
+        ids = []
+        for answer_data in answers_data:
+            if answer_data.get('id', False):
+                ids.append(answer_data['id'])
+                answer = get_object_or_404(DraftSurveyRadio, id=answer_data['id'])
+                if answer.draft_survey.user == self.user:
+                    answer.title = answer_data['title']
+                    answer.save()
+            else:
+                answer_data['draft_survey'] = draft_survey
+                option = DraftSurveyRadio.objects.create(**answer_data)
+                ids.append(option.id)
+        
+        options = DraftSurveyRadio.objects.filter(draft_survey=draft_survey)
+        for option in options:
+            if option.id not in ids and option.draft_survey.user == self.user:
+                option.delete()
+
+        return draft_survey
 
     def save(self):
         draft_survey = super(DraftSurveySerializer, self).save()
 
         # if this edit to draft
-        old_tags = SurveyTag.objects.filter(draft_survey=draft_survey)
+        old_tags = DraftSurveyTag.objects.filter(draft_survey=draft_survey)
         for old_tag in old_tags:
             if not old_tag in self.tags:
                 old_tag.delete()
 
         if self.tags:
             for tag in self.tags:
-                SurveyTag.objects.create(draft_survey=draft_survey, title=tag)
-
-        if self.edit_answers:
-            draft_answers_survey = SurveyRadio.objects.filter(draft_survey=draft_survey)
-            for draft_answer_survey in draft_answers_survey:
-                print(draft_answer_survey.id, self.edit_answers)
-                if not str(draft_answer_survey.id) in self.edit_answers.keys():
-                    draft_answer_survey.delete()
-                else:
-                    draft_answer_survey.title = self.edit_answers[
-                        str(draft_answer_survey.id)
-                    ]
-                    draft_answer_survey.save()
-
-        if self.answers:
-            for answer in self.answers:
-                SurveyRadio.objects.create(title=answer, draft_survey=draft_survey)
+                DraftSurveyTag.objects.create(draft_survey=draft_survey, title=tag)
 
         return draft_survey
+    

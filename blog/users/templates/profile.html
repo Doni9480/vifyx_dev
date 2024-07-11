@@ -74,14 +74,16 @@
 
                                 <div id="canvas-TabContent2" class="tab-content">
                                     <div class="tab-pane fade" id="contact-alt" role="tabpanel" aria-labelledby="canvas-contact-tab" tabindex="0">
-                                        <!-- Surveys
+                                        <!-- Blogs
                                         ============================================= -->
                                         <div class="row gutter-40 posts-md mt-4">
                                             {% for blog in blogs %}
                                                 <div class="entry col-12">
                                                     <div class="grid-inner row align-items-center g-0">
                                                         <div class="col-md-4">
-                                                            <a class="entry-image" href="{{ blog.preview.url }}" data-lightbox="image"><img src="{{ blog.preview.url }}" alt="Standard blog with Image"></a>
+                                                            {% if blog.preview %}
+                                                                <a class="entry-image" href="{{ blog.preview.url }}" data-lightbox="image"><img src="{{ blog.preview.url }}" alt="Standard blog with Image"></a>
+                                                            {% endif %}
                                                         </div>
                                                         <div class="col-md-8 ps-md-4">
                                                             <div class="entry-title title-sm">
@@ -99,12 +101,6 @@
                                                     </div>
                                                 </div>
                                             {% endfor %}
-
-                                            {% if surveys %}
-                                                <div class="entry col-12">
-                                                    <a href="{% url 'users:surveys_show' user.get_username %}" class="more-link">More Surveys</a>
-                                                </div>
-                                            {% endif %}
                                         </div>
                                     </div>
 

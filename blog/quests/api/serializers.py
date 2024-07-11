@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from quests.models import Quest, QuestionQuest, QuestionQuestAnswer
 
+from blog.validators import check_language
+
 
 class RecursiveQuestion(serializers.Serializer):
 
@@ -123,6 +125,7 @@ class QuestSerializer(serializers.ModelSerializer):
         required=False,
     )
     preview = serializers.FileField()
+    language = serializers.CharField(validators=[check_language])
 
     class Meta:
         model = Quest

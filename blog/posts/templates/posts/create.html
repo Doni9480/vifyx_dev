@@ -16,7 +16,7 @@
       height: 360px;
     }
     
-    .btn_input {
+    .btn_input, .btn_remove {
       border: none;
       font-size: 14px;
       margin-left: 4px;
@@ -82,13 +82,33 @@
               </div>
 
               <div class="col-12 form-group">
-                <label for="id_description">Description:</label>
-                <textarea name="description" class="form-control" id="id_description" cols="30" rows="5">{% if form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+                <label for="id_content">Content:</label>
+                {{ form.content }}
               </div>
 
               <div class="col-12 form-group">
-                <label for="id_content">Content:</label>
-                {{ form.content }}
+                <input id="checkbox-11" class="checkbox-style" name="add_survey" type="checkbox">
+                <label for="checkbox-11" class="checkbox-style-3-label">Add survey</label>
+              </div>
+
+              <div class="col-12 form-group" id="title_answers" style="display: none;">
+                <label>Answer options (There are <span id="num_answers" style="font-weight: bold;">9</span> options left):</label> <button style="display: inline-block;" type="button" class="btn btn-primary" id="add_more">Add more</button>
+              </div>
+
+              <div id="answers_block" style="display: none;">
+                <div class="col-12 form-group d-flex" id="answer">
+                  <input type="text" class="form-control" name="answers">
+                  <button type="button" class="btn btn-danger btn_remove" onclick="remove_answer(this)">Remove</button>
+                </div>
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_language">Language:</label>
+                <select id="id_language" class="form-select">
+                  <option disabled selected>Select a language</option>
+                  <option value="english">English</option>
+                  <option value="russian">Russian</option>
+                </select>
               </div>
 
               <div class="col-12 form-group">
@@ -115,16 +135,23 @@
                 </div>
               </div>
 
-              {% if blog_levels %}
+              <div class="col-12 form-group">
+                <input id="checkbox-10" class="checkbox-style" name="is_paid" type="checkbox">
+                <label for="checkbox-10" class="checkbox-style-3-label">is paid</label>
+              </div>
+
+              <div class="col-12 form-group form-none" style="display: none;">
+                <label for="id_amount">Amount:</label>
+                <input type="number" id="id_amount" name="amount" value="{% if form.amount.value %}{{ form.amount.value }}{% endif %}" class="form-control" />
+              </div>
+
+              {% if level_follows %}
                 <div class="col-12 form-group">
                   <label for="id_level_access">This is private blog. Select the access level:</label>
                   <select id="id_level_access" class="form-select">
-                    <option selected disabled>Select the access level</option>
-                    <option value="1">1 (free)</option>
-                    {% for blog_level in blog_levels %}
-                      {% if not blog_level.level == 1 %}
-                        <option value="{{ blog_level.level }}">{{ blog_level.level }} ({{ blog_level.scores }} scores)</option>
-                      {% endif %}
+                    <option value="0" selected>free</option>
+                    {% for level_follow in level_follows %}
+                      <option value="{{ level_follow.level }}">Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -149,6 +176,7 @@
 {% block js %}
   <script src="{% static 'js/functions.js' %}"></script>
   <script src="{% static 'js/tags.js' %}"></script>
+  <script src="{% static 'js/answers.js' %}"></script>
   <script src="{% static 'js/send_post.js' %}"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script>
@@ -180,5 +208,30 @@
     }
   
     get_g_token();
+  </script>
+  <script>
+    var _is_paid = document.querySelector('input[name="is_paid"]');
+    _is_paid.addEventListener('change', function() {
+      if (_is_paid.checked) {
+        document.querySelector('.form-none').style.display = 'block';
+      } else {
+        document.querySelector('.form-none').style.display = 'none';
+      }
+    });
+
+    var _title_answers = document.querySelector('#title_answers');
+    var _answers_block = document.querySelector('#answers_block');
+    var _add_survey = document.querySelector('input[name="add_survey"]');
+
+    _add_survey.addEventListener('click', function() {
+      if (_add_survey.checked) {
+        _title_answers.style.display = 'block';
+        _answers_block.style.display = 'block';
+      } else {
+        _title_answers.style.display = 'none';
+        _answers_block.style.display = 'none';
+      }
+    });
+  </script>
   </script>
 {% endblock %}

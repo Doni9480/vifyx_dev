@@ -9,9 +9,8 @@ async function send_blog(e) {
 
     var preview = document.querySelector('input[name="preview"');
     var title = document.querySelector('input[name="title"]');
-    var level_two = document.querySelector('input[name="level_two"]');
-    var level_three = document.querySelector('input[name="level_three"]');
-    var level_four = document.querySelector('input[name="level_four"]');
+    var url_blog = document.querySelector('input[name="url"]');
+    var description = document.querySelector('#id_description');
     var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     var g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
     var is_private = document.querySelector('input[name="is_private"]');
@@ -22,18 +21,8 @@ async function send_blog(e) {
     }
 
     form_data.append('title', title.value);
-
-    if (level_two) {
-        form_data.append('level_two', level_two.value);
-    }
-
-    if (level_three) {
-        form_data.append('level_three', level_three.value);
-    }
-
-    if (level_four) {
-        form_data.append('level_four', level_four.value);
-    }
+    form_data.append('description', description.value);
+    form_data.append('slug', url_blog.value);
 
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
@@ -57,7 +46,6 @@ async function send_blog(e) {
 
     if (response.ok) {
         var result = await response.json();
-        console.log(result);
 
         form_errors = document.querySelectorAll('#form-error');
 
@@ -66,7 +54,7 @@ async function send_blog(e) {
         }
 
         if (result.success) {
-            window.location.replace(window.location.protocol + '//' + window.location.host + '/blogs/show/' + result.slug + '/');
+            window.location.replace(window.location.protocol + '//' + window.location.host + '/blogs/show/' + result.url + '/');
         } else {
             if (result.preview) {
                 preview.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.preview}</div>`);
@@ -76,16 +64,12 @@ async function send_blog(e) {
                 title.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.title}</div>`);
             }
 
-            if (result.level_two) {
-                level_two.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.level_two}</div>`);
+            if (result.description) {
+                description.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.description}</div>`);
             }
 
-            if (result.level_three) {
-                level_three.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.level_three}</div>`);
-            }
-
-            if (result.level_four) {
-                level_four.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.level_four}</div>`);
+            if (result.slug) {
+                url_blog.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.slug}</div>`);
             }
 
             if (result.is_private) {

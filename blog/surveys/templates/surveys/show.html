@@ -36,6 +36,7 @@
     <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
     <div class="content-wrap" style="background-color: #EEE">
         <div class="container">
+            <input type="hidden" name="blog_id" value="{{ survey.blog.pk }}">
             <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
                 <!-- Single Post============================================= -->
                 <div class="entry">
@@ -64,9 +65,11 @@
                                 </ul>
                             </div><!-- .entry-meta end -->
                         </div>
-                        <div class="col-md-9">
-                            <p class="text-larger text-muted mt-3">{{ survey.description }}</p>
-                        </div>
+                        {% if survey.description %}
+                            <div class="col-md-9">
+                                <p class="text-larger text-muted mt-3">{{ survey.description }}</p>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="clear"></div>
@@ -76,9 +79,11 @@
                     <!-- Entry Image
                     ============================================= -->
                     <div class="entry-image align-wide-xl my-3">
-                        <img src="{{ survey.preview.url }}" width="500" height="281"
-                                allow="autoplay; fullscreen" allowfullscreen>
-                        <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                        {% if survey.preview %}
+                            <img src="{{ survey.preview.url }}" width="500" height="281"
+                                    allow="autoplay; fullscreen" allowfullscreen>
+                            <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                        {% endif %}
                     </div><!-- .entry-image end -->
 
                     <div class="clear"></div>
@@ -122,7 +127,7 @@
                                 {% endfor %}
                             </div>
 
-                            <form method="POST" id="form_scores" class="col-12 form-group mt-3" style="display: none;">
+                            <form method="POST" id="form_scores_to_option" class="col-12 form-group mt-3" style="display: none;">
                                 {% csrf_token %}
                                 <label for="id_scores">Send scores:</label>
                                 <input type="number" id="id_scores" name="scores" class="form-control" placeholder="Enter the number of scores..."/>
@@ -464,7 +469,7 @@
     <script>
         async function add_view_to_survey() {
             let survey = document.querySelector('input[name="survey_id"]').value;
-            let url = window.location.protocol + '//' + window.location.host + '/api/v1/surveys/views/add/' + survey + '/';
+            let url = window.location.protocol + '//' + window.location.host + '/api/v1/surveys/' + survey + '/view/add/';
             let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     
             let response = await fetch(url, {
@@ -494,7 +499,7 @@
         var id_options = document.querySelector('#id_options');
         if (id_options) {
             id_options.addEventListener('change', function() {
-                document.querySelector('#form_scores').style.display = 'block';
+                document.querySelector('#form_scores_to_option').style.display = 'block';
             });
         }
     </script>

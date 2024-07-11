@@ -16,7 +16,7 @@
       height: 360px;
     }
     
-    .btn_input {
+    .btn_input, .btn_remove {
       border: none;
       font-size: 14px;
       margin-left: 4px;
@@ -70,7 +70,11 @@
                 <label for="id_preview" class="bg-dark p-3 text-center text-light" style="word-wrap: break-word; display: block;">
                   <img src="{% static 'images/upload.svg' %}" width="20" height="20" />
                   Select a file or drag it here for preview
-                  <div><img style="object-fit: cover;" src="{{ form.instance.preview.url }}" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% if form.instance.preview %}
+                    <div><img style="object-fit: cover;" src="{{ form.instance.preview.url }}" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% else %}
+                    <div><img style="object-fit: cover; display: none;" src="#" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% endif %}
                 </label>
                 <input type="file" id="id_preview" style="display: none;" name="preview" />
               </div>
@@ -81,14 +85,44 @@
               </div>
 
               <div class="col-12 form-group">
-                <label for="id_description">Description:</label>
-                <textarea name="description" id="id_description" class="form-control" cols="30" rows="5">{{ form.description.value }}</textarea>
-              </div>
-
-              <div class="col-12 form-group">
                 <label for="id_content">Content:</label>
                 {{ form.content }}
               </div>
+
+              <div class="col-12 form-group">
+                {% if form.instance.add_survey %}
+                  <input id="checkbox-11" class="checkbox-style" name="add_survey" type="checkbox" checked>
+                {% else %}
+                  <input id="checkbox-11" class="checkbox-style" name="add_survey" type="checkbox">
+                {% endif %}
+                <label for="checkbox-11" class="checkbox-style-3-label">Add survey</label>
+              </div>
+
+              {% if answers %}
+                <div class="col-12 form-group" id="title_answers">
+                  <label>Answer options (There are <span id="num_answers" style="font-weight: bold;">9</span> options left):</label> <button style="display: inline-block;" type="button" class="btn btn-primary" id="add_more">Add more</button>
+                </div>
+
+                <div id="answers_block">
+                  {% for answer in answers %}
+                    <div class="col-12 form-group d-flex" id="answer">
+                      <input type="text" class="form-control" name="answers" value="{{ answer.title }}" id="{{ answer.pk }}">
+                      <button type="button" class="btn btn-danger btn_remove" onclick="remove_answer(this)">Remove</button>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="col-12 form-group" id="title_answers" style="display: none;">
+                  <label>Answer options (There are <span id="num_answers" style="font-weight: bold;">9</span> options left):</label> <button style="display: inline-block;" type="button" class="btn btn-primary" id="add_more">Add more</button>
+                </div>
+
+                <div id="answers_block" style="display: none;">
+                  <div class="col-12 form-group d-flex" id="answer">
+                    <input type="text" class="form-control" name="answers">
+                    <button type="button" class="btn btn-danger btn_remove" onclick="remove_answer(this)">Remove</button>
+                  </div>
+                </div>
+              {% endif %}
 
               <div class="col-12 form-group">
                 <label>Tags:</label>
@@ -157,6 +191,7 @@
   <script src="{% static 'js/functions.js' %}"></script>
   <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
   <script src="{% static 'js/tags.js' %}"></script>
+  <script src="{% static 'js/answers.js' %}"></script>
   <script src="{% static 'js/edit_post.js' %}"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script>
@@ -188,5 +223,20 @@
     }
   
     get_g_token();
+  </script>
+  <script>
+    var _title_answers = document.querySelector('#title_answers');
+    var _answers_block = document.querySelector('#answers_block');
+    var _add_survey = document.querySelector('input[name="add_survey"]');
+
+    _add_survey.addEventListener('click', function() {
+      if (_add_survey.checked) {
+        _title_answers.style.display = 'block';
+        _answers_block.style.display = 'block';
+      } else {
+        _title_answers.style.display = 'none';
+        _answers_block.style.display = 'none';
+      }
+    });
   </script>
 {% endblock %}

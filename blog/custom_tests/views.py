@@ -35,7 +35,7 @@ def test_create(request):
 def test_edit(request, slug):
     instance = get_object_or_404(Test, slug=slug)
     if instance.user != request.user:
-        raise Http404
+        raise Http404()
     if request.method == "GET":
         form = TestForm(instance=instance)
         return render(
@@ -59,8 +59,10 @@ def test_edit(request, slug):
 
 
 def list_tests(request):
-    obj_set = Test.objects.filter(language=request.user.language).order_by("scores")
-    print(obj_set.count())
+    filter_kwargs = {}
+    if request.user.language != 'any':
+        filter_kwargs['language'] = request.user.language
+    obj_set = Test.objects.filter(**filter_kwargs).order_by("scores")
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -76,7 +78,10 @@ def list_tests(request):
 
 
 def detail_test(request, slug):
-    test_obj = get_object_or_404(Test, language=request.user.language, slug=slug)
+    filter_kwargs = {'slug': slug}
+    if request.user.language != 'any':
+        filter_kwargs['language'] = request.user.language
+    test_obj = get_object_or_404(Test, **filter_kwargs)
 
     comment_for_test = Comment.objects.filter(test=test_obj)
     comment_for_test_answers = Answer.objects.filter(test=test_obj)
@@ -98,14 +103,14 @@ def detail_test(request, slug):
 
 
 @login_required(login_url="/registration/login")
-def test_question_cerate(request, slug):
+def test_question_create(request, slug):
     if request.method == "GET":
         test_obj = get_object_or_404(Test, slug=slug)
         form = QuestionForm()
         form_answer = QuestionAnswerForm()
         return render(
             request,
-            "custom_test/question_cerate.html",
+            "custom_test/question_create.html",
             {
                 "form": form,
                 "form_answer": form_answer,
@@ -134,15 +139,18 @@ def test_question_edit(request, slug, question_id):
 
 
 def test_run(request, slug):
-    test_obj = get_object_or_404(Test, slug=slug)
-    questions = Question.objects.filter(test=test_obj).order_by("id")
+    filter_kwargs = {'slug': slug}
+    if request.user.language != 'any':
+        filter_kwargs['language'] = request.user.language
+    test_obj = get_object_or_404(Test, **filter_kwargs)
+    # questions = Question.objects.filter(test=test_obj).order_by("id")
     # number = request
     return render(
         request,
         "custom_test/test_run.html",
         {
             "test": test_obj,
-            "questions": questions,
+            # "questions": questions,
             "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
         },
     )

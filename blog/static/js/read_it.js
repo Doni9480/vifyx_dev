@@ -18,7 +18,7 @@ _read_it.addEventListener('click', send_read_it);
 async function send_read_it(e) {
     e.preventDefault();
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/notifications/read_it/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/notifications/read-it/';
 
     var response = await fetch(url, {
         method: 'POST',

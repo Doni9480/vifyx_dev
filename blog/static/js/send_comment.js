@@ -21,12 +21,18 @@ async function send_comment(e) {
     e.preventDefault();
     let survey_id = document.querySelector('input[name="survey_id"]');
     let post_id = document.querySelector('input[name="post_id"]');
+    let test_id = document.querySelector('input[name="test_id"]');
+    let quest_id = document.querySelector('input[name="quest_id"]');
 
     let comment_text = document.querySelector('#id_comment');
     if (survey_id) {
         let survey_id = document.querySelector('input[name="survey_id"]');
     } else if (post_id) {
         let post_id = document.querySelector('input[name="post_id"]');
+    } else if (test_id) {
+        let test_id = document.querySelector('input[name="test_id"]');
+    } else if (quest_id) {
+        let quest_id = document.querySelector('input[name="quest_id"]');
     }
 
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
@@ -42,6 +48,12 @@ async function send_comment(e) {
     } else if (post_id) {
         form_data.append('post', Number(post_id.value));
         url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/create/post/';
+    } else if (test_id) {
+        form_data.append('test', Number(test_id.value));
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/create/test/';
+    } else if (quest_id) {
+        form_data.append('quest', Number(quest_id.value));
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/create/quest/';
     }
 
     let response = await fetch(url, {
@@ -97,6 +109,8 @@ async function send_answer(form_answer) {
 
     let survey_id = document.querySelector('input[name="survey_id"]');
     let post_id = document.querySelector('input[name="post_id"]');
+    let test_id = document.querySelector('input[name="test_id"]');
+    let quest_id = document.querySelector('input[name="quest_id"]');
 
     if (survey_id) {
         form_data.append('survey', Number(survey_id.value));
@@ -104,6 +118,12 @@ async function send_answer(form_answer) {
     } else if (post_id) {
         form_data.append('post', Number(post_id.value));
         url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/answer/create/post/';
+    } else if (test_id) {
+        form_data.append('test', Number(test_id.value));
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/answer/create/test/';
+    } else if (quest_id) {
+        form_data.append('quest', Number(quest_id.value));
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/answer/create/quest/';
     }
 
     let response = await fetch(url, {

@@ -10,5 +10,5 @@ urlpatterns = [
     path('show/<slug:slug>/', show, name="show"),
     
     # draft
-    path('blog/<slug:slug>/create/', draft_survey_create, name="draft_survey_create"),
+    path('blog/<slug:slug>/draft/create/', draft_survey_create, name="draft_survey_create"),
 ]

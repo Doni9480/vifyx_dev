@@ -1,7 +1,7 @@
 {% extends 'layouts/basic.html' %}
 {% load static %}
 
-{% block title %}Create a post{% endblock %}
+{% block title %}Edit a blog{% endblock %}
 
 {% block head %}
   <style>
@@ -40,7 +40,7 @@
     <div class="container">
       <div class="page-title-row">
         <div class="page-title-content">
-          <h1>Create a post</h1>
+          <h1>Edit a blog</h1>
         </div>
 
         <nav aria-label="breadcrumb">
@@ -48,7 +48,7 @@
             <li class="breadcrumb-item">
               <a href="{% url 'main' %}">Home</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Create a post</li>
+            <li class="breadcrumb-item active" aria-current="page">Edit a blog</li>
           </ol>
         </nav>
       </div>
@@ -71,7 +71,11 @@
                 <label for="id_preview" class="bg-dark p-3 text-center text-light" style="word-wrap: break-word; display: block;">
                   <img src="{% static 'images/upload.svg' %}" width="20" height="20" />
                   Select a file or drag it here for preview
-                  <div><img style="object-fit: cover;" src="{{ form.instance.preview.url }}" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% if form.instance.preview %}
+                    <div><img style="object-fit: cover;" src="{{ form.instance.preview.url }}" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% else %}
+                    <div><img style="object-fit: cover; display: none;" src="#" id="ready_image" alt="" width="640" height="360" /></div>
+                  {% endif %}
                 </label>
                 <input type="file" id="id_preview" style="display: none;" name="preview" />
               </div>
@@ -79,6 +83,11 @@
               <div class="col-12 form-group">
                 <label for="id_title">Title:</label>
                 <input type="text" id="id_title" name="title" value="{% if form.title.value %}{{ form.title.value }}{% endif %}" class="form-control" />
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_description">Description:</label>
+                <textarea name="description" id="id_description" class="form-control" cols="30" rows="5">{% if form.description.value %}{{ form.description.value }}{% endif %}</textarea>
               </div>
 
               <div class="col-12 form-group">

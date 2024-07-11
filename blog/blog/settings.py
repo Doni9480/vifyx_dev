@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-hqu-11onn^q7+kr(vgxm@)zo!5&*9+%p+lmx#c*t&shlfev07='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 APPEND_SLASH = True
@@ -75,9 +75,10 @@ MIDDLEWARE = [
     # 'blog.middlewares.AdminCheckMiddleware',
     # local timezone
     'blog.middlewares.TimezoneMiddleware',
-    # language
+    # notifications
+    'blog.middlewares.NotificationsMiddleware',
+    # for no authentication users
     'blog.middlewares.LanguageMiddleware',
-    
     # 'corsheaders.middleware.CorsMiddleware',
 ]
 
@@ -107,8 +108,12 @@ WSGI_APPLICATION = 'blog.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'blog',
+        'USER': 'user_blog',
+        'PASSWORD': 'jfjsdDJUIA',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -152,9 +157,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-   BASE_DIR / 'static'
-]
+# STATICFILES_DIRS = [
+#    BASE_DIR / 'static'
+# ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
@@ -198,7 +203,6 @@ SUMMERNOTE_CONFIG = {
         'width': '100%',
     }
 }
-
 
 # CORS_ALLOWED_ORIGINS = ["http://localhost:8080", "http://127.0.0.1:8080", "https://d991-185-138-186-34.ngrok-free.app"]
 

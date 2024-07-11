@@ -82,21 +82,18 @@
               </div>
 
               <div class="col-12 form-group">
-                <input id="checkbox-10" class="checkbox-style" name="is_private" type="checkbox">
-                <label for="checkbox-10" class="checkbox-style-3-label">Is private blog</label>
+                <label for="id_description">Description:</label>
+                <textarea name="description" class="form-control" id="id_description" cols="30" rows="5">{% if form.description.value %}{{ form.description.value }}{% endif %}</textarea>
               </div>
 
-              <div id="private_form" style="display: none;">
-                <div class="col-12 form-group">
-                  <label>Enter the number of points for each access level (1 level is free)</label>
-                  <input type="number" class="form-control" name="level_two" placeholder="2 level...">
-                </div>
-                <div class="col-12 form-group">
-                  <input type="number" class="form-control" name="level_three" placeholder="3 level...">
-                </div>
-                <div class="col-12 form-group">
-                  <input type="number" class="form-control" name="level_four" placeholder="4 level...">
-                </div>
+              <div class="col-12 form-group">
+                <label for="id_url">URL:</label>
+                <input type="text" id="id_url" name="url" value="{% if form.url.value %}{{ form.url.value }}{% endif %}" class="form-control" />
+              </div>
+
+              <div class="col-12 form-group">
+                <input id="checkbox-10" class="checkbox-style" name="is_private" type="checkbox">
+                <label for="checkbox-10" class="checkbox-style-3-label">Is private blog</label>
               </div>
 
               <div class="col-12 form-group">
@@ -147,17 +144,5 @@
     }
   
     get_g_token();
-  </script>
-  <script>
-    var private_form = document.querySelector('#private_form');
-    var _is_private = document.querySelector('input[name="is_private"]');
-
-    _is_private.addEventListener('change', function() {
-      if (_is_private.checked) {
-        private_form.style.display = 'block';
-      } else {
-        private_form.style.display = 'none';
-      }
-    });
   </script>
 {% endblock %}

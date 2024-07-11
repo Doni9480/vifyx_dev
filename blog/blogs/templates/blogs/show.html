@@ -5,6 +5,22 @@
 
 {% block head %}
 <script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+<style>
+    .paid_follow {
+        border-radius: 5px;
+        box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.5);
+    }
+
+    .paid_follow:hover {
+        .follow_radio_none {
+            display: block;
+        }
+    }
+
+    .follow_radio_none {
+        display: none;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -50,7 +66,9 @@
                             <div class="entry col-12" id="element">
                                 <div class="grid-inner">
                                     <div class="entry-image">
-                                        <a href="{{ e.preview.url }}" data-lightbox="image"><img src="{{ e.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                        {% if e.preview %}
+                                            <a href="{{ e.preview.url }}" data-lightbox="image"><img src="{{ e.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                        {% endif %}
                                     </div>
                                     <div class="entry-title">
                                         <h2><a href="/{{ e.namespace }}/show/{{ e.slug }}/">{{ e.title }}</a></h2>
@@ -62,31 +80,8 @@
                                             <li><a href="{% url 'users:profile' e.user.username %}"><i class="uil uil-user"></i> {{ e.user.username }}</a></li>
                                             <li><a href="/{{ e.namespace }}/show/{{ e.slug }}/"><i class="uil uil-comments-alt"></i> {{ e.count_comments }} Comments</a></li>
                                             <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ e.count_views }}</span></li>
-                                            {% if e.is_private and blog.user != request.user and not e.is_followed and request.user.is_authenticated %}
-                                                <li><button type="submit" class="btn btn-outline-success" id="follow_btn">Follow</button></li>
-                                                <li>Level {{ e.level_access }}: {{ e.scores_to_follow }} scores</li>
-                                            {% endif %}
+                                            {% if e.level_access %}<li style="font-weight: bold;">Subscription level: {{ e.level_access.level }}</li>{% endif %}
                                         </ul>
-                                        {% if e.is_private and blog.user != request.user and not e.is_followed and request.user.is_authenticated %}
-                                            <div id="follow_radio">
-                                                <div>
-                                                    <input id="{{ e.slug }}-{{ e.id }}" class="radio-style" name="radio-group-mouth" value="1" type="radio">
-                                                    <label for="{{ e.slug }}-{{ e.id }}" class="radio-style-2-label">1 mouth</label>
-                                                </div>
-                                                <div>
-                                                    <input id="{{ e.slug }}-{{ e.id|add:1 }}" class="radio-style" name="radio-group-mouth" value="3" type="radio">
-                                                    <label for="{{ e.slug }}-{{ e.id|add:1 }}" class="radio-style-2-label">3 mouths</label>
-                                                </div>
-                                                <div>
-                                                    <input id="{{ e.slug }}-{{ e.id|add:2 }}" class="radio-style" name="radio-group-mouth" value="6" type="radio">
-                                                    <label for="{{ e.slug }}-{{ e.id|add:2 }}" class="radio-style-2-label">6 mouths</label>
-                                                </div>
-                                                <div>
-                                                    <input id="{{ e.slug }}-{{ e.id|add:3 }}" class="radio-style" name="radio-group-mouth" value="12" type="radio">
-                                                    <label for="{{ e.slug }}-{{ e.id|add:3 }}" class="radio-style-2-label">12 mouths</label>
-                                                </div>
-                                            </div>
-                                        {% endif %}
                                     </form>
                                     <div class="entry-content">
                                         <p>{{ e.description }}</p>
@@ -129,20 +124,72 @@
                 ============================================= -->
                 <aside class="sidebar col-lg-3">
                     {% include "layouts/sidebar.html" %}
+
                     {% if request.user == blog.user %}
-                        <form class="sidebar col-lg-3" method="POST" id="delete_all_notifications" style="width: 100%;">
-                            {% csrf_token %}
-                            <a href="{% url 'posts:create' blog.slug %}" class="btn btn-primary mt-2">Create a new post</i></a>
-                            <a href="{% url 'surveys:create' blog.slug %}" class="btn btn-success mt-2">Create a new survey</i></a>
-                        </form>
+                        <div><a href="{% url 'posts:create' blog.slug %}" class="btn btn-primary mt-2">Create a new post</i></a></div>
+                        <div><a href="{% url 'surveys:create' blog.slug %}" class="btn btn-success mt-2">Create a new survey</i></a></div>
+                    {% else %}
+                        <div><a href="{% url 'blogs:donate' blog.slug %}" class="btn btn-info mt-2">Donate</i></a></div>
                     {% endif %}
 
                     {% if paid_follow %}
-                        <form class="sidebar col-lg-3" method="POST" id="delete_all_notifications" style="width: 100%;">
-                            {% csrf_token %}
-                            <a style="cursor: pointer;" id="delete_follow" class="btn btn-danger mt-2">Unfollow this blog</i></a>
-                        </form>
+                        <div><a style="cursor: pointer;" id="delete_follow" class="btn btn-danger mt-2">Unfollow this blog</i></a></div>
                     {% endif %}
+
+                    {% if get_notifications_blog and request.user != blog.user %}
+                        <div>
+                            {% if get_notifications_blog.get_notifications_blog %}
+                                <input id="checkbox-10" class="checkbox-style" name="get_notifications_blog" type="checkbox" checked>
+                            {% else %}
+                                <input id="checkbox-10" class="checkbox-style" name="get_notifications_blog" type="checkbox">
+                            {% endif %}
+                            <label for="checkbox-10" class="checkbox-style-3-label">Get notifications</label>
+                        </div>
+                    {% endif %}
+
+                    {% if request.user == blog.user and blog.is_private %}
+                        <div class="mt-2">
+                            <a href="{% url 'blogs:create_level_follow' blog.slug %}" class="btn btn-info">Add level follow</a>
+                        </div>
+                    {% endif %}
+
+                    {% for level_follow in level_follows %}
+                        <div style="max-width: 300px;" class="mt-2 p-2 paid_follow">
+                            <div><img src="{{ level_follow.preview.url }}"></div>
+                            <div>Level {{ level_follow.level }}</div>
+                            <div class="mt-2" style="font-weight: bold;">{{ level_follow.title }}</div>
+                            <div>{{ level_follow.description }}</div>
+                            <div class="mt-2">{{ level_follow.scores }} scores (1 month)</div>
+                            {% if request.user != blog.user %}
+                                <form id="form_follow" method="POST" style="margin-bottom: 0;">
+                                    {% if paid_follow.blog_access_level.level >= level_follow.level %}
+                                        <button type="button" class="btn btn-warning mt-2" disabled>Subscribed</button>
+                                    {% else %}
+                                        <div id="follow_radio" class="follow_radio_none">
+                                            <input type="hidden" name="level" value="{{ level_follow.level }}">
+                                            <div>
+                                                <input id="{{ level_follow.title }}-{{ level_follow.id }}" class="radio-style" name="radio-group-month-{{ level_follow.title }}" value="1" type="radio">
+                                                <label for="{{ level_follow.title }}-{{ level_follow.id }}" class="radio-style-2-label">1 month</label>
+                                            </div>
+                                            <div>
+                                                <input id="{{ level_follow.title }}-{{ level_follow.id|add:1 }}" class="radio-style" name="radio-group-month-{{ level_follow.title }}" value="3" type="radio">
+                                                <label for="{{ level_follow.title }}-{{ level_follow.id|add:1 }}" class="radio-style-2-label">3 months</label>
+                                            </div>
+                                            <div>
+                                                <input id="{{ level_follow.title }}-{{ level_follow.id|add:2 }}" class="radio-style" name="radio-group-month-{{ level_follow.title }}" value="6" type="radio">
+                                                <label for="{{ level_follow.title }}-{{ level_follow.id|add:2 }}" class="radio-style-2-label">6 months</label>
+                                            </div>
+                                            <div>
+                                                <input id="{{ level_follow.title }}-{{ level_follow.id|add:3 }}" class="radio-style" name="radio-group-month-{{ level_follow.title }}" value="12" type="radio">
+                                                <label for="{{ level_follow.title }}-{{ level_follow.id|add:3 }}" class="radio-style-2-label">12 months</label>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-warning mt-2">Subscribe</button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
                 </aside><!-- .sidebar end -->
             </div>
 
@@ -155,6 +202,7 @@
 {% block js %}
 <script src="{% static 'js/functions.js' %}"></script>
 <script src="{% static 'js/send_pay_to_blog.js' %}"></script>
+<script src="{% static 'js/get_notifications_blog.js' %}"></script>
 <script src="{% static 'js/delete_follow_blog.js' %}"></script>
 <script>
     function get_g_token() {
@@ -168,24 +216,5 @@
   
     get_g_token();
   </script>
-<script>
-    _follow_btns = document.querySelectorAll('#follow_btn');
-    _follow_btns.forEach(_follow_btn => {
-        _follow_btn.disabled = true;
-    });
-    var follow_blocks = document.querySelectorAll('#follow_block');
-
-    if (follow_blocks) {
-        follow_blocks.forEach(follow_block => {
-            var follow_radio = follow_block.querySelector('#follow_radio');
-            
-            if (follow_radio) {
-                follow_radio.addEventListener('change', function() {
-                    follow_block.querySelector('#follow_btn').disabled = false;
-                });
-            }
-        });
-    }
-</script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 {% endblock %}

@@ -4,11 +4,6 @@ from mptt.models import MPTTModel, TreeForeignKey
 
 
 class Quest(models.Model):
-    languages = (
-        ("1", "English"),
-        ("2", "Russian"),
-    )
-
     slug = models.SlugField(
         verbose_name="URL",
         max_length=255,
@@ -18,6 +13,8 @@ class Quest(models.Model):
     preview = models.ImageField(
         verbose_name="Preview",
         upload_to="quests/",
+        null=True,
+        blank=True,
     )
     title = models.CharField(
         verbose_name="Title",
@@ -25,6 +22,8 @@ class Quest(models.Model):
     )
     description = models.TextField(
         verbose_name="Description",
+        null=True,
+        blank=True,
     )
     content = models.TextField(
         verbose_name="Content",
@@ -39,8 +38,6 @@ class Quest(models.Model):
     )
     language = models.CharField(
         verbose_name="Language",
-        max_length=255,
-        choices=languages,
     )
     scores = models.IntegerField(
         verbose_name="Scores",

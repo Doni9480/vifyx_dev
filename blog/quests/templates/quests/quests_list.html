@@ -43,7 +43,9 @@
                             <div class="entry col-12" id="element">
                                 <div class="grid-inner">
                                     <div class="entry-image">
-                                        <a href="{{ blog.preview.url }}" data-lightbox="image"><img src="{{ blog.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                        {% if blog.preview %}
+                                            <a href="{{ blog.preview.url }}" data-lightbox="image"><img src="{{ blog.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                        {% endif %}
                                     </div>
                                     <div class="entry-title">
                                         <h2><a href="{% url 'detail_quest' slug=blog.slug %}">{{ blog.title }}</a></h2>
@@ -57,7 +59,9 @@
                                         </ul>
                                     </div>
                                     <div class="entry-content">
-                                        <p>{{ blog.description }}</p>
+                                        {% if blog.description %}
+                                            <p>{{ blog.description }}</p>
+                                        {% endif %}
                                         <a href="{% url 'detail_quest' slug=blog.slug %}" class="more-link">Read More</a>
                                     </div>
                                 </div>

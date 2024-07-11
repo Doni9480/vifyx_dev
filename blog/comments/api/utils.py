@@ -66,21 +66,18 @@ def func_is_valid_answer(request, serializer):
 
 def opening_access(e, user):
     is_exp = False
-    if e.level_access > 1:
+    if e.level_access:
         if user.is_anonymous:
             return True
-        paid_follow = PaidFollow.objects.filter(blog=e.blog, follower=user.id)
-        if not (
-            paid_follow and paid_follow[0].blog_access_level.level >= e.level_access
-        ):
+        paid_follow = PaidFollow.objects.filter(blog=e.blog, follower=user)
+        if not paid_follow or paid_follow[0].blog_access_level.level < e.level_access.level:
             is_exp = True
 
-    if (
-        e.hide_to_moderator or e.hide_to_user or int(e.language) != int(user.language)
-    ) and not user.is_staff:
+    if e.hide_to_moderator or e.hide_to_user and not user.is_staff:
         is_exp = True
-
+    if e.language != user.language and user.language != 'any':
+        is_exp = True      
     if e.user == user:
         is_exp = False
-
+        
     return is_exp

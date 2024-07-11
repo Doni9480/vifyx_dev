@@ -3,11 +3,6 @@ from django.conf import settings
 
 
 class Test(models.Model):
-    languages = (
-        ("1", "English"),
-        ("2", "Russian"),
-    )
-
     slug = models.SlugField(
         verbose_name="URL",
         max_length=255,
@@ -17,8 +12,8 @@ class Test(models.Model):
     preview = models.ImageField(
         verbose_name="Preview",
         upload_to="uploads/",
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
     )
     title = models.CharField(
         verbose_name="Title",
@@ -28,8 +23,8 @@ class Test(models.Model):
     )
     description = models.TextField(
         verbose_name="Description",
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
     )
     content = models.TextField(
         verbose_name="Content",
@@ -44,8 +39,6 @@ class Test(models.Model):
     )
     language = models.CharField(
         verbose_name="Language",
-        max_length=255,
-        choices=languages,
     )
     scores = models.IntegerField(
         verbose_name="scores",

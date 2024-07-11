@@ -15,6 +15,7 @@ async function send_survey(e) {
     let description = document.querySelector('#id_description');
     let content = document.querySelector('#id_content');
     let answers = document.querySelectorAll('input[name="answers"]');
+    let language = document.querySelector('#id_language');
     let tags = document.querySelectorAll('input[name="tags"]');
     let level_access = document.querySelector('#id_level_access');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
@@ -22,13 +23,19 @@ async function send_survey(e) {
     let blog = document.querySelector('input[name="blog"]');
 
     tags_list = [];
+    let is_empty_tags = true;
     tags.forEach(tag => {
+        is_empty_tags = false;
         tags_list.push(tag.value);
     });
 
     answers_list = [];
+    let is_empty_answers = true;
     answers.forEach(answer => {
-        answers_list.push(answer.value);
+        if (answer.value) {
+            is_empty_answers = false;
+            answers_list.push({'title': answer.value});
+        }
     });
 
     let form_data = new FormData();
@@ -38,14 +45,18 @@ async function send_survey(e) {
     form_data.append('title', title.value);
     form_data.append('description', description.value);
     form_data.append('content', content.value);
-    if (level_access) {
+    if (level_access && level_access.value) {
         form_data.append('level_access', level_access.value);
     }
-    if (answers_list) {
-        form_data.append('answers', answers_list);
+    if (! is_empty_answers) {
+        form_data.append('answers_set', JSON.stringify(answers_list));
     }
-    form_data.append('tags', tags_list);
+
+    if (! is_empty_tags) {
+        form_data.append('tags', tags_list);
+    }
     form_data.append('blog', blog.value);
+    form_data.append('language', language.value);
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     url = window.location.protocol + '//' + window.location.host + '/api/v1/surveys/create/';
@@ -55,13 +66,14 @@ async function send_survey(e) {
         headers: {
             'X-CSRFToken': csrftoken,
         },
-        body: form_data
+        body: form_data,
     });
 
     get_g_token();
 
     if (response.ok) {
         let result = await response.json();
+        console.log(result);
 
         form_errors = document.querySelectorAll('#form-error');
 
@@ -90,6 +102,10 @@ async function send_survey(e) {
                 content.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.content}</div>`);
             }
 
+            if (result.language) {
+                language.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.language}</div>`);
+            }
+
             if (result.recaptcha) {
                 form_survey.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.recaptcha}</div>`);
             }
@@ -102,8 +118,8 @@ async function send_survey(e) {
                 blog.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.blog}</div>`);
             }
 
-            if (result.answers) {
-                document.querySelector('#title_answers').insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.answers}</div>`);
+            if (result.answers_set) {
+                document.querySelector('#title_answers').insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.answers_set}</div>`);
             }
         }
         
@@ -120,6 +136,7 @@ async function send_draft_survey(e) {
     let description = document.querySelector('#id_description');
     let content = document.querySelector('#id_content');
     let answers = document.querySelectorAll('input[name="answers"]');
+    let language = document.querySelector('#id_language');
     let tags = document.querySelectorAll('input[name="tags"]');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let level_access = document.querySelector('#id_level_access');
@@ -127,21 +144,26 @@ async function send_draft_survey(e) {
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
     tags_list = [];
+    let is_empty_tags = true;
     tags.forEach(tag => {
+        is_empty_tags = false;
         tags_list.push(tag.value);
     });
 
-    answers_list = []
+    answers_list = [];
+    let is_empty_answers = true;
     answers.forEach(answer => {
-        if (! answer.id) {
-            answers_list.push(answer.value);
-        }
-    });
-
-    let edit_answers = {};
-    answers.forEach(answer => {
-        if (answer.id) {
-            edit_answers[answer.id] = answer.value;
+        if (answer.value) {
+            if (! answer.id) {
+                is_empty_answers = false
+                answers_list.push({'title': answer.value});
+            } else {
+                is_empty_answers = false
+                answers_list.push({
+                    'title': answer.value,
+                    'id': answer.id,
+                });
+            }
         }
     });
 
@@ -159,24 +181,24 @@ async function send_draft_survey(e) {
     if (content) {
         form_data.append('content', content.value);
     }
-    if (! isNaN(Number(level_access.value))) {
+    if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);
+    }
+    if (language.value == 'russian' || language.value == 'english') {
+        form_data.append('language', language.value);   
     }
     if (blog) {
         form_data.append('blog', blog.value);
     }
-    if (answers_list) {
-        form_data.append('answers', answers_list);
+    if (! is_empty_answers) {
+        form_data.append('answers_set', JSON.stringify(answers_list));
     }
-    if (edit_answers) {
-        form_data.append('edit_answers', JSON.stringify(edit_answers));
-    }
-    if (tags_list) {
+    if (! is_empty_tags) {
         form_data.append('tags', tags_list);
     }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/drafts_survey/create/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/surveys/draft/create/';
 
     let response = await fetch(url, {
         method: 'POST',

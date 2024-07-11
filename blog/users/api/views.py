@@ -11,20 +11,18 @@ from django.shortcuts import get_object_or_404
 
 from users.api.serializers import *
 from users.api.utils import delete_token
-from users.models import User, Follow, Percent
+from users.models import User, Percent
 
-from posts.api.utils import get_views_and_comments_to_posts
-from posts.models import Post
+from blogs.models import Blog, PaidFollow, BlogFollow
 
-from surveys.models import Survey
-from surveys.utils import get_views_and_comments_to_surveys
+from users.api.serializers import BlogFollowSerializer
 
 
 class RegisterViewSet(viewsets.GenericViewSet):
     serializer_class = RegisterSerializer
     # parser_classes = [MultiPartParser, FormParser]
 
-    @action(detail=True, methods=["post"], url_path="account")
+    @action(detail=True, methods=["post"], url_path="registration")
     @transaction.atomic
     def create_account(self, request):
 
@@ -72,7 +70,6 @@ class UserViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["post"])
     @transaction.atomic
     def logout(self, request):
-        print("ok")
         delete_token(request.user)
         return Response({"response": "You have logged out of your account."})
 
@@ -94,33 +91,32 @@ class UserViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path="<pk>/send_scores_to_user")
+    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/send_scores_to_user")
     @transaction.atomic
-    def send_scores_to_user(self, request, pk=None):
+    def send_scores_to_user(self, request, id=None):
         data = {}
 
-        try:
-            user = get_object_or_404(User, id=pk)
-            if user == request.user:
-                raise Exception()
-        except Exception:
+        user = get_object_or_404(User, id=id)
+        if user == request.user:
             raise Http404()
 
         serializer = ScoresSerializer(data=request.data)
 
         if serializer.is_valid():
             _user = request.user
+            admin = User.objects.filter(is_superuser=True).first()
+            if _user == admin:
+                _user = admin
 
             scores = int(serializer.validated_data["scores"])
-            _user.scores -= scores
-            if _user.scores <= 0:
+            if _user.scores < scores:
                 data["error_scores"] = "you have fewer scores than you indicated."
             elif scores <= 0:
                 data["error_scores"] = "you cannot enter a negative value."
             else:
+                _user.scores -= scores
                 _user.save()
 
-                admin = User.objects.filter(is_superuser=True)[0]
                 percent = Percent.objects.all()[0].percent / 100
                 admin.scores += int(scores * percent) or 1
                 admin.save()
@@ -138,11 +134,11 @@ class UserViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path="<pk>/forbid_to_post")
+    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/forbid_to_post")
     @transaction.atomic
-    def forbid_to_post(self, request, pk=None):
+    def forbid_to_post(self, request, id=None):
         try:
-            user = get_object_or_404(User, id=pk)
+            user = get_object_or_404(User, id=id)
             if not request.user.is_staff:
                 raise Exception()
         except Exception:
@@ -157,9 +153,9 @@ class UserViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path="<pk>/forbid_to_comment")
+    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/forbid_to_comment")
     @transaction.atomic
-    def forbid_to_comment(self, request, pk=None):
+    def forbid_to_comment(self, request, id=None):
         try:
             user = get_object_or_404(User, id=id)
             if not request.user.is_staff:
@@ -172,9 +168,9 @@ class UserViewSet(viewsets.ViewSet):
         data["success"] = "ok."
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path="<pk>/allow_to_post")
+    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/allow_to_post")
     @transaction.atomic
-    def allow_to_post(self, request, pk=None):
+    def allow_to_post(self, request, id=None):
         try:
             user = get_object_or_404(User, id=id)
             if not request.user.is_staff:
@@ -191,9 +187,9 @@ class UserViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path="<pk>/allow_to_comment")
+    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/allow_to_comment")
     @transaction.atomic
-    def allow_to_comment(self, request, pk=None):
+    def allow_to_comment(self, request, id=None):
         try:
             user = get_object_or_404(User, id=id)
             if not request.user.is_staff:
@@ -211,40 +207,9 @@ class UserViewSet(viewsets.ViewSet):
 
             return Response(data)
 
-    @action(detail=True, methods=["post"], url_path="<str:username>/follow")
-    @transaction.atomic
-    def follow(self, request, username):
-        try:
-            user = get_object_or_404(User, username=username)
-            if user == request.user:
-                raise Exception()
-        except Exception:
-            raise Http404()
-
-        Follow.objects.create(follower=request.user, user=user)
-
-        return Response({"success": "ok."})
-
-    @action(detail=True, methods=["post"], url_path="<str:username>/unfollow")
-    @transaction.atomic
-    def unfollow(self, request, username):
-        try:
-            user = get_object_or_404(User, username=username)
-            follow = Follow.objects.filter(follower=request.user, user=user)
-            if user == request.user and not follow:
-                raise Exception()
-        except Exception:
-            raise Http404()
-
-        follow[0].delete()
-
-        return Response({"success": "ok."})
-
     @action(detail=True, methods=["post"], url_path="is_notificated")
     @transaction.atomic
     def is_notificated(self, request, *args, **kwargs):
-        print(args)
-        print(kwargs)
         data = {}
 
         is_notificated = request.data.get("is_notificated", False)
@@ -268,131 +233,54 @@ class UserViewSet(viewsets.ViewSet):
             user.is_autorenewal = True
         elif is_autorenewal == "false":
             user.is_autorenewal = False
-        print(user.is_autorenewal)
         user.save()
 
         return Response(data)
+    
+    @action(detail=True, methods=["post"], url_path="set_language")
+    @transaction.atomic
+    def set_language(self, request, language=None):
+        language = request.data['language']
+        if language in ['russian', 'english', 'any']:
+            request.user.language = language
+            request.user.save()
+            return Response({'success': 'ok.'})
 
-
+        return Response(
+            {"language": "Invalid language (valid: russian, english, any)"}, status=status.HTTP_400_BAD_REQUEST
+        )
 class ProfileViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["get"])
     def my_profile(self, request):
-        surveys = Survey.objects.filter(user=request.user).order_by("-date")[:3]
-        surveys = get_views_and_comments_to_surveys(
-            SurveysSerializer(surveys, many=True).data
-        )
+        blogs = BlogSerializer(Blog.objects.filter(user=request.user), many=True).data
 
-        posts = Post.objects.filter(user=request.user).order_by("-date")[:3]
-        posts = get_views_and_comments_to_posts(PostsSerializer(posts, many=True).data)
-
-        follows = FollowSerializer(
-            Follow.objects.filter(follower=request.user), many=True
+        follows = BlogFollowSerializer(
+            BlogFollow.objects.filter(follower=request.user), many=True
         ).data
         for follow in follows:
             follow["user"] = User.objects.get(id=follow["user"]).username
+        
+        paid_follow_models = PaidFollow.objects.filter(follower=request.user)
+        paid_follows = []
+        for paid_follow_model in paid_follow_models:
+            paid_follows.append(BlogSerializer(paid_follow_model.blog).data)
 
         data = {
-            "posts": posts,
-            "surveys": surveys,
-            # 'paid_post_follows': paid_post_follows,
-            # 'paid_survey_follows': paid_survey_follows,
+            "blogs": blogs,
+            "paid_follows": paid_follows,
             "follows": follows,
         }
 
         return Response({"data": data})
 
-    @action(detail=True, methods=["get"], url_path="<str:username>/profile")
+    @action(detail=True, methods=["get"], url_path=r"(?P<username>[^/.]+)/profile")
     def profile(self, request, username=None):
-        try:
-            user = get_object_or_404(User, username=username)
-        except Exception:
-            raise Http404()
+        user = get_object_or_404(User, username=username)
+        blogs = BlogSerializer(Blog.objects.filter(user=user), many=True).data
 
-        if not request.user.is_staff:
-            surveys = Survey.objects.filter(
-                user=user,
-                hide_to_user=False,
-                hide_to_moderator=False,
-                language=request.user.language,
-            ).order_by("-date")[:3]
-            posts = Post.objects.filter(
-                user=user,
-                hide_to_user=False,
-                hide_to_moderator=False,
-                language=request.user.language,
-            ).order_by("-date")[:3]
-        else:
-            surveys = Survey.objects.filter(
-                user=user, language=request.user.language
-            ).order_by("-date")[:3]
-            posts = Post.objects.filter(
-                user=user, language=request.user.language
-            ).order_by("-date")[:3]
-
-        surveys = get_views_and_comments_to_surveys(
-            SurveysSerializer(surveys, many=True).data
-        )
-        posts = get_views_and_comments_to_posts(PostsSerializer(posts, many=True).data)
-
-        return Response({"data": {"posts": posts, "surveys": surveys}})
-
-
-class PostViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    serializer_class = PostsSerializer
-
-    def list(self, request, username=None):
-        try:
-            user = get_object_or_404(User, username=username)
-            if not request.user.is_staff:
-                posts = Post.objects.filter(
-                    user=user,
-                    hide_to_user=False,
-                    hide_to_moderator=False,
-                    language=request.user.language,
-                )
-            else:
-                posts = Post.objects.filter(user=user, language=request.user.language)
-
-            if not posts:
-                raise Exception()
-        except Exception:
-            raise Http404()
-
-        posts = get_views_and_comments_to_posts(PostsSerializer(posts, many=True).data)
-
-        return Response({"data": posts})
-
-
-class SurveyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    serializer_class = SurveysSerializer
-
-    def list(self, request, username=None):
-        try:
-            user = get_object_or_404(User, username=username)
-            if not request.user.is_staff:
-                surveys = Survey.objects.filter(
-                    user=user,
-                    hide_to_user=False,
-                    hide_to_moderator=False,
-                    language=request.user.language,
-                )
-            else:
-                surveys = Survey.objects.filter(
-                    user=user, language=request.user.language
-                )
-
-            if not surveys:
-                raise Exception()
-        except Exception:
-            raise Http404()
-
-        surveys = get_views_and_comments_to_surveys(
-            SurveysSerializer(surveys, many=True).data
-        )
-
-        return Response({"data": surveys})
+        return Response({"data": {"user": user.username, "blogs": blogs}})
 
 
 # from rest_framework.views import APIView
@@ -508,7 +396,7 @@ class SurveyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 #             scores = int(serializer.validated_data["scores"])
 #             _user.scores -= scores
-#             if _user.scores <= 0:
+#             if _user.scores < 0:
 #                 data["error_scores"] = "you have fewer scores than you indicated."
 #             elif scores <= 0:
 #                 data["error_scores"] = "you cannot enter a negative value."

@@ -24,8 +24,14 @@ const questions = [
 
 async function load_tests() {
     let test_id = document.querySelector('input[name="test_id"]')?.value;
+    let post_id = document.querySelector('input[name="post_id"]')?.value;
+    console.log(post_id);
 
-    let url = window.location.protocol + '//' + window.location.host + '/api/v1/test/' + test_id + '/';
+    if (test_id) {
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/' + test_id + '/';
+    } else if (post_id) {
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/test_run/' + post_id + '/';
+    }
     let response = await fetch(url, {
         method: 'GET',
     })

@@ -4,20 +4,23 @@ from django.http import Http404
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 
-from surveys.models import Survey, SurveyTag, SurveyRadio, SurveyView, SurveyVote, DraftSurvey
+from surveys.models import Survey, SurveyTag, SurveyRadio, SurveyView, SurveyVote, DraftSurvey, DraftSurveyTag, DraftSurveyRadio
 from surveys.forms import SurveyForm, DraftSurveyForm
 from surveys.utils import get_views_and_comments_to_surveys, opening_access
 from comments.models import Comment, Answer
 
-from blogs.models import LevelAccess, Blog
-from users.models import Follow
+from blogs.models import LevelAccess, Blog, BlogFollow
 
 def index(request):
-    if not request.user.is_staff:
-        surveys_list = Survey.level_access_objects.filter(hide_to_user=False, hide_to_moderator=False, language=request.user.language).order_by('-date')
-    else:
-        surveys_list = Survey.level_access_objects.filter(language=request.user.language).order_by('-date')
-        
+    filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
+    if request.user.language == 'any':
+        del filter_kwargs['language']
+    if request.user.is_staff:
+        del filter_kwargs['hide_to_moderator']
+        del filter_kwargs['hide_to_user']
+
+    surveys_list = Survey.level_access_objects.filter(**filter_kwargs).order_by('-date')        
+
     paginator = Paginator(surveys_list, 5)
     page_number = request.GET.get("page")
     page_obj = get_views_and_comments_to_surveys(paginator.get_page(page_number))
@@ -29,17 +32,17 @@ def create(request, slug):
     blog = get_object_or_404(Blog, slug=slug, user=request.user.id)
     
     if DraftSurvey.objects.filter(user=request.user.id, blog=blog):
-        return redirect('drafts_survey:create', blog.slug)
+        return redirect('surveys:draft_survey_create', blog.slug)
     
     form = SurveyForm()
     
-    blog_levels = LevelAccess.objects.filter(blog=blog)
+    level_follows = LevelAccess.objects.filter(blog=blog)
     
     data = {
         'form': form, 
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
         'blog': blog,
-        'blog_levels': blog_levels,
+        'level_follows': level_follows,
     }
 
     return render(request, 'surveys/create.html', data)
@@ -55,10 +58,10 @@ def edit(request, slug):
     answers = SurveyRadio.objects.filter(survey=instance)
     form = SurveyForm(instance=instance)
     
-    blog_levels = LevelAccess.objects.filter(blog=blog)
+    level_follows = LevelAccess.objects.filter(blog=blog)
     
     data = {
-        'blog_levels': blog_levels,
+        'level_follows': level_follows,
         'answers': answers,
         'form': form,
         'tags': tags,
@@ -104,7 +107,7 @@ def show(request, slug):
     data = {
         'survey': survey,
         'follow_exists': bool(request.user != survey.user),
-        'follow': bool(not Follow.objects.filter(follower=request.user.id, user=survey.user)),
+        'follow': bool(not BlogFollow.objects.filter(follower=request.user.id, blog=survey.blog)),
         'tags': tags,
         'comments': comments,
         'answers': answers,
@@ -127,13 +130,13 @@ def draft_survey_create(request, slug):
         raise Http404()
     
     form = DraftSurveyForm(instance=draft_survey)
-    tags = SurveyTag.objects.filter(draft_survey=draft_survey)
+    tags = DraftSurveyTag.objects.filter(draft_survey=draft_survey)
     for tag in tags:
         tag.replaced = tag.title.replace(' ', '_')
         
-    answers = SurveyRadio.objects.filter(draft_survey=draft_survey)
+    answers = DraftSurveyRadio.objects.filter(draft_survey=draft_survey)
     
-    blog_levels = LevelAccess.objects.filter(blog=blog)
+    level_follows = LevelAccess.objects.filter(blog=blog)
     
     data = {
         'form': form,
@@ -141,7 +144,7 @@ def draft_survey_create(request, slug):
         'tags': tags,
         'answers': answers,
         'blog': blog,
-        'blog_levels': blog_levels,
+        'level_follows': level_follows,
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
     }
     

@@ -16,6 +16,8 @@ async function create_question (e) {
     let question_text = document.querySelector('textarea[name="question"]').value;
     let test_slug = document.querySelector('input[name="test_slug"]')?.value;
     let test_id = document.querySelector('input[name="id_test"]')?.value;
+    let post_slug = document.querySelector('input[name="post_slug"]')?.value;
+    let post_id = document.querySelector('input[name="id_post"]')?.value;
     let quest_slug = document.querySelector('input[name="quest_slug"]')?.value;
     let quest_id = document.querySelector('input[name="id_quest"]')?.value;
     let question_answers = document.querySelectorAll('.questions__item')
@@ -40,37 +42,54 @@ async function create_question (e) {
             ...data,
             test: test_id
         }
-        url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/question/cerate/';
-    } else {
-        url = window.location.protocol + '//' + window.location.host + '/api/v1/quests/' + quest_id + '/question/cerate/';
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/question/create/';
+    } else if (quest_id) {
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/quests/' + quest_id + '/question/create/';
+    } else if (post_id) {
+        data = {
+            ...data,
+            post: post_id
+        }
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/question/create/';
     }
-    
 
-    let response = await fetch(url, {
-        method: 'POST',
+    console.log(data);
+    
+    let config = {
         headers: {
             'X-CSRFToken': csrftoken,
-        },
-        body: data
-    })
-
-    get_g_token();
-
-    if (response.ok) {
-        let result = await response.json();
-        if (result.success) {
+        }
+    }
+    axios.post(url, data, config)
+    .then(function(r) {
+        if (r.data.success) {
             alert('saved successfully');
             if (test_id) {
-                window.location.replace(window.location.protocol + '//' + window.location.host + '/test/' + test_slug);
-            } else {
-                window.location.replace(window.location.protocol + '//' + window.location.host + '/quest/' + quest_slug);
+                window.location.replace(window.location.protocol + '//' + window.location.host + '/tests/' + test_slug);
+            } else if (quest_id) {
+                window.location.replace(window.location.protocol + '//' + window.location.host + '/quests/' + quest_slug);
+            } else if (post_id) {
+                window.location.replace(window.location.protocol + '//' + window.location.host + '/posts/show/' + post_slug);
             }
         } else {
-            alert(result.error);
+            alert(r.data.error);
         }
-    } else {
-        let result = await response.json();
-        alert(result.error);
-    }
-
+    }).catch(function(r) {
+        if (r.response.status == 400) {
+            if (r.response.data.data.answers_set) {
+                r.response.data.data.answers_set.forEach(err => {
+                    if (err.variant) {
+                        alert('Answer option: ' + err.variant);
+                    }
+                });
+            } 
+            if (r.response.data.data.question) {
+                alert('Question: ' + r.response.data.data.question);
+            }
+        } else { 
+            alert('Backend error');
+        }
+    }).finally(function() {
+        get_g_token();
+    });
 }

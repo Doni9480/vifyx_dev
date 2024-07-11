@@ -3,8 +3,11 @@ import os
 import requests
 import datetime
 import calendar
+import json
 
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django.http import Http404
 
 
 def my_custom_upload_to_func(instance, filename):
@@ -44,3 +47,28 @@ def add_months(sourcedate, months):
     month = month % 12 + 1
     day = min(sourcedate.day, calendar.monthrange(year, month)[1])
     return datetime.date(year, month, day)
+
+# Router is not working with types params in url_path
+def custom_get_object_or_404(Query, **kwargs):
+    try:
+        return get_object_or_404(Query, **kwargs)
+    except ValueError as e:
+        raise Http404()
+    
+def get_request_data(request_data):
+    if request_data.__class__.__name__ == 'QueryDict':
+        # QueryDict not working with nested serializers (AnswerSerilaizer)
+        data = request_data.dict()
+        try:
+            data["answers_set"] = json.loads(data["answers_set"])
+        except (json.JSONDecodeError, KeyError):
+            pass
+    else:
+        data = request_data
+    
+    return data
+
+def set_language_to_user(request):
+    if not hasattr(request.user, 'language'):
+        request.user.language = 'any'
+    return request

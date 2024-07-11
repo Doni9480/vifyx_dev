@@ -1,7 +1,7 @@
-let form_scores = document.querySelector('#form_scores');
+let form_scores_to_option = document.querySelector('#form_scores_to_option');
 
-if (form_scores) {
-    form_scores.addEventListener('submit', send_scores);
+if (form_scores_to_option) {
+    form_scores_to_option.addEventListener('submit', send_scores);
 }
 
 async function send_scores(e) {
@@ -17,15 +17,21 @@ async function send_scores(e) {
     });
 
     if (option_id) {
-        let scores = form_scores.querySelector('input[name="scores"]');
+        let scores = form_scores_to_option.querySelector('input[name="scores"]');
         let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
-        let csrftoken = form_scores.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        let csrftoken = form_scores_to_option.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        let survey_id = document.querySelector('input[name="survey_id"]')?.value;
+        let post_id = document.querySelector('input[name="post_id"]')?.value;
     
         let form_data = new FormData();
         form_data.append('scores', scores.value);
         form_data.append('g_recaptcha_response', g_recaptcha_response.value);
     
-        url = window.location.protocol + '//' + window.location.host + '/api/v1/surveys/send_scores_to_option/' + option_id + '/';
+        if (post_id) {
+            url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/send_scores_to_option/' + option_id + '/';
+        } else if (survey_id) {
+            url = window.location.protocol + '//' + window.location.host + '/api/v1/surveys/send_scores_to_option/' + option_id + '/';
+        }
     
         let response = await fetch(url, {
             method: 'POST',
@@ -46,16 +52,16 @@ async function send_scores(e) {
             }
     
             if (result.error_scores) {
-                form_scores.insertAdjacentHTML('afterbegin', `<div id="form-error" style="color: red;">${result.error_scores}</div>`);
+                form_scores_to_option.insertAdjacentHTML('afterbegin', `<div id="form-error" style="color: red;">${result.error_scores}</div>`);
             } else if (result.success) {
                 window.location.reload();
             } else {
                 if (result.recaptcha) {
-                    form_scores.insertAdjacentHTML('afterbegin', `<div id="form-error" style="color: red;">${result.recaptcha}</div>`);
+                    form_scores_to_option.insertAdjacentHTML('afterbegin', `<div id="form-error" style="color: red;">${result.recaptcha}</div>`);
                 }
 
                 if (result.scores) {
-                    form_scores.insertAdjacentHTML('afterbegin', `<div id="form-error" style="color: red;">${result.scores}</div>`);
+                    form_scores_to_option.insertAdjacentHTML('afterbegin', `<div id="form-error" style="color: red;">${result.scores}</div>`);
                 }
             }  
     

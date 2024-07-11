@@ -28,16 +28,17 @@ def get_views_and_comments_to_posts(posts):
 
 def opening_access(post, user):
     is_exp = False
-    if post.level_access > 1:
+    if post.level_access:
         if user.is_anonymous:
             return True
-        paid_follow = PaidFollow.objects.filter(blog=post.blog, follower=user.id)
-        if not (paid_follow and paid_follow[0].blog_access_level.level >= post.level_access):
+        paid_follow = PaidFollow.objects.filter(blog=post.blog, follower=user)
+        if not paid_follow or paid_follow[0].blog_access_level.level < post.level_access.level:
             is_exp = True
-            
-    if (post.hide_to_moderator or post.hide_to_user or int(post.language) != int(user.language)) and not user.is_staff:
+
+    if post.hide_to_moderator or post.hide_to_user and not user.is_staff:
         is_exp = True
-        
+    if post.language != user.language and user.language != 'any':
+        is_exp = True      
     if post.user == user:
         is_exp = False
         

@@ -1,4 +1,4 @@
-let username = document.querySelector('#username').innerHTML;
+let blog_id = document.querySelector('input[name="blog_id"]')?.value;
 
 let follow = document.querySelector('#follow');
 if (follow) {
@@ -8,7 +8,7 @@ if (follow) {
 async function send_follow(e) {
     e.preventDefault();
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/follow/' + username + '/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/blogs/' + blog_id + '/follow/';
 
     let response = await fetch(url, {
         method: 'POST',
@@ -36,7 +36,7 @@ if (unfollow) {
 async function send_unfollow(e) {
     e.preventDefault();
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/unfollow/' + username + '/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/blogs/' + blog_id + '/unfollow/';
 
     let response = await fetch(url, {
         method: 'POST',

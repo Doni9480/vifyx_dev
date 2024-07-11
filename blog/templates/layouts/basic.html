@@ -22,7 +22,7 @@
 	<link rel="stylesheet" href="{% static 'css/components/radio-checkbox.css' %}">
 
 	<!-- Font Icons -->
-	{% comment %} <link rel="stylesheet" href="{% static 'css/font-icons.css' %}"> {% endcomment %}
+	<link rel="stylesheet" href="{% static 'css/font-icons.css' %}">
 
 	<!-- Custom CSS -->
 	<link rel="stylesheet" href="{% static 'css/custom.css' %}">
@@ -233,40 +233,59 @@
 													</a>
 												</li>
 											{% endif %}
-											<li class="menu-item">
-												<a class="menu-link" href="{% url 'language' 'russian' %}">
-													<div style="font-size: 14px;">RUS</div>
-												</a>
-											</li>
-											<li class="menu-item slash-language">
-												<span>/</span>
-											</li>
-											<li class="menu-item">
-												<a class="menu-link" href="{% url 'language' 'english' %}">
-													<div style="font-size: 14px;">ENG</div>
-												</a>
-											</li>
 											<li class="menu-item" style="position: relative;">
 												<span>
 													<div id="notification" style="cursor: pointer;"><img width="24" src="{% static 'images/i-notification.png' %}"></div>
 												</span>
-												{% if request.notification_blogs %}
+												{% if request.notifications %}
 													<div class="dropmenu" style="display: none;">
 														<div class="read-it_btn"><div></div><button type="button" id="read_it" style="font-size: 12px;" class="btn btn-outline-secondary">Read it</a></div>
 														<div id="notifications">
-															{% for notification_blog in request.notification_blogs %}
-																<a class="fix_text fix_color" href="/{{ notification_blog.namespace }}/show/{{ notification_blog.slug }}/">
-																	<div class="d-flex justify-content-between mb-2">
-																		<div>
-																			<div style="font-weight: bold; font-size: 13px;">A new post has been created</div>
-																			<div>{{ notification_blog.title }}</div>
-																			<div>{{ notification_blog.date|date:"d M Y H:i" }}</div>
+															{% for notification in request.notifications %}
+																{% if notification.post %}
+																	<a class="fix_text fix_color" href="{% url 'posts:show' notification.post.slug %}">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">A new post has been created</div>
+																				<div>{{ notification.post.title }}</div>
+																				<div>{{ notification.post.date|date:"d M Y H:i" }}</div>
+																			</div>
+																			{% if notification.post.preview %}
+																				<div>
+																					<div><img width="100" src="{{ notification.post.preview.url }}"></div>
+																				</div>
+																			{% endif %}
 																		</div>
-																		<div>
-																			<div><img width="100" src="{{ notification_blog.preview.url }}"></div>
+																	</a>
+																{% elif notification.survey %}
+																	<a class="fix_text fix_color" href="{% url 'surveys:show' notification.survey.slug %}">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">A new survey has been created</div>
+																				<div>{{ notification.survey.title }}</div>
+																				<div>{{ notification.survey.date|date:"d M Y H:i" }}</div>
+																			</div>
+																			{% if notification.survey.preview %}
+																				<div>
+																					<div><img width="100" src="{{ notification.survey.preview.url }}"></div>
+																				</div>
+																			{% endif %}
 																		</div>
-																	</div>
-																</a>
+																	</a>
+																{% elif notification.donate %}
+																	<a class="fix_text fix_color" href="{% url 'blogs:donate_show' notification.donate.pk %}">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">A donation was sent to you</div>
+																				<div>{{ notification.donate.message|truncatechars:20 }}</div>
+																				<div>{{ notification.donate.date|date:"d M Y H:i" }}</div>
+																			</div>
+																			<div>
+																				<div><img width="100" src="{% static 'images/donate.png' %}"></div>
+																			</div>
+																		</div>
+																	</a>
+																{% endif %}
 															{% endfor %}
 														</div>
 														<div class="text-center"><a id="link_notifications" href="{% url 'notifications:index' %}">Notifications</a></div>

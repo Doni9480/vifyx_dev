@@ -19,9 +19,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from blog.views import main, redirect_main, best_blogs, language
+from blog.views import redirect_main
 from blog.admin import login, logout
-from blog.api.views import best_blogs as best_blogs_api
+
+from posts.views import main
+
+from blogs.views import best_blogs
+
+from scheduler.scheduler import TasksScheduler
 
 from .swagger import urlpatterns as urlpatterns_swagger
 
@@ -52,15 +57,16 @@ urlpatterns = [
     # path('api/v1/drafts/', include('drafts.api.urls')),
     # path('api/v1/drafts_survey/', include('drafts_survey.api.urls')),
     path('api/v1/comments/', include('comments.api.urls')),
-    path('api/v1/best_blogs/', best_blogs_api),
     path('api/v1/notifications/', include('notifications.api.urls')),
     path('api/v1/tests/', include('custom_tests.api.urls')),
     path('api/v1/quests/', include('quests.api.urls')),
-    
-    path('language/<str:language>/', language, name="language"),
 
     *urlpatterns_swagger
 ]
+
+# running scheduler
+scheduler = TasksScheduler()
+scheduler.run()
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

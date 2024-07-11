@@ -20,16 +20,17 @@ def get_views_and_comments_to_surveys(surveys):
 
 def opening_access(survey, user):
     is_exp = False
-    if survey.level_access > 1:
+    if survey.level_access:
         if user.is_anonymous:
             return True
-        paid_follow = PaidFollow.objects.filter(blog=survey.blog, follower=user.id)
-        if not (paid_follow and paid_follow[0].blog_access_level.level >= survey.level_access):
+        paid_follow = PaidFollow.objects.filter(blog=survey.blog, follower=user)
+        if not paid_follow or paid_follow[0].blog_access_level.level < survey.level_access.level:
             is_exp = True
-            
-    if (survey.hide_to_moderator or survey.hide_to_user or int(survey.language) != int(user.language)) and not user.is_staff:
+
+    if survey.hide_to_moderator or survey.hide_to_user and not user.is_staff:
         is_exp = True
-        
+    if survey.language != user.language and user.language != 'any':
+        is_exp = True      
     if survey.user == user:
         is_exp = False
         

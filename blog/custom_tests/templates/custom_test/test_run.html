@@ -85,9 +85,11 @@
                                 </ul>
                             </div><!-- .entry-meta end -->
                         </div>
-                        <div class="col-md-9">
-                            <p class="text-larger text-muted mt-3">{{ test.description }}</p>
-                        </div>
+                        {% if test.description %}
+                            <div class="col-md-9">
+                                <p class="text-larger text-muted mt-3">{{ test.description }}</p>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="clear"></div>
@@ -97,9 +99,11 @@
                     <!-- Entry Image
                     ============================================= -->
                     <div class="entry-image align-wide-xl my-3">
-                        <img src="{{ test.preview.url }}" width="500" height="281"
-                                allow="autoplay; fullscreen" allowfullscreen>
-                        <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                        {% if test.preview %}
+                            <img src="{{ test.preview.url }}" width="500" height="281"
+                                    allow="autoplay; fullscreen" allowfullscreen>
+                            <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                        {% endif %}
                     </div><!-- .entry-image end -->
 
                     <div class="clear"></div>
@@ -171,7 +175,6 @@
                         </div>
                     {% endif %} {% endcomment %}
                 </div><!-- .entry end -->
-
                 <div class="d-flex justify-content-between">
                     <div id="quiz-container">
                         <h2>Тест</h2>

@@ -103,6 +103,15 @@
               </div>
 
               <div class="col-12 form-group">
+                <label for="id_language">Language:</label>
+                <select id="id_language" class="form-select">
+                  <option disabled selected>Select a language</option>
+                  <option value="english">English</option>
+                  <option value="russian">Russian</option>
+                </select>
+              </div>
+
+              <div class="col-12 form-group">
                 <label>Tags:</label>
 
                 <div id="selected_tags">
@@ -127,16 +136,13 @@
 
               </div>
 
-              {% if blog_levels %}
+              {% if level_follows %}
                 <div class="col-12 form-group">
                   <label for="id_level_access">This is private blog. Select the access level:</label>
                   <select id="id_level_access" class="form-select">
-                    <option selected disabled>Select the access level</option>
-                    <option value="1">1 (free)</option>
-                    {% for blog_level in blog_levels %}
-                      {% if not blog_level.level == 1 %}
-                        <option value="{{ blog_level.level }}">{{ blog_level.level }} ({{ blog_level.scores }} scores)</option>
-                      {% endif %}
+                    <option value="0" selected>free</option>
+                    {% for level_follow in level_follows %}
+                      <option value="{{ level_follow.level }}">Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -162,6 +168,7 @@
   <script src="{% static 'js/functions.js' %}"></script>
   <script src="{% static 'js/tags.js' %}"></script>
   <script src="{% static 'js/answers.js' %}"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script src="{% static 'js/send_survey.js' %}"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script>

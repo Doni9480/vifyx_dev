@@ -126,6 +126,26 @@
               </div>
 
               <div class="col-12 form-group">
+                <label for="id_language">Language:</label>
+                <select id="id_language" class="form-select">
+                  {% if draft_survey.language == 'english' %}
+                    <option disabled>Select a language</option>
+                    <option value="english" selected>English</option>
+                    <option value="russian">Russian</option>
+                  {% elif draft_survey.language == 'russian' %}
+                    <option disabled>Select a language</option>
+                    <option value="english">English</option>
+                    <option value="russian" selected>Russian</option>
+                  {% else %}
+                    <option disabled selected>Select a language</option>
+                    <option value="english">English</option>
+                    <option value="russian">Russian</option>
+                  {% endif %}
+                  
+                </select>
+              </div>
+
+              <div class="col-12 form-group">
                 <label>Tags:</label>
 
                 <div id="selected_tags">
@@ -150,24 +170,16 @@
 
               </div>
 
-              {% if blog_levels %}
+              {% if level_follows %}
                 <div class="col-12 form-group">
                   <label for="id_level_access">This is private blog. Select the access level:</label>
                   <select id="id_level_access" class="form-select">
-                    <option selected disabled>Select the access level</option>
-                    {% for blog_level in blog_levels %}
-                      {% if blog_level.level == 1 %}
-                        {% if blog_level.level == draft_survey.level_access %}
-                          <option value="1" selected>1 (free)</option>
-                        {% else %}
-                          <option value="1">1 (free)</option>
-                        {% endif %}
+                    <option value="0" selected>free</option>
+                    {% for level_follow in level_follows %}
+                      {% if level_follow == draft_survey.level_access %}
+                        <option value="{{ level_follow.level }}" selected>Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
                       {% else %}
-                        {% if blog_level.level == draft_survey.level_access %}
-                          <option value="{{ blog_level.level }}" selected>{{ blog_level.level }} ({{ blog_level.scores }} scores)</option>
-                        {% else %}
-                          <option value="{{ blog_level.level }}">{{ blog_level.level }} ({{ blog_level.scores }} scores)</option>
-                        {% endif %}
+                        <option value="{{ level_follow.level }}">Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
                       {% endif %}
                     {% endfor %}
                   </select>

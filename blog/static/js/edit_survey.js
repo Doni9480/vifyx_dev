@@ -25,14 +25,12 @@ async function survey_edit(e) {
     answers_list = []
     answers.forEach(answer => {
         if (! answer.id) {
-            answers_list.push(answer.value);
-        }
-    });
-
-    let edit_answers = {};
-    answers.forEach(answer => {
-        if (answer.id) {
-            edit_answers[answer.id] = answer.value;
+            answers_list.push({'title': answer.value});
+        } else {
+            answers_list.push({
+                'title': answer.value,
+                'id': answer.id,
+            });
         }
     });
 
@@ -44,10 +42,8 @@ async function survey_edit(e) {
     form_data.append('description', description.value);
     form_data.append('content', content.value);
     if (answers_list) {
-        form_data.append('answers', answers_list);
-    }
-    if (edit_answers) {
-        form_data.append('edit_answers', JSON.stringify(edit_answers));
+        console.log(answers_list);
+        form_data.append('answers_set', JSON.stringify(answers_list));
     }
     if (level_access) {
         form_data.append('level_access', level_access.value);

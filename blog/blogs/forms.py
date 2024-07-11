@@ -9,4 +9,5 @@ class BlogForm(forms.ModelForm):
         fields = (
             'preview',
             'title',
+            'description'
         )

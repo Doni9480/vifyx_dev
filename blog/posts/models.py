@@ -9,7 +9,7 @@ from django.db.models.signals import post_delete
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 
-from blogs.models import Blog
+from blogs.models import Blog, LevelAccess
 
 from blog.managers import LevelAccessManager
 
@@ -18,27 +18,21 @@ class Post(models.Model):
     level_access_objects = LevelAccessManager()
     objects = models.Manager()
 
-    languages = (
-        ("1", "English"),
-        ("2", "Russian"),
-    )
-
     slug = models.SlugField(
         verbose_name="URL", max_length=255, unique=True, db_index=True
     )
     preview = models.ImageField(
-        verbose_name="Preview", upload_to="uploads/", null=False, blank=False
+        verbose_name="Preview", upload_to="uploads/", null=True, blank=True
     )
     title = models.CharField(
         verbose_name="Title", null=False, blank=False, max_length=255
     )
-    description = models.TextField(verbose_name="Description", null=False, blank=False)
-    content = models.TextField(verbose_name="Content", blank=True, null=True)
+    content = models.TextField(verbose_name="Content")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
     language = models.CharField(
-        verbose_name="Language", max_length=255, choices=languages
+        verbose_name="Language"
     )
     scores = models.IntegerField(verbose_name="scores", default=0)
     mouth_scores = models.IntegerField(verbose_name="Mouth scores", default=0)
@@ -46,8 +40,11 @@ class Post(models.Model):
     hide_to_moderator = models.BooleanField(
         default=False, verbose_name="Hide to moderator"
     )
+    add_survey = models.BooleanField(verbose_name="Add survey", default=False)
+    is_paid = models.BooleanField(verbose_name="Is paid", default=False)
+    amount = models.IntegerField(verbose_name="Amount", blank=True, null=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
-    level_access = models.IntegerField(verbose_name="Level access", default=0)
+    level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
 
     date = models.DateTimeField(auto_now_add=True)
 
@@ -71,6 +68,25 @@ class Post(models.Model):
             self.slug = "%s-%s" % (strtime[7:], title)
 
         super(Post, self).save()
+        
+
+class PostRadio(models.Model):
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, verbose_name='Post')
+    scores = models.IntegerField(verbose_name='scores', default=0)
+    title = models.CharField(max_length=255, verbose_name="title")
+    
+    class Meta:
+        verbose_name = 'Radio'
+        verbose_name_plural = 'Radios'
+        
+    def __str__(self):
+        return self.title
+
+
+class PostVote(models.Model):
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='User')
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, verbose_name='Post')
+    option = models.ForeignKey(to=PostRadio, on_delete=models.CASCADE, verbose_name='Option', null=True)
 
 
 class PostTag(models.Model):
@@ -98,6 +114,51 @@ class PostView(models.Model):
     class Meta:
         verbose_name = "View"
         verbose_name_plural = "Views"
+        
+
+class Question(models.Model):
+    question = models.TextField(
+        verbose_name="Question",
+    )
+    post = models.ForeignKey(
+        to=Post,
+        on_delete=models.CASCADE,
+        related_name='questions',
+        verbose_name="Тест",
+    )
+
+    def __str__(self):
+        return f"{self.question} - {self.post}"
+
+
+class QuestionAnswer(models.Model):
+    variant = models.CharField(
+        max_length=250,
+        verbose_name="Question answer",
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name="answers",
+        verbose_name="Question",
+    )
+    is_true = models.BooleanField(
+        verbose_name="True Answer",
+        default=False,
+    )
+
+    def __str__(self):
+        return f"{self.variant} - {self.question}: {self.is_true}"
+        
+
+class BuyPost(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
+    post = models.ForeignKey(
+        to=Post, on_delete=models.CASCADE, verbose_name="Post"
+    )
+    scores = models.IntegerField(verbose_name="scores")
 
 
 @receiver(post_delete, sender=Post)
@@ -122,22 +183,20 @@ def on_delete(sender, **kwargs):
 
 @cleanup.ignore
 class DraftPost(models.Model):
-    languages = (
-        ("1", "English"),
-        ("2", "Russian"),
-    )
-
     preview = models.ImageField(
         verbose_name="Preview", upload_to="uploads_drafts/", null=True, blank=True
     )
     title = models.CharField(
         verbose_name="Title", null=True, blank=True, max_length=255
     )
-    description = models.TextField(verbose_name="Description", null=True, blank=True)
     content = models.TextField(verbose_name="Content", blank=True, null=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
-    level_access = models.IntegerField(verbose_name="Level access", default=0)
-    user = models.OneToOneField(
+    level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
+    language = models.CharField(verbose_name='Language', null=True, blank=True)
+    add_survey = models.BooleanField(verbose_name="Add survey", default=False)
+    is_paid = models.BooleanField(verbose_name="Is paid", default=False)
+    amount = models.IntegerField(verbose_name="Amount", blank=True, null=True)
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
 
@@ -169,3 +228,18 @@ class DraftPostTag(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+class DraftPostRadio(models.Model):
+    draft_post = models.ForeignKey(
+        to=DraftPost, on_delete=models.CASCADE, verbose_name="Draft post"
+    )
+    title = models.CharField(max_length=255, verbose_name="title")
+
+    class Meta:
+        verbose_name = "Radio"
+        verbose_name_plural = "Radios"
+
+    def __str__(self):
+        return self.title
+    
