@@ -214,7 +214,7 @@ class PostViewSet(viewsets.ModelViewSet):
             if not view:
                 PostView.objects.create(
                     post=post,
-                    user=request.user.id
+                    user=request.user
                 )
             
         return Response({'success': 'ok.'})
