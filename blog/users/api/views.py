@@ -134,7 +134,7 @@ class UserViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/forbid_to_post")
+    @action(detail=True, methods=["post"], url_path=r"forbid_to_post/(?P<id>\d+)")
     @transaction.atomic
     def forbid_to_post(self, request, id=None):
         try:
@@ -153,7 +153,7 @@ class UserViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/forbid_to_comment")
+    @action(detail=True, methods=["post"], url_path=r"forbid_to_comment/(?P<id>\d+)")
     @transaction.atomic
     def forbid_to_comment(self, request, id=None):
         try:
@@ -168,7 +168,7 @@ class UserViewSet(viewsets.ViewSet):
         data["success"] = "ok."
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/allow_to_post")
+    @action(detail=True, methods=["post"], url_path=r"allow_to_post/(?P<id>\d+)")
     @transaction.atomic
     def allow_to_post(self, request, id=None):
         try:
@@ -187,7 +187,7 @@ class UserViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    @action(detail=True, methods=["post"], url_path=r"(?P<id>\d+)/allow_to_comment")
+    @action(detail=True, methods=["post"], url_path=r"allow_to_comment/(?P<id>\d+)")
     @transaction.atomic
     def allow_to_comment(self, request, id=None):
         try:
