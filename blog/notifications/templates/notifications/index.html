@@ -45,7 +45,9 @@
                                     <div class="entry col-12" id="element">
                                         <div class="grid-inner">
                                             <div class="entry-image">
-                                                <a href="{{ notification.post.preview.url }}" data-lightbox="image"><img src="{{ notification.post.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                                {% if notification.post.preview %}
+                                                    <a href="{{ notification.post.preview.url }}" data-lightbox="image"><img src="{{ notification.post.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                                {% endif %}
                                             </div>
                                             <div class="entry-title">
                                                 <h2><a href="{% url 'posts:show' notification.post.slug %}">{{ notification.post.title }}</a></h2>
@@ -66,7 +68,9 @@
                                     <div class="entry col-12" id="element">
                                         <div class="grid-inner">
                                             <div class="entry-image">
-                                                <a href="{{ notification.survey.preview.url }}" data-lightbox="image"><img src="{{ notification.survey.preview.url }}" alt="Standard survey with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                                {% if notification.survey.preview %}
+                                                <a href="{{ notification.survey.preview.url }}" data-lightbox="image"><img src="{{ notification.survey.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                            {% endif %}
                                             </div>
                                             <div class="entry-title">
                                                 <h2><a href="{% url 'surveys:show' notification.survey.slug %}">{{ notification.survey.title }}</a></h2>
