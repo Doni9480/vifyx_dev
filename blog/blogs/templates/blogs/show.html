@@ -160,7 +160,7 @@
                             <div class="mt-2" style="font-weight: bold;">{{ level_follow.title }}</div>
                             <div>{{ level_follow.description }}</div>
                             <div class="mt-2">{{ level_follow.scores }} scores (1 month)</div>
-                            {% if request.user != blog.user %}
+                            {% if request.user != blog.user and request.user.is_authenticated %}
                                 <form id="form_follow" method="POST" style="margin-bottom: 0;">
                                     {% if paid_follow.blog_access_level.level >= level_follow.level %}
                                         <button type="button" class="btn btn-warning mt-2" disabled>Subscribed</button>
