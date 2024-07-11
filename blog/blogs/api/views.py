@@ -71,7 +71,7 @@ class BlogViewSet(
     def show(self, request, id=None):
         blog = get_object_or_404(Blog, id=id)
         
-        filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
+        filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language, 'blog': blog}
         if request.user.language == 'any':
             del filter_kwargs['language']
         if request.user.is_staff:

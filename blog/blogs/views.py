@@ -31,7 +31,7 @@ def show(request, slug):
     blog = get_object_or_404(Blog, slug=slug)
     level_follows = LevelAccess.objects.filter(blog=blog)
     
-    filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
+    filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language, 'blog': blog}
     if request.user.language == 'any':
         del filter_kwargs['language']
     if request.user.is_staff:
