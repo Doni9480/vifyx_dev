@@ -128,16 +128,15 @@
                                     <div class="tab-pane fade" id="profile-alt" role="tabpanel" aria-labelledby="canvas-profile-tab" tabindex="0">
 
                                         {% if follows %}
-                                            <p>Follows on users</p>
+                                            <p>Follows on blogs</p>
 
                                             <table class="table table-bordered table-striped">
                                             <tbody>
                                                 {% for follow in follows %}
                                                     <tr>
                                                         <td style="vertical-align: middle;">
-                                                            <a href="{% url 'users:profile' follow.user.get_username %}">{{ follow.user }}</a>
+                                                            <a href="{% url 'blogs:show' follow.blog.slug %}">{{ follow.blog.title }}</a>
                                                         </td>
-                                                        <td><button type="button" value="{{ follow.user.get_username }}" id="username_unfollow" class="btn btn-danger">Unfollow</button></td>
                                                     </tr>
                                                 {% endfor %}
                                             </tbody>
