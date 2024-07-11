@@ -57,7 +57,7 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.blog.is_private and self.level_access:
-            self.level_access = 0
+            self.level_access = None
 
         if not self.slug:
             title = default_slugify(self.title)  # title on english language
