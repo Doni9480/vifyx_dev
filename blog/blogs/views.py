@@ -52,7 +52,7 @@ def show(request, slug):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     
-    get_notifications_blog_filter = NotificationBlog.objects.filter(follower=request.user, blog=blog)
+    get_notifications_blog_filter = NotificationBlog.objects.filter(follower=request.user.id, blog=blog)
     if get_notifications_blog_filter:
         get_notifications_blog = get_notifications_blog_filter.first()
     else:

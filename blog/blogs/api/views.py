@@ -298,7 +298,7 @@ class BlogViewSet(
 
         follow.first().delete()
         
-        notification_blog = NotificationBlog.objects.filter(blog=blog, follower=request.user, user=blog.user)
+        notification_blog = NotificationBlog.objects.filter(blog=blog, follower=request.user.id, user=blog.user)
         notification_blog.first().delete()
 
         return Response({"success": "ok."})
