@@ -238,7 +238,7 @@
                         </div>
                     {% endif %}
 
-                    {% if questions %}
+                    {% if questions and request.user == post.user %}
                         <div class="question-content">
                             <hr/>
                             {% for question in questions %}
