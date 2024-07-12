@@ -93,7 +93,7 @@
                     <div class="mb-4">{{ survey.content|safe }}</div>
 
                     <div class="entry-content mt-3">
-                        {% if vote %}
+                        {% if vote or not request.user.is_authenticated %}
                             {% for option in options %}
                                 <p id="id_options">
                                     <ol style="--length: 5" role="list" class="test-ol">
@@ -152,18 +152,6 @@
                                 <button class="btn btn-danger" style="inline-block;" type="submit">Delete</button>
                             </form>
                         </div>
-
-                        {% if survey.is_private %}
-                            <div id="checkbox-followers">
-                                {% if survey.is_public %}
-                                    <input id="checkbox-10" class="checkbox-style" name="checkbox-10" type="checkbox">
-                                {% else %}
-                                    <input id="checkbox-10" class="checkbox-style" name="checkbox-10" type="checkbox" checked>
-                                {% endif %}
-                                
-                                <label for="checkbox-10" class="checkbox-style-3-label">Only for followers</label>
-                            </div>
-                        {% endif %}
                     {% endif %}
                 </div><!-- .entry end -->
 

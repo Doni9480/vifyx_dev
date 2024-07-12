@@ -142,7 +142,7 @@
                             {{ post.content|safe }}
 
                             <div class="mb-5">
-                                {% if vote %}
+                                {% if vote or not request.user.is_authenticated %}
                                     {% for option in options %}
                                         <p id="id_options">
                                             <ol style="--length: 5" role="list" class="test-ol">
