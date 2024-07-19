@@ -105,7 +105,7 @@ async function register_send(e) {
 
     let form_data = JSON.stringify(obj);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/registration/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/register/account/';
 
     let response = await fetch(url, {
         method: 'POST',

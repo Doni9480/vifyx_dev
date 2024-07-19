@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
+from campaign.models import Campaign, Task
 from users.forms import ChangeEmailForm, PasswordChangeForm
 from users.models import User, TotalScore
 from users.utils import send_email_for_change, get_user
@@ -96,9 +97,18 @@ def change_password(request, uidb64, token):
 
 @login_required(login_url="/registration/login")
 def my_profile(request):
+    tasks = Task.objects.all()
+    print("********************************")
+    print(tasks)
     blogs = Blog.objects.filter(user=request.user)
 
+<<<<<<< Updated upstream
     follows = BlogFollow.objects.filter(follower=request.user)
+=======
+    companies = Campaign.objects.filter(user=request.user)
+
+    follows = Follow.objects.filter(follower=request.user)
+>>>>>>> Stashed changes
     paid_follows = PaidFollow.objects.filter(follower=request.user)
 
     total_scores = TotalScore.objects.all()[0]
@@ -106,7 +116,9 @@ def my_profile(request):
         total_scores.minute = "0" + str(total_scores.minute)
 
     data = {
+        "tasks": tasks,
         "blogs": blogs,
+        "companies": companies,
         "follows": follows,
         "paid_follows": paid_follows,
         "hour": total_scores.hour + request.user.utc_offset,

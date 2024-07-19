@@ -1,0 +1,257 @@
+{% extends "layouts/basic.html" %}
+{% load tz %}
+{% load static %}
+
+{% block title %}Test{% endblock %}
+
+{% block head %}
+<script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+<style>
+    .progress-bar-1 {
+        background-color: #e7e8e6;
+        padding: 10px 0;
+        border-radius: 10px;
+    }
+
+    .progress-bar-2 {
+        position: relative;
+        top: -20px;
+        background-color: #7cfc00;
+        padding: 10px 0;
+        border-radius: 10px;
+    }
+    
+    .progress-bar-3 {
+        position: relative;
+        top: -20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content
+============================================= -->
+<section id="content">
+    <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+    <div class="content-wrap" style="background-color: #EEE">
+        <div class="container">
+            <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
+                <!-- Single Post============================================= -->
+                <div class="entry">
+                    <!-- Entry Title============================================= -->
+                    <div class="entry-title">
+                        <h2 class="fix_text">{{ object.campaign.title }}</h2>
+                    </div><!-- .entry-title end -->
+                    <div class="row align-items-center mt-2">
+                        <div class="col-md-3">
+                            <!-- Entry Meta ============================================= -->
+                            <div>
+                                <ul class="d-flex flex-column entry-meta no-separator">
+                                    <li class="me-0"><i class="uil uil-schedule"></i> {{ object.campaign.created_at|date:"d M Y" }}</li>
+                                    <li class="me-0"><a href="{% url 'users:profile' object.campaign.user.username  %}"><i class="uil uil-user"></i> {{ object.campaign.user.username }}</a></li>
+                                    {% comment %} <li class="me-0"><i class="uil uil-comments-alt"></i> {{ count_comments }} Comments</li> {% endcomment %}
+                                    {% comment %} <li class="me-0"><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"> <span style="margin-left: 5.5px;">{{ count_views }}</span></li> {% endcomment %}
+                                </ul>
+                            </div><!-- .entry-meta end -->
+                        </div>
+                        <div class="col-md-9">
+                            <p class="text-larger text-muted mt-3">{{ object.campaign.description }}</p>
+                        </div>
+                    </div>
+
+                    <div class="clear"></div>
+
+                    <input type="hidden" name="test_id" value="{{ object.campaign.id }}">
+
+                    <!-- Entry Image
+                    ============================================= -->
+                    <div class="entry-image align-wide-xl my-3">
+                        <img src="{{ object.campaign.image.url }}" width="500" height="281"
+                                allow="autoplay; fullscreen" allowfullscreen>
+                        <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                    </div><!-- .entry-image end -->
+
+                    <div class="clear"></div>
+                </div><!-- .entry end -->
+
+
+                {% if request.user.is_authenticated %}
+                <div class="col-12">
+                    <span>
+                        {{object.deadline|default:""}}
+                    </span>
+                    <h3>
+                        {{object.name}}
+                    </h3>
+                    <p>
+                        {{object.description}}
+                    </p>
+                </div>
+                <div class="col-12">
+                    <a href="/api/v1/companies/tasks/{{object.pk}}/check_visit/">
+                        link to page
+                    </a>
+                    <br />
+                    <br />
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-primary run_task" data-pk="{{object.pk}}" >Run task</button>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</section><!-- #content end -->
+
+<script>
+    let get_run_task_btn = document.querySelector(".run_task")
+    get_run_task_btn.addEventListener("click", run_task_func)
+
+    async function run_task_func(e) {
+        e.preventDefault();
+
+        var task_id = get_run_task_btn.dataset.pk;
+        var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/companies/tasks/' + task_id + '/run/';
+
+        var response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+        });
+
+        if (response.ok) {
+            let res = await response.json();
+            get_run_task_btn.innerHTML = res.message
+            get_run_task_btn.style.pointerEvents = 'none'
+        } else {
+            alert('Backend error');
+        }
+    }
+</script>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/functions.js' %}"></script>
+    {% comment %} <script src="{% static 'js/delete_object.campaign.js' %}"></script>
+    <script src="{% static 'js/send_comment.js' %}"></script>
+    <script src="{% static 'js/send_scores_to_option.js' %}"></script>
+    <script src="{% static 'js/send_hide_object.campaign.js' %}"></script> {% endcomment %}
+    <script>
+        function delete_comment_block(id, username, text, date) {
+            return `
+                <li id="comment_${id}" class="comment byuser comment-author-_smcl_admin even thread-odd thread-alt depth-1"
+                    id="li-comment-2">
+
+                    <div id="comment-2" class="comment-wrap">
+
+
+                        <div class="comment-content d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="comment-author"><a href='/profile/${username}/'
+                                                                rel='external nofollow' class='url'>${username}</a><span>${date}</span>
+                                </div>
+
+                                <p>${text}</p>
+                            </div>
+                            <div>
+
+                                <div><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="delete_${document.querySelector('input[name="delete_comment_from"]').value}(${id})" id="${id}">delete</a></div>
+
+                                <div class="mt-4" style="text-align: right;"><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="form_reply(${id})">reply</a></div>
+                            </div>
+                        </div>
+
+                        <div class="clear"></div>
+
+                    </div>
+
+                    <ul class="children"></ul>
+
+                    <form class="row mt-2" method="post" style="display: none;" id="answerform">
+                        {% csrf_token %}
+                        <input type="hidden" value="${id}" name="comment_id">
+                        <div class="w-100"></div>
+
+                        <div class="col-12 form-group">
+                            <label for="answer">Answer</label>
+                            <textarea id="id_answer" name="answer" cols="58" rows="7" tabindex="4"
+                                        class="form-control"></textarea>
+                        </div>
+
+                        <div class="col-12 form-group">
+                            <button name="submit" type="submit" id="submit-button" tabindex="5" class="button button-3d m-0">
+                                Submit Answer
+                            </button>
+                        </div>
+                    </form>
+                </li>
+            `;
+        }
+
+        function delete_comment_block_user(id) {
+            return `
+                <div class="comment-content d-flex justify-content-between align-items-center">
+                    <span style="color: #adb5bd;">This comment was deleted by the user.</span>
+                    <div>
+                        <div class="mt-4" style="text-align: right;"><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="form_reply(${id})">reply</a></div>
+                    </div>
+                </div>
+
+                <div class="clear"></div>
+            `;
+        }
+
+    </script>
+    <script>
+        var deletes_task = document.querySelectorAll('.delete_task');
+        if (deletes_task) {
+            deletes_task.forEach(delete_task => {
+                delete_task.addEventListener('click', delete_task_func);
+            });
+        }
+    
+        async function delete_task_func(e) {
+            e.preventDefault();
+    
+            var task_id = e.target.id;
+            var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+            url = window.location.protocol + '//' + window.location.host + '/api/v1/companies/tasks/' + task_id + '/delete/';
+    
+            var response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                },
+            });
+    
+            if (response.ok) {
+                {% comment %} var result = await response.json(); {% endcomment %}
+        
+                {% comment %} if (result.success) { {% endcomment %}
+                window.location.reload();
+                {% comment %} } {% endcomment %}
+            } else {
+                alert('Backend error');
+            }
+        }
+    </script>
+    
+    {% comment %} <script>
+        function get_g_token() {
+            //global grecaptcha
+            grecaptcha.ready(function() {
+                grecaptcha.execute('{{recaptcha_site_key}}').then(function(token) {
+                    document.getElementById('g_recaptcha_response').value = token;
+                });
+            });
+        }
+
+        get_g_token();
+    </script> {% endcomment %}
+{% endblock %}

@@ -14,8 +14,14 @@ from .serializers import (
     TestVisibilitySerializer,
 )
 from django.db import transaction
+<<<<<<< Updated upstream
 from django.template.defaultfilters import slugify
 from blog.utils import get_request_data
+=======
+from django.template.defaultfilters import slugify as default_slugify
+
+from transliterate import slugify
+>>>>>>> Stashed changes
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
@@ -89,8 +95,18 @@ class TestViewSet(viewsets.ModelViewSet):
     # @transaction.atomic
     def create(self, request, *args, **kwargs):
         response_data = {}
+<<<<<<< Updated upstream
         data = get_request_data(request.data)
         data["slug"] = slugify(data["title"])
+=======
+        data = request.data
+        slug_title = default_slugify(data["title"])  # title on english language
+        if not slug_title:
+            slug_title = slugify(data["title"])  # title on russian language
+        data["slug"] = slug_title
+        print("_"*10)
+        print(data["slug"])
+>>>>>>> Stashed changes
         data["user"] = request.user.pk
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():

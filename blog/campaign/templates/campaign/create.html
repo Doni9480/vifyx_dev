@@ -1,0 +1,149 @@
+{% extends 'layouts/basic.html' %}
+{% load static %}
+
+{% block title %}Company creation{% endblock %}
+
+{% block head %}
+  <style>
+    .dz-success-mark,
+    .dz-error-mark,
+    .dz-size {
+      display: none;
+    }
+    
+    .dropzone .dz-preview .dz-image {
+      width: 640px;
+      height: 360px;
+    }
+    
+    .btn_input {
+      border: none;
+      font-size: 14px;
+      margin-left: 4px;
+    }
+    
+    .tag {
+      background-color: rgba(0, 255, 255, 0.5);
+      padding: 5px;
+      border-radius: 5px;
+      color: black;
+      display: inline-block;
+    }
+  </style>
+  <script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+{% endblock %}
+
+{% block content %}
+  <!--   Page Title
+=============================================   -->
+  <section class="page-title bg-transparent">
+    <div class="container">
+      <div class="page-title-row">
+        <div class="page-title-content">
+          <h1>Company creation</h1>
+        </div>
+
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="{% url 'main' %}">Home</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Company creation</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </section>
+  <!-- .page-title end -->
+
+  <!--   Content
+=============================================   -->
+  <section id="content">
+    <div class="content-wrap">
+      <div class="container">
+        <div class="accordion accordion-lg mx-auto mb-0" style="max-width: 1000px;">
+          <div>
+            <form class="row mb-0" id="form_post" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="col-12 form-group">
+                <label>Preview:</label>
+                <label for="id_preview" class="bg-dark p-3 text-center text-light" style="word-wrap: break-word; display: block;">
+                  <img src="{% static 'images/upload.svg' %}" width="20" height="20" />
+                  Select a file or drag it here for preview
+                  <div>
+
+                    {% if draft.preview %}
+                      <img style="object-fit: cover;" src="{{ draft.preview.url }}" id="ready_image" alt="" width="640" height="360" />
+                    {% else %}
+                      <img style="object-fit: cover; display: none;" src="#" id="ready_image" alt="" width="640" height="360" />
+                    {% endif %}
+                  </div>
+                </label>
+                <input type="file" id="id_preview" style="display: none;" name="image" />
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_title">Name:</label>
+                <input type="text" id="id_title" name="name" value="{{ form.name.value|default:"" }}" class="form-control" />
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_title">Prize fund:</label>
+                <input type="number" id="id_title" name="prize_fund" value="{{ form.prize_fund.value|default:"" }}" class="form-control" />
+              </div>
+
+              <div class="col-12 form-group">
+                <label for="id_description">Description:</label>
+                <textarea name="description" class="form-control" id="id_description" cols="30" rows="5">{{ form.description.value|default:"" }}</textarea>
+              </div>
+
+              <div class="col-12 form-group">
+                <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+                <div class="d-flex justify-content-between">
+                  <button id="id_save" type="submit" class="button button-3d button-black m-0">Save</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- #content end -->
+{% endblock %}
+
+{% block js %}
+  <script src="{% static 'js/functions.js' %}"></script>
+  <script src="{% static 'js/campaign/send_campaign.js' %}"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script>
+    function readURL(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader()
+    
+        reader.onload = function (e) {
+          $('#ready_image').attr('src', e.target.result);
+		  $('#ready_image').css('display', 'inline');
+        }
+    
+        reader.readAsDataURL(input.files[0])
+      }
+    }
+    
+    $('#id_preview').change(function () {
+      readURL(this)
+    })
+  </script>
+  <script>
+    function get_g_token() {
+      //global grecaptcha
+      grecaptcha.ready(function() {
+        grecaptcha.execute('{{recaptcha_site_key}}').then(function(token) {
+            document.getElementById('g_recaptcha_response').value = token;
+        });
+      });
+    }
+  
+    get_g_token();
+  </script>
+{% endblock %}

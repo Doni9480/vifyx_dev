@@ -48,6 +48,7 @@ urlpatterns = [
     path('notifications/', include(('notifications.urls', 'notifications'), namespace="notifications")),
     path('tests/', include('custom_tests.urls')),
     path('quests/', include('quests.urls')),
+    path('companies/', include('campaign.urls')),
     
     path('summernote/', include('django_summernote.urls')),
     path('api/v1/blogs/', include('blogs.api.urls')),
@@ -60,6 +61,12 @@ urlpatterns = [
     path('api/v1/notifications/', include('notifications.api.urls')),
     path('api/v1/tests/', include('custom_tests.api.urls')),
     path('api/v1/quests/', include('quests.api.urls')),
+<<<<<<< Updated upstream
+=======
+    path('api/v1/companies/', include('campaign.api.urls')),
+    
+    path('language/<str:language>/', language, name="language"),
+>>>>>>> Stashed changes
 
     *urlpatterns_swagger
 ]

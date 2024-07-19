@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'storages',
     # 'corsheaders',
+    'constance',
+    'constance.backends.database',
     
     'users',
     'surveys',
@@ -56,7 +58,16 @@ INSTALLED_APPS = [
     'comments',
     'blogs',
     'notifications',
+    'campaign',
 ]
+
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+CONSTANCE_CONFIG = {
+    'LIMIT_CAMPAIGN': (10, 'Лимит компаний для одного пользователя'),
+    'PERIODIC_SCORES': (100, 'Количество баллов периодического бонуса'),
+    'TWITTER_CONNECT_SCORES': (150, 'Баллы за подключения Twitter аккаунта'),
+    'TELEGRAM_WALLET_CONNECT_SCORES': (200, 'Баллы за подключение кошелька Telegram'),
+}
 
 MPTT_ADMIN_LEVEL_INDENT = 20
 
@@ -208,17 +219,17 @@ SUMMERNOTE_CONFIG = {
 
 # CORS_ORIGIN_WHITELIST = (
 #     'https://d991-185-138-186-34.ngrok-free.app',
-    # 'localhost:8080',
-    # 'localhost:8081',
-    # 'localhost',
-    # 'localhost:8888',
+#     # 'localhost:8080',
+#     # 'localhost:8081',
+#     # 'localhost',
+#     # 'localhost:8888',
 # )
 
 # CSRF_TRUSTED_ORIGINS = ['http://localhost:8080', 'https://d991-185-138-186-34.ngrok-free.app']
-# 
-CORS_ALLOW_ALL_ORIGINS = True
 
-SECURE_SSL_REDIRECT = False  # Перенаправление всех HTTP-запросов на HTTPS
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')  # Убедитесь, что Django знает, что находится за прокси, который использует HTTPS
-CSRF_COOKIE_SECURE = False  # Убедитесь, что CSRF куки используются только по HTTPS
-SESSION_COOKIE_SECURE = False  # Убедитесь, что сессионные куки используются только по HTTPS
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# SECURE_SSL_REDIRECT = True  # Перенаправление всех HTTP-запросов на HTTPS
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Убедитесь, что Django знает, что находится за прокси, который использует HTTPS
+# CSRF_COOKIE_SECURE = True  # Убедитесь, что CSRF куки используются только по HTTPS
+# SESSION_COOKIE_SECURE = True  # Убедитесь, что сессионные куки используются только по HTTPS
