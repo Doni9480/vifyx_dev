@@ -98,17 +98,9 @@ def change_password(request, uidb64, token):
 @login_required(login_url="/registration/login")
 def my_profile(request):
     tasks = Task.objects.all()
-    print("********************************")
-    print(tasks)
     blogs = Blog.objects.filter(user=request.user)
-
-<<<<<<< Updated upstream
     follows = BlogFollow.objects.filter(follower=request.user)
-=======
     companies = Campaign.objects.filter(user=request.user)
-
-    follows = Follow.objects.filter(follower=request.user)
->>>>>>> Stashed changes
     paid_follows = PaidFollow.objects.filter(follower=request.user)
 
     total_scores = TotalScore.objects.all()[0]

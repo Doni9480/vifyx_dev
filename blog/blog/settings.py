@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django_cleanup.apps.CleanupConfig',
     'django_apscheduler',
     'storages',
-    # 'corsheaders',
+    'corsheaders',
     'constance',
     'constance.backends.database',
     

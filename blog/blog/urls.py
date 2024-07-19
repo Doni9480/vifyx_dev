@@ -61,12 +61,9 @@ urlpatterns = [
     path('api/v1/notifications/', include('notifications.api.urls')),
     path('api/v1/tests/', include('custom_tests.api.urls')),
     path('api/v1/quests/', include('quests.api.urls')),
-<<<<<<< Updated upstream
-=======
     path('api/v1/companies/', include('campaign.api.urls')),
     
-    path('language/<str:language>/', language, name="language"),
->>>>>>> Stashed changes
+    # path('language/<str:language>/', language, name="language"),
 
     *urlpatterns_swagger
 ]
