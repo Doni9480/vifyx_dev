@@ -38,7 +38,7 @@ class Donate(models.Model):
 
 class LevelAccess(models.Model):
     preview = models.ImageField(verbose_name="Preview", upload_to="upload_follows/")
-    title = models.CharField(verbose_name="Title", unique=True)
+    title = models.CharField(max_length=255, verbose_name="Title", unique=True)
     description = models.TextField(verbose_name="Description")
     level = models.IntegerField(verbose_name="Level access")
     scores = models.IntegerField(verbose_name="Scores", default=0)

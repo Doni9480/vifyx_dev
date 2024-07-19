@@ -69,8 +69,11 @@ urlpatterns = [
 ]
 
 # running scheduler
-scheduler = TasksScheduler()
-scheduler.run()
+try:
+    scheduler = TasksScheduler()
+    scheduler.run()
+except Exception as e:
+    print(f"Scheduler error: {e}")
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

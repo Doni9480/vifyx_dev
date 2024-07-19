@@ -38,6 +38,7 @@ class Test(models.Model):
         blank=True,
     )
     language = models.CharField(
+        max_length=255,
         verbose_name="Language",
     )
     scores = models.IntegerField(

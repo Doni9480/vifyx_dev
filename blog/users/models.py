@@ -15,7 +15,7 @@ class User(AbstractUser):
     email = models.EmailField(verbose_name="email address", unique=True)
     first_name = models.CharField(max_length=255, verbose_name="First name", blank=False, null=False)
     scores = models.IntegerField(verbose_name="scores", default=0)
-    language = models.CharField(verbose_name="Language", default="any")
+    language = models.CharField(max_length=255, verbose_name="Language", default="any")
     unearned_scores = models.IntegerField(verbose_name="unearned scores", default=0)
     is_published_post = models.BooleanField(default=True)
     is_published_comment = models.BooleanField(default=True)
