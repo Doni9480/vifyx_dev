@@ -145,7 +145,7 @@ class DraftSerializer(serializers.ModelSerializer):
         )
         
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", None)
+        self.user = kwargs.pop("user", 1)
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
@@ -305,7 +305,7 @@ class PostSerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", None)
+        self.user = kwargs.pop("user", 1)
         self._instance = kwargs.get("instance", None)
         super().__init__(*args, **kwargs)
 

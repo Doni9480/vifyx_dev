@@ -9,6 +9,7 @@ async function send_post() {
     let preview = document.querySelector('input[name="image"]');
     let title = document.querySelector('input[name="name"]');
     let prize_fund = document.querySelector('input[name="prize_fund"]');
+    let slug = document.querySelector('input[name="slug"]');
     let description = document.querySelector('#id_description');
     // let content = document.querySelector('#id_content');
     // let tags = document.querySelectorAll('input[name="tags"]');
@@ -29,6 +30,9 @@ async function send_post() {
     }
     if (prize_fund) {
         form_data.append('prize_fund', prize_fund.value);
+    }
+    if (slug) {
+        form_data.append('slug', slug.value);
     }
     if (description) {
         form_data.append('description', description.value);

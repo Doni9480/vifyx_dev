@@ -4,6 +4,10 @@ from campaign.models import Campaign, Task, UserTaskChecking
 
 class CampaignSerializer(serializers.ModelSerializer):
     user = serializers.CharField(read_only=True)
+    slug = serializers.CharField(
+        help_text="Можете оставить пустым так как есть автогенерация на основе 'name'.(Опционально)",
+        required=False,
+    )
     
     class Meta:
         model = Campaign

@@ -1,7 +1,8 @@
 from typing import Iterable
 from django.db import models
 from django.conf import settings
-from django.utils.text import slugify
+from django.template.defaultfilters import slugify as default_slugify
+from transliterate import slugify
 from django.contrib.auth.models import User
 
 
@@ -16,7 +17,10 @@ class Campaign(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            slug_name = default_slugify(self.name) 
+            if not slug_name:
+                slug_name = slugify(self.name)
+            self.slug = slug_name
         super(Campaign, self).save(*args, **kwargs)
 
 
@@ -63,18 +67,13 @@ class UserTaskChecking(models.Model):
     
     
     def save(self, *args, **kwargs) -> None:
-        print("_-"*100)
         if self.is_completed:
             task_owner_scores = self.task.campaign.user.scores
-            print("owner:", task_owner_scores)
             if task_owner_scores >= self.points_awarded:
                 self.task.campaign.user.scores = task_owner_scores - self.points_awarded
-                print("owner:", self.task.campaign.user.scores)
                 self.task.campaign.user.save()
                 
                 total_points = self.user.scores
-                print("user:", total_points)
                 self.user.scores = total_points + self.points_awarded
-                print("user:", self.user.scores)
                 self.user.save()
         return super().save(*args, **kwargs)

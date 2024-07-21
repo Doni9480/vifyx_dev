@@ -195,14 +195,6 @@ class PostViewSet(viewsets.ModelViewSet):
         
         return Response({'data': post})
 
-    # @swagger_auto_schema(
-    #     operation_description="Создание",
-    #     request_body=openapi.Schema(
-    #         type=openapi.TYPE_OBJECT,
-    #         properties={}
-    #     ),
-    #     responses={200: None}
-    # )
     @action(detail=True, methods=["post"], url_path="<pk>/view/add")
     def add_view(self, request, pk=None):
         if request.user.is_authenticated:
@@ -268,11 +260,6 @@ class PostViewSet(viewsets.ModelViewSet):
         
         return Response(data)
 
-    # @swagger_auto_schema(
-    #     operation_description="Создание",
-    #     request_body=ScoresSerializer,
-    #     responses={200: ScoresSerializer},
-    # )
     @transaction.atomic
     @action(detail=True, methods=["post"], url_path="<pk>/send_scores")
     def send_scores(self, request, pk=None):
@@ -369,7 +356,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
-    @swagger_auto_schema(operation_description="Создание", responses={200: None})
+    # @swagger_auto_schema(operation_description="Создание", responses={200: None})
     @transaction.atomic
     @action(detail=True, methods=["patch"], url_path="<pk>/hide_post")
     def hide_post(self, request, pk=None):
@@ -387,7 +374,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
-    @swagger_auto_schema(operation_description="Создание", responses={200: None})
+    # @swagger_auto_schema(operation_description="Создание", responses={200: None})
     @transaction.atomic
     @action(detail=True, methods=["patch"], url_path="<pk>/show_post")
     def show_post(self, request, pk=None):
@@ -507,9 +494,7 @@ class DraftPostViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
-        if self.action in ["list", "retrieve"]:
-            return DraftSerializer if "post" in self.request.data else DraftSerializer
-        return DraftSerializer  # Default serializer
+        return DraftSerializer
 
     @swagger_auto_schema(
         operation_description="Создание",

@@ -88,6 +88,11 @@
               </div>
 
               <div class="col-12 form-group">
+                <label for="id_slug">Slug:</label>
+                <input type="text" id="id_slug" name="slug" value="{{ form.slug.value|default:"" }}" class="form-control" />
+              </div>
+
+              <div class="col-12 form-group">
                 <label for="id_title">Prize fund:</label>
                 <input type="number" id="id_title" name="prize_fund" value="{{ form.prize_fund.value|default:"" }}" class="form-control" />
               </div>

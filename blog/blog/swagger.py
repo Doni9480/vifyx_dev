@@ -13,7 +13,7 @@ class CustomSchema(OpenAPISchemaGenerator):
         if slugify_path and slugify_path.group(1) not in [
             # "comments",
             # "tests",
-            # "posts",
+            "posts",
             # "quests",
             # "surveys",
             # "blogs",
