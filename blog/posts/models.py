@@ -41,6 +41,7 @@ class Post(models.Model):
     hide_to_moderator = models.BooleanField(
         default=False, verbose_name="Hide to moderator"
     )
+    namespace = models.CharField(verbose_name='Namespace', default='posts')
     add_survey = models.BooleanField(verbose_name="Add survey", default=False)
     is_paid = models.BooleanField(verbose_name="Is paid", default=False)
     amount = models.IntegerField(verbose_name="Amount", blank=True, null=True)

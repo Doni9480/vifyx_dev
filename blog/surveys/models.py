@@ -21,6 +21,7 @@ class Survey(models.Model):
     content = models.TextField(verbose_name='Content', blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     language = models.CharField(max_length=255, verbose_name='Language')
+    namespace = models.CharField(verbose_name='Namespace', default='posts')
     hide_to_user = models.BooleanField(default=False, verbose_name='Hide to user')
     hide_to_moderator = models.BooleanField(default=False, verbose_name='Hide to moderator')
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)

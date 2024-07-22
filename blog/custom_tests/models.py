@@ -45,6 +45,7 @@ class Test(models.Model):
         verbose_name="scores",
         default=0,
     )
+    namespace = models.CharField(verbose_name='Namespace', default='posts')
     hide_to_moderator = models.BooleanField(
         default=False,
         verbose_name="Hide to moderator",

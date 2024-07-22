@@ -44,6 +44,7 @@ class Quest(models.Model):
         verbose_name="Scores",
         default=0,
     )
+    namespace = models.CharField(verbose_name='Namespace', default='quests')
     hide_to_user = models.BooleanField(
         default=False,
         verbose_name="Hide to User",
