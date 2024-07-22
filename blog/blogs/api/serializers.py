@@ -4,6 +4,10 @@ from posts.models import Post
 
 from surveys.models import Survey
 
+from quests.models import Quest
+
+from custom_tests.models import Test
+
 from blogs.models import Blog, LevelAccess, Donate
 
 from notifications.models import Notification
@@ -114,6 +118,32 @@ class SurveySerializer(serializers.ModelSerializer):
             "date",
             "user",
             "level_access",
+        )
+        
+
+class TestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = (
+            "id",
+            "preview",
+            "title",
+            "slug",
+            "date",
+            "user",
+        )
+        
+
+class QuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quest
+        fields = (
+            "id",
+            "preview",
+            "title",
+            "slug",
+            "date",
+            "user",
         )
 
 

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
@@ -10,12 +10,14 @@ from django.utils import timezone
 from django.http import Http404
 from django.urls import reverse
 
-from blog.utils import check_recaptcha, add_months
+from blog.utils import check_recaptcha, add_months, set_language_to_user
 from blogs.api.serializers import (
     BlogSerializer,
     PaySerializer,
     PostSerializer,
     SurveySerializer,
+    TestSerializer,
+    QuestSerializer,
     DonateSerializer,
     BlogShowSerializer,
     DonateShowSerializer,
@@ -24,9 +26,11 @@ from blogs.api.serializers import (
 from blogs.models import Blog, LevelAccess, PaidFollow, Donate, BlogFollow
 from blog.utils import get_request_data
 from posts.api.utils import get_views_and_comments_to_posts
-from posts.models import Post
+from posts.models import Post, PostTag
 from surveys.api.utils import get_views_and_comments_to_surveys
-from surveys.models import Survey, SurveyRadio
+from surveys.models import Survey, SurveyRadio, SurveyTag
+from custom_tests.models import Test
+from quests.models import Quest
 from users.models import User, Percent
 from notifications.models import NotificationBlog
 
@@ -41,6 +45,7 @@ class BlogViewSet(
 ):
     queryset = Blog.objects.all()
     permission_classes = [IsAuthenticated]
+    permission_classes_by_action = dict.fromkeys(['search', 'search_tags'], [AllowAny])
     parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
@@ -49,6 +54,14 @@ class BlogViewSet(
         if self.action == "donate":
             return DonateSerializer
         return BlogSerializer
+
+    def get_permissions(self):
+        try:
+            # return permission_classes depending on `action`
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            # action is not set return default permission_classes
+            return [permission() for permission in self.permission_classes]
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -302,3 +315,60 @@ class BlogViewSet(
         notification_blog.first().delete()
 
         return Response({"success": "ok."})
+    
+    @action(detail=True, methods=["get"], url_path=r"search/(?P<q>[^/.]+)")
+    def search(self, request, q):
+        request = set_language_to_user(request)
+        filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
+        if request.user.language == 'any':
+            del filter_kwargs['language']
+        if request.user.is_staff:
+            del filter_kwargs['hide_to_moderator']
+            del filter_kwargs['hide_to_user']
+            
+        posts = get_views_and_comments_to_posts(
+            PostSerializer(Post.level_access_objects.filter(title__contains=q, **filter_kwargs), many=True).data
+        )
+        surveys = get_views_and_comments_to_surveys(
+            SurveySerializer(Survey.level_access_objects.filter(title__contains=q, **filter_kwargs), many=True).data
+        )
+        tests = TestSerializer(Test.objects.filter(title__contains=q), many=True).data
+        quests = QuestSerializer(Quest.objects.filter(title__contains=q), many=True).data
+        
+        blog_list = posts + surveys + tests + quests
+        return Response({"data": blog_list})
+    
+    @action(detail=True, methods=['get'], url_path=r"search_tags/(?P<q>[^/.]+)")
+    def search_tags(self, request, q):
+        request = set_language_to_user(request)
+        filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
+        if request.user.language == 'any':
+            del filter_kwargs['language']
+        if request.user.is_staff:
+            del filter_kwargs['hide_to_moderator']
+            del filter_kwargs['hide_to_user']
+            
+        post_tags = PostTag.objects.filter(title=q)
+        posts = []
+        for tag in post_tags:
+            try:
+                posts.append(get_object_or_404(Post.level_access_objects, id=tag.post.pk, **filter_kwargs))
+            except Http404 as e:
+                pass
+        survey_tags = SurveyTag.objects.filter(title=q)
+        surveys = []
+        for tag in survey_tags:
+            try:
+                surveys.append(get_object_or_404(Survey.level_access_objects, id=tag.survey.pk))
+            except Http404 as e:
+                pass
+            
+        posts = get_views_and_comments_to_posts(
+            PostSerializer(posts, many=True).data
+        )
+        surveys = get_views_and_comments_to_surveys(
+            SurveySerializer(surveys, many=True).data
+        )
+        
+        blog_list = posts + surveys
+        return Response({"data": blog_list})

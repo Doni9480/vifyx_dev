@@ -24,7 +24,7 @@ from blog.admin import login, logout
 
 from posts.views import main
 
-from blogs.views import best_blogs
+from blogs.views import best_blogs, search, search_tags
 
 from scheduler.scheduler import TasksScheduler
 
@@ -38,6 +38,8 @@ urlpatterns = [
     path('', redirect_main, name="redirect_main"),
     path('main/', main, name="main"),
     path('best_blogs/', best_blogs, name="best_blogs"),
+    path('search/<str:q>/', search, name="search"),
+    path('search_tags/<str:q>/', search_tags, name="search_tags"),
 
     path('', include(('users.urls', 'users'), namespace="users")),
     path('blogs/', include(('blogs.urls', 'blogs'), namespace="blogs")),

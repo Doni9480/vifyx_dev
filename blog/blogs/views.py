@@ -6,12 +6,17 @@ from django.http import Http404
 
 from blogs.models import Blog, LevelAccess, PaidFollow, Donate
 from blogs.forms import BlogForm
+from blogs.utils import get_filter_kwargs
 
-from posts.models import Post
+from posts.models import Post, PostTag
 from posts.utils import get_views_and_comments_to_posts
 
-from surveys.models import Survey, SurveyRadio
+from surveys.models import Survey, SurveyRadio, SurveyTag
 from surveys.utils import get_views_and_comments_to_surveys
+
+from quests.models import Quest
+
+from custom_tests.models import Test
 
 from notifications.models import NotificationBlog
 
@@ -128,3 +133,44 @@ def create_level_follow(request, slug):
         "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
         "level": level,
     })
+    
+def search(request, q):
+    filter_kwargs = get_filter_kwargs(request)
+    
+    posts = get_views_and_comments_to_posts(Post.level_access_objects.filter(title__contains=q, **filter_kwargs))
+    surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(title__contains=q, **filter_kwargs))
+    tests = Test.objects.filter(title__contains=q)
+    quests = Quest.objects.filter(title__contains=q)
+    
+    blog_list = sorted(chain(posts, surveys, tests, quests), key=attrgetter("date"), reverse=True)
+    
+    paginator = Paginator(blog_list, 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'blogs/search.html', {'page_obj': page_obj, 'q': q})
+
+def search_tags(request, q):
+    filter_kwargs = get_filter_kwargs(request)
+    post_tags = PostTag.objects.filter(title=q)
+    posts = []
+    for tag in post_tags:
+        try:
+            posts.append(get_object_or_404(Post.level_access_objects, id=tag.post.pk, **filter_kwargs))
+        except Http404 as e:
+            pass
+    survey_tags = SurveyTag.objects.filter(title=q)
+    surveys = []
+    for tag in survey_tags:
+        try:
+            surveys.append(get_object_or_404(Survey.level_access_objects, id=tag.survey.pk))
+        except Http404 as e:
+            pass
+            
+    blog_list = sorted(chain(posts, surveys), key=attrgetter("date"), reverse=True)
+    
+    paginator = Paginator(blog_list, 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'blogs/search_tags.html', {'page_obj': page_obj, 'q': q})
