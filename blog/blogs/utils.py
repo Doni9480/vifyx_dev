@@ -41,3 +41,13 @@ def paid_follows():
                     paid_follow.save()
             else:
                 paid_follow.delete()
+
+def get_filter_kwargs(request):
+    filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
+    if request.user.language == 'any':
+        del filter_kwargs['language']
+    if request.user.is_staff:
+        del filter_kwargs['hide_to_moderator']
+        del filter_kwargs['hide_to_user']
+        
+    return filter_kwargs
