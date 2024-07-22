@@ -32,6 +32,7 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
     language = models.CharField(
+        max_length=255,
         verbose_name="Language"
     )
     scores = models.IntegerField(verbose_name="scores", default=0)
@@ -192,7 +193,7 @@ class DraftPost(models.Model):
     content = models.TextField(verbose_name="Content", blank=True, null=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
-    language = models.CharField(verbose_name='Language', null=True, blank=True)
+    language = models.CharField(max_length=255, verbose_name='Language', null=True, blank=True)
     add_survey = models.BooleanField(verbose_name="Add survey", default=False)
     is_paid = models.BooleanField(verbose_name="Is paid", default=False)
     amount = models.IntegerField(verbose_name="Amount", blank=True, null=True)

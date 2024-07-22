@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-hqu-11onn^q7+kr(vgxm@)zo!5&*9+%p+lmx#c*t&shlfev07=
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
+DEV_DB = True
 ALLOWED_HOSTS = ['*']
 APPEND_SLASH = True
 
@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'storages',
     # 'corsheaders',
+    'constance',
+    'constance.backends.database',
     
     'users',
     'surveys',
@@ -56,7 +58,16 @@ INSTALLED_APPS = [
     'comments',
     'blogs',
     'notifications',
+    'campaign',
 ]
+
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+CONSTANCE_CONFIG = {
+    'LIMIT_CAMPAIGN': (10, 'Лимит компаний для одного пользователя'),
+    'PERIODIC_SCORES': (100, 'Количество баллов периодического бонуса'),
+    'TWITTER_CONNECT_SCORES': (150, 'Баллы за подключения Twitter аккаунта'),
+    'TELEGRAM_WALLET_CONNECT_SCORES': (200, 'Баллы за подключение кошелька Telegram'),
+}
 
 MPTT_ADMIN_LEVEL_INDENT = 20
 
@@ -105,17 +116,24 @@ WSGI_APPLICATION = 'blog.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'blog',
-        'USER': 'user_blog',
-        'PASSWORD': 'jfjsdDJUIA',
-        'HOST': 'localhost',
-        'PORT': '5432',
+if DEV_DB:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'blog',
+            'USER': 'user_blog',
+            'PASSWORD': 'jfjsdDJUIA',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 
 # Password validation
@@ -208,17 +226,17 @@ SUMMERNOTE_CONFIG = {
 
 # CORS_ORIGIN_WHITELIST = (
 #     'https://d991-185-138-186-34.ngrok-free.app',
-    # 'localhost:8080',
-    # 'localhost:8081',
-    # 'localhost',
-    # 'localhost:8888',
+#     # 'localhost:8080',
+#     # 'localhost:8081',
+#     # 'localhost',
+#     # 'localhost:8888',
 # )
 
 # CSRF_TRUSTED_ORIGINS = ['http://localhost:8080', 'https://d991-185-138-186-34.ngrok-free.app']
-# 
-CORS_ALLOW_ALL_ORIGINS = True
 
-SECURE_SSL_REDIRECT = False  # Перенаправление всех HTTP-запросов на HTTPS
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')  # Убедитесь, что Django знает, что находится за прокси, который использует HTTPS
-CSRF_COOKIE_SECURE = False  # Убедитесь, что CSRF куки используются только по HTTPS
-SESSION_COOKIE_SECURE = False  # Убедитесь, что сессионные куки используются только по HTTPS
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# SECURE_SSL_REDIRECT = True  # Перенаправление всех HTTP-запросов на HTTPS
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Убедитесь, что Django знает, что находится за прокси, который использует HTTPS
+# CSRF_COOKIE_SECURE = True  # Убедитесь, что CSRF куки используются только по HTTPS
+# SESSION_COOKIE_SECURE = True  # Убедитесь, что сессионные куки используются только по HTTPS

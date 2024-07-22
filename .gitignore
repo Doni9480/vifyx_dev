@@ -129,7 +129,7 @@ Control.ca-list
 Control.ca-bundle 
 Control.system-ca-bundle 
 GitHub.sublime-settings 
-git_dev/
+
 # Visual Studio Code # 
 .vscode/* 
 .vscode/settings.json 
@@ -137,3 +137,6 @@ git_dev/
 .vscode/launch.json 
 .vscode/extensions.json 
 .history
+
+prod_git/
+dev_git/

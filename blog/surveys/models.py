@@ -20,7 +20,7 @@ class Survey(models.Model):
     description = models.TextField(verbose_name='Description', null=True, blank=True)
     content = models.TextField(verbose_name='Content', blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
-    language = models.CharField(verbose_name='Language')
+    language = models.CharField(max_length=255, verbose_name='Language')
     hide_to_user = models.BooleanField(default=False, verbose_name='Hide to user')
     hide_to_moderator = models.BooleanField(default=False, verbose_name='Hide to moderator')
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
@@ -102,7 +102,7 @@ class DraftSurvey(models.Model):
     )
     description = models.TextField(verbose_name="Description", null=True, blank=True)
     content = models.TextField(verbose_name="Content", blank=True, null=True)
-    language = models.CharField(verbose_name='Language', null=True, blank=True)
+    language = models.CharField(max_length=255, verbose_name='Language', null=True, blank=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
     user = models.ForeignKey(

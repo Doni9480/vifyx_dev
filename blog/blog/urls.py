@@ -48,25 +48,32 @@ urlpatterns = [
     path('notifications/', include(('notifications.urls', 'notifications'), namespace="notifications")),
     path('tests/', include('custom_tests.urls')),
     path('quests/', include('quests.urls')),
+    path('companies/', include('campaign.urls')),
     
     path('summernote/', include('django_summernote.urls')),
     path('api/v1/blogs/', include('blogs.api.urls')),
     path('api/v1/users/', include('users.api.urls')),
     path('api/v1/posts/', include('posts.api.urls')),
     path('api/v1/surveys/', include('surveys.api.urls')),
-    # path('api/v1/drafts/', include('drafts.api.urls')),
-    # path('api/v1/drafts_survey/', include('drafts_survey.api.urls')),
+    # # path('api/v1/drafts/', include('drafts.api.urls')),
+    # # path('api/v1/drafts_survey/', include('drafts_survey.api.urls')),
     path('api/v1/comments/', include('comments.api.urls')),
     path('api/v1/notifications/', include('notifications.api.urls')),
     path('api/v1/tests/', include('custom_tests.api.urls')),
     path('api/v1/quests/', include('quests.api.urls')),
+    path('api/v1/companies/', include('campaign.api.urls')),
+    
+    # path('language/<str:language>/', language, name="language"),
 
     *urlpatterns_swagger
 ]
 
 # running scheduler
-scheduler = TasksScheduler()
-scheduler.run()
+try:
+    scheduler = TasksScheduler()
+    scheduler.run()
+except Exception as e:
+    print(f"Scheduler error: {e}")
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
