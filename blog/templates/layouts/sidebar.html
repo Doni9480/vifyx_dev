@@ -1,5 +1,14 @@
-
 <div class="list-group">
     <a href="{% url 'posts:best_posts_mouth' %}" class="list-group-item list-group-item-action d-flex justify-content-between"><div>Best posts in 30 days</div><i class="bi-laptop"></i></a>
     <a href="{% url 'best_blogs' %}" class="list-group-item list-group-item-action d-flex justify-content-between"><div>Best blogs</div><i class="bi-credit-card"></i></a>
+    <form class="col-12 form-group mt-2" id="form_search">
+        <label for="id_search">Search:</label>
+        <input type="text" id="id_search" name="search" class="form-control mb-2" />
+        <input type="submit" class="btn btn-primary" value="Search">
+    </form>
+    <form class="col-12 form-group mt-2" id="form_search_tags">
+        <label for="id_search">Tags:</label>
+        <input type="text" id="id_search" name="search_tags" class="form-control mb-2" />
+        <input type="submit" class="btn btn-primary" value="Search">
+    </form>
 </div>
