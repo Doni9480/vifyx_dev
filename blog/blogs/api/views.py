@@ -327,13 +327,13 @@ class BlogViewSet(
             del filter_kwargs['hide_to_user']
             
         posts = get_views_and_comments_to_posts(
-            PostSerializer(Post.level_access_objects.filter(title__contains=q, **filter_kwargs), many=True).data
+            PostSerializer(Post.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
         surveys = get_views_and_comments_to_surveys(
-            SurveySerializer(Survey.level_access_objects.filter(title__contains=q, **filter_kwargs), many=True).data
+            SurveySerializer(Survey.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
-        tests = TestSerializer(Test.objects.filter(title__contains=q), many=True).data
-        quests = QuestSerializer(Quest.objects.filter(title__contains=q), many=True).data
+        tests = TestSerializer(Test.objects.filter(title__icontains=q), many=True).data
+        quests = QuestSerializer(Quest.objects.filter(title__icontains=q), many=True).data
         
         blog_list = posts + surveys + tests + quests
         return Response({"data": blog_list})
@@ -348,14 +348,14 @@ class BlogViewSet(
             del filter_kwargs['hide_to_moderator']
             del filter_kwargs['hide_to_user']
             
-        post_tags = PostTag.objects.filter(title=q)
+        post_tags = PostTag.objects.filter(title__iexact=q)
         posts = []
         for tag in post_tags:
             try:
                 posts.append(get_object_or_404(Post.level_access_objects, id=tag.post.pk, **filter_kwargs))
             except Http404 as e:
                 pass
-        survey_tags = SurveyTag.objects.filter(title=q)
+        survey_tags = SurveyTag.objects.filter(title__iexact=q)
         surveys = []
         for tag in survey_tags:
             try:

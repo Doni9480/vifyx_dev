@@ -14,9 +14,9 @@ from posts.utils import get_views_and_comments_to_posts
 from surveys.models import Survey, SurveyRadio, SurveyTag
 from surveys.utils import get_views_and_comments_to_surveys
 
-from quests.models import Quest
-
 from custom_tests.models import Test
+
+from quests.models import Quest
 
 from notifications.models import NotificationBlog
 
@@ -137,10 +137,10 @@ def create_level_follow(request, slug):
 def search(request, q):
     filter_kwargs = get_filter_kwargs(request)
     
-    posts = get_views_and_comments_to_posts(Post.level_access_objects.filter(title__contains=q, **filter_kwargs))
-    surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(title__contains=q, **filter_kwargs))
-    tests = Test.objects.filter(title__contains=q)
-    quests = Quest.objects.filter(title__contains=q)
+    posts = get_views_and_comments_to_posts(Post.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    tests = Test.objects.filter(title__icontains=q)
+    quests = Quest.objects.filter(title__icontains=q)
     
     blog_list = sorted(chain(posts, surveys, tests, quests), key=attrgetter("date"), reverse=True)
     
