@@ -1,9 +1,10 @@
 from typing import Iterable
 from django.db import models
+from django.db.models import Count
 from django.conf import settings
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
-from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 
 class Campaign(models.Model):
@@ -14,6 +15,7 @@ class Campaign(models.Model):
     image = models.ImageField(upload_to="campaign_images/", blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    is_active = models.BooleanField(default=True, verbose_name="is active")
     
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -65,13 +67,28 @@ class UserTaskChecking(models.Model):
     start_date = models.DateTimeField(auto_now_add=True, verbose_name="Start date")
     end_date = models.DateTimeField(null=True, blank=True, verbose_name="End date")
     
+    @staticmethod
+    def getting_statistics(campaign_id):
+        campaign_obj = Campaign.objects.get(id=campaign_id)
+        queryset = UserTaskChecking.objects.all()
+        statistics = {
+            "number_of_participants": queryset.distinct("user").count(),
+            "total_completed_tasks": queryset.filter(task__campaign__pk=campaign_id).count(),
+            "remaining_points": campaign_obj.prize_fund,
+        }
+        return statistics
+    
     
     def save(self, *args, **kwargs) -> None:
         if self.is_completed:
             task_owner_scores = self.task.campaign.user.scores
-            if task_owner_scores >= self.points_awarded:
+            campaign_owner_scores = self.task.campaign.prize_fund
+            if task_owner_scores >= self.points_awarded and task_owner_scores >= campaign_owner_scores:
                 self.task.campaign.user.scores = task_owner_scores - self.points_awarded
                 self.task.campaign.user.save()
+                
+                self.task.campaign.prize_fund = campaign_owner_scores - self.points_awarded
+                self.task.campaign.save()
                 
                 total_points = self.user.scores
                 self.user.scores = total_points + self.points_awarded

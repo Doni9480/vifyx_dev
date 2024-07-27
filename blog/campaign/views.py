@@ -1,6 +1,8 @@
+from typing import Any
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
-from .models import Campaign, Task
+from .models import Campaign, Task, UserTaskChecking
 from .forms import CampaignForm, TaskForm
 from django.conf import settings
 from django.urls import reverse
@@ -15,7 +17,11 @@ from django.urls import reverse
 class CampaignDetailView(DetailView):
     model = Campaign
     template_name = "campaign/detail.html"
-
+    
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context  = super().get_context_data(**kwargs)
+        context["statistics"] = UserTaskChecking.getting_statistics(self.object.pk)
+        return context
 
 def campaign_create(request):
     if request.method == "POST":

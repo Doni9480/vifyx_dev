@@ -27,16 +27,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def save(self):
-        languages_dict = {'en': 'english', 'ru': 'russian'}
-        if languages_dict.get(self.validated_data.get('language', ''), ''):
-            self.validated_data['language'] = languages_dict[self.validated_data['language']]
+        languages_dict = {"en": "english", "ru": "russian"}
+        if languages_dict.get(self.validated_data.get("language", ""), ""):
+            self.validated_data["language"] = languages_dict[
+                self.validated_data["language"]
+            ]
         else:
-            self.validated_data['language'] = 'any'
+            self.validated_data["language"] = "any"
         self.user = User(
             first_name=self.validated_data["first_name"],
             email=self.validated_data["email"],
             username=self.validated_data["username"],
-            language=self.validated_data['language'],
+            language=self.validated_data["language"],
         )
 
         self.user.set_password(self.validated_data["password"])
@@ -99,18 +101,30 @@ class BlogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Blog
         fields = (
-            'id',
-            'preview',
-            'title',
+            "id",
+            "preview",
+            "title",
         )
-        
+
 
 class PaidFollowSeriailzer(serializers.ModelSerializer):
     class Meta:
         model = PaidFollow
-        
+
 
 class BlogFollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogFollow
         fields = ("blog",)
+
+
+class TwitterAccountUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("twitter",)
+
+
+class TelegramWalletUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("telegram_wallet",)

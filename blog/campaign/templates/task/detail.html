@@ -95,9 +95,17 @@
                     <br />
                     <br />
                 </div>
+                
+                {% if request.user.pk != object.campaign.user.pk %}
                 <div class="col-12">
-                    <button class="btn btn-primary run_task" data-pk="{{object.pk}}" >Run task</button>
+                    {% if object.campaign.prize_fund < object.points_reward %}
+                        <p>
+                            Не доступно!
+                        </p>
+                    {% endif %}
+                    <button class="btn btn-primary run_task" {% if object.campaign.prize_fund < object.points_reward %}style="pointer-events: none;"{% endif %} data-pk="{{object.pk}}" >Run task</button>
                 </div>
+                {% endif %}
                 {% endif %}
 
             </div>

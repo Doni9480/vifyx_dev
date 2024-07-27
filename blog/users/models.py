@@ -21,6 +21,8 @@ class User(AbstractUser):
     is_published_comment = models.BooleanField(default=True)
     is_notificated = models.BooleanField(default=True, verbose_name="Is notificated")
     is_autorenewal = models.BooleanField(default=True, verbose_name="Is auto renewal")
+    twitter = models.CharField(max_length=255, null=True, blank=True, verbose_name="Twitter")
+    telegram_wallet = models.CharField(max_length=255, null=True, blank=True, verbose_name="Telegram wallet")
 
     REQUIRED_FIELDS = ["last_name"]
 

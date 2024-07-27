@@ -97,7 +97,7 @@ def change_password(request, uidb64, token):
 
 @login_required(login_url="/registration/login")
 def my_profile(request):
-    tasks = Task.objects.all()
+    tasks = Task.objects.filter(campaign__is_active=True)
     blogs = Blog.objects.filter(user=request.user)
     follows = BlogFollow.objects.filter(follower=request.user)
     companies = Campaign.objects.filter(user=request.user)

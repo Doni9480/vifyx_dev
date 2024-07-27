@@ -2,6 +2,7 @@ from django.utils.timezone import now
 from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 # from transliterate import slugify
 from django.utils.text import slugify
 from campaign.models import Campaign, Task, UserTaskChecking
@@ -33,12 +34,27 @@ class CampaignViewSet(viewsets.ModelViewSet):
         elif self.action == "list_task":
             return TaskSerializer
         return CampaignSerializer
+    
+    # def list(self, request, *args, **kwargs):
+    #     return super().list(request, *args, **kwargs)
 
     def create(self, request, **kwargs):
         count_campaigns = Campaign.objects.filter(user=request.user).count()
         if count_campaigns >= config.LIMIT_CAMPAIGN:
             return Response(
-                {"data": "Limit of campaigns reached."}, status=status.HTTP_403_FORBIDDEN
+                {"error": "Limit of campaigns reached."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if request.user.scores < int(request.data.get("prize_fund", 0)):
+            return Response(
+                {
+                    "error": {
+                        "prize_fund": [
+                            f"You don't have enough points. Your score: {request.user.scores}"
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -48,24 +64,9 @@ class CampaignViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
             )
         return Response(
-            {"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+            {"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
-        
-    # def partial_update(self, request, *args, **kwargs):
-    #     campaign = self.get_object()
-    #     if campaign.user != request.user:
-    #     serializer = CampaignSerializer(campaign, data=request.data, partial=True)
-    #     if serializer.is_valid():
-    #         name = serializer.validated_data.get("name", None)
-    #         serializer.save(slug=slugify(name))
-    #         return Response(
-    #             {"data": serializer.data, "success": "Campaign updated successfully."},
-    #             status=status.HTTP_200_OK,
-    #         )
-    #     return Response(
-    #         {"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
-    #     )
-    
+
     def partial_update(self, request, *args, **kwargs):
         if self.get_object().user != request.user:
             return Response(
@@ -73,7 +74,6 @@ class CampaignViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
         return super().partial_update(request, *args, **kwargs)
-        
 
     @action(detail=True, methods=["get"], url_path="<pk>/tasks")
     def list_task(self, request, pk=None):
@@ -82,7 +82,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
         return Response(
             {"data": serializer.data, "success": "ok."}, status=status.HTTP_200_OK
         )
-print(config.LIMIT_CAMPAIGN)
+
 
 class TaskTypesViewSet(
     mixins.CreateModelMixin,
@@ -114,7 +114,7 @@ class TaskTypesViewSet(
     # @action(detail=True, methods=['post'], url_path="task/create")
     def create(self, request):
         # campaign = self.get_object()
-        print("*"*100)
+        print("*" * 100)
         print(request.data)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -146,13 +146,20 @@ class TaskCheckingViewSet(viewsets.GenericViewSet):
 
     @action(detail=True, methods=["post"], url_path="tasks/<pk>/run")
     def task_running(self, request, pk=None):
-        object_set = UserTaskChecking.objects.filter(user=request.user, is_completed=False)
+        object_set = UserTaskChecking.objects.filter(
+            user=request.user, is_completed=False
+        )
         if len(object_set) >= 1:
-            return Response({"data": None, "message": "You already have a task started"}, status=status.HTTP_200_OK)
+            return Response(
+                {"data": None, "message": "You already have a task started"},
+                status=status.HTTP_200_OK,
+            )
         serializers = UserTaskCheckingSerializer(data=request.data)
         if serializers.is_valid():
             task_obj = get_object_or_404(Task, pk=pk)
-            serializers.save(user=request.user, task=task_obj, points_awarded=task_obj.points_reward)
+            serializers.save(
+                user=request.user, task=task_obj, points_awarded=task_obj.points_reward
+            )
             return Response(
                 {"data": serializers.data, "success": "ok.", "message": "Started!"},
                 status=status.HTTP_201_CREATED,
@@ -171,9 +178,11 @@ class TaskCheckingViewSet(viewsets.GenericViewSet):
             "wallet_connect",
             "twitter_connect",
             "periodic_bonus",
-            "content_usage"
+            "content_usage",
         ]:
-            obj_set = UserTaskChecking.objects.filter(user=request.user, is_completed=False)
+            obj_set = UserTaskChecking.objects.filter(
+                user=request.user, is_completed=False
+            )
             if len(obj_set) == 1:
                 obj_set[0].end_date = now()
                 obj_set[0].is_completed = True
@@ -182,4 +191,6 @@ class TaskCheckingViewSet(viewsets.GenericViewSet):
             return redirect(task_obj.external_link)
         else:
             return redirect(task_obj.external_link)
-        return Response({"error": "Task type is not supported."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "Task type is not supported."}, status=status.HTTP_400_BAD_REQUEST
+        )

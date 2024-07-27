@@ -249,6 +249,44 @@ class UserViewSet(viewsets.ViewSet):
         return Response(
             {"language": "Invalid language (valid: russian, english, any)"}, status=status.HTTP_400_BAD_REQUEST
         )
+        
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def connect_twitter_account(self, request):
+        serializer = TwitterAccountUserSerializer(data=request.data, instance=request.user, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"response": "You have successfully connected your Twitter account."})
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def disconnect_twitter_account(self, request):
+        user_obj = request.user
+        user_obj.twitter = None
+        user_obj.save()
+        return Response({"response": "You have successfully disconnected your Twitter account."})
+        
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def connect_telegram_wallet(self, request):
+        serializer = TelegramWalletUserSerializer(data=request.data, instance=request.user, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"response": "You have successfully connected your Telegram Wallet."})
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def disconnect_telegram_wallet(self, request):
+        user_obj = request.user
+        user_obj.telegram_wallet = None
+        user_obj.save()
+        return Response({"response": "You have successfully disconnected your Twitter account."})
+    
+    
 class ProfileViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 

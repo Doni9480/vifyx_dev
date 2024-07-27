@@ -74,15 +74,48 @@ async function send_post() {
         } else {
             form_errors = document.querySelectorAll('#form-error');
 
-            for (const form_error of form_errors) {
-                form_error.remove();
+            // for (const form_error of form_errors) {
+            //     form_error.remove();
+            // }
+
+            if (result.error.preview) {
+                preview.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.preview}</div>`);
             }
 
-            if (result.recaptcha) {
-                form_post.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.recaptcha}</div>`);
+            if (result.error.prize_fund) {
+                prize_fund.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.error.prize_fund}</div>`);
             }
+
+            // if (result.error.title) {
+            //     title.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.title}</div>`);
+            // }
+
+            // if (result.description) {
+            //     description.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.description}</div>`);
+            // }
+
+            // if (result.slug) {
+            //     url_blog.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.slug}</div>`);
+            // }
+
+            // if (result.is_private) {
+            //     is_private.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.is_private}</div>`);
+            // }
+
+            // if (result.recaptcha) {
+            //     form_post.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.recaptcha}</div>`);
+            // }
         }
     } else {
+        let result = await response.json();
+        
+        if (result.error.preview) {
+            preview.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.preview}</div>`);
+        }
+
+        if (result.error.prize_fund) {
+            prize_fund.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.error.prize_fund}</div>`);
+        }
         alert('Backend error');
     }
 }
