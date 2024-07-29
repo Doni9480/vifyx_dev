@@ -32,7 +32,7 @@ def main(request):
     filter_kwargs = get_filter_kwargs(request)
     q = request.GET.get('q')
     if q == 'tracked':
-        notification_blogs = NotificationBlog.objects.filter(follower=request.user)
+        notification_blogs = NotificationBlog.objects.filter(follower=request.user.id)
         blog_list = []
         for notification_blog in notification_blogs:
             filter_kwargs['blog'] = notification_blog.blog
