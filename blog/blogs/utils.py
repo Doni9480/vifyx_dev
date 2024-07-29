@@ -70,7 +70,7 @@ def get_blog_list(filter_kwargs):
     return blog_list
 
 def get_obj_set(obj_set, user):
-    hides = Hide.objects.filter(hider=user)
+    hides = Hide.objects.filter(hider=user.id)
     
     obj_set_dict = {}
     for obj in obj_set:
