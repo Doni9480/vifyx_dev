@@ -12,9 +12,9 @@ from custom_tests.views import (
 
 urlpatterns = [
     path("", list_tests, name="list_tests"),
-    path("create/", test_create, name="test_create"),
+    path("blog/<slug:slug>/create/", test_create, name="test_create"),
     path("<slug:slug>/edit/", test_edit, name="test_edit"),
-    path("<slug:slug>/", detail_test, name="detail_test"),
+    path("show/<slug:slug>/", detail_test, name="detail_test"),
     path("<slug:slug>/run/", test_run, name="test_run"),
     path(
         "<slug:slug>/create_question/",

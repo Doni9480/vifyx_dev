@@ -4,14 +4,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.db import transaction
 from django.http import Http404
-from django.http import QueryDict
 from users.models import User, Percent
-# from posts.api.serializers import DraftSerializer
-# from posts.models import Draft
-
-
-# from .serializers import DraftSerializer
-# from posts.models import DraftPost
+from blogs.utils import get_filter_kwargs, get_obj_set, get_category
 
 from .serializers import (
     PostSerializer,
@@ -21,8 +15,7 @@ from .serializers import (
     PostScoresSerializer,
     DraftSerializer,
     PostNoneSerializer,
-    QuestionSerializer,
-    PostTestDetailSerializer
+    SubcategorySerializer
 )
 
 from posts.models import (
@@ -31,31 +24,34 @@ from posts.models import (
     PostTag, 
     DraftPost, 
     BuyPost, 
-    Question, 
     PostRadio,
     PostVote,
+    Category,
+    Subcategory
 )
 
 from comments.models import Comment
 
 from blog.decorators import recaptcha_checking
-from blog.utils import custom_get_object_or_404 as get_object_or_404, get_request_data, set_language_to_user
+from blog.utils import custom_get_object_or_404 as get_object_or_404, get_request_data, set_language_to_user, MyPagination
 
 from blogs.models import Blog
 
 from users.models import User
-
-from posts.utils import opening_access
+from users.utils import opening_access
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+
+from operator import attrgetter
 
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     permission_classes_by_action = dict.fromkeys(['list', 'show', 'add_view', 'get_test'], [AllowAny])
     queryset = Post.objects.all()
+    pagination_class = MyPagination
     # parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
@@ -63,19 +59,15 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostShowSerializer
         elif self.action == "send_scores":
             return PostScoresSerializer
-        if self.action in ['question_create', 'question_update']:
-            return QuestionSerializer
-        if self.action == 'get_test':
-            return PostTestDetailSerializer
         if self.action not in ["add_view"]:
             return PostSerializer
         return PostNoneSerializer
     
     def get_queryset(self):
-        if self.action in ['question_update', 'question_destroy']:
-            return Question.objects.all()
         if self.action == 'send_scores_to_option':
             return PostRadio.objects.all()
+        if self.action == 'get_subcategory':
+            return Category.objects.all()    
         return super().get_queryset()
     
     def get_permissions(self):
@@ -107,7 +99,7 @@ class PostViewSet(viewsets.ModelViewSet):
     )
     @transaction.atomic
     def create(self, request):
-        _ = get_object_or_404(Blog, user=request.user.id, id=request.data['blog'])
+        _ = get_object_or_404(Blog, user=request.user.id, id=request.data.get('blog'))
 
         data = {}
         
@@ -141,15 +133,12 @@ class PostViewSet(viewsets.ModelViewSet):
     )
     def list(self, request):
         request = set_language_to_user(request)
-        filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
-        if request.user.language == 'any':
-            del filter_kwargs['language']
-        if request.user.is_staff:
-            del filter_kwargs['hide_to_moderator']
-            del filter_kwargs['hide_to_user']
+        filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'posts')
+        obj_set = get_obj_set(Post.level_access_objects.filter(**filter_kwargs).order_by('-date'), request.user)
+        obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
             
         posts = PostIndexSerializer(
-            Post.level_access_objects.filter(**filter_kwargs).order_by('-date')[:20], many=True
+            obj_set, many=True
         ).data
         for post in posts:
             post['user'] = User.objects.get(id=post['user']).username
@@ -159,9 +148,10 @@ class PostViewSet(viewsets.ModelViewSet):
             if post['language'] == "2":
                 post['language'] = "Russian"
             else:
-                post['language'] = "English" 
-        
-        return Response({'data': posts})
+                post['language'] = "English"
+                
+        page = self.paginate_queryset(posts)
+        return self.get_paginated_response(page) 
 
     @swagger_auto_schema(
         operation_description="Получение данных!",
@@ -433,59 +423,16 @@ class PostViewSet(viewsets.ModelViewSet):
         if not data:
             data['success'] = 'ok.'
         return Response(data)
-
-    @action(detail=True, methods=["post"], url_path="question/create")
-    @transaction.atomic
-    def question_create(self, request, *args, **kwargs):
-        data = {}
-        
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            valid = True
-            err = None
-            if valid:
-                data["success"] = "ok."
-                data["data"] = serializer.data
-                return Response(data, status=status.HTTP_201_CREATED)
-            else:
-                data["data"] = err
-        else:
-            data["data"] = serializer.errors
-        return Response(data, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=True, methods=["patch"], url_path="question/<pk>/update")
-    @transaction.atomic
-    def question_update(self, request, pk=None, *args, **kwargs):
-        instance = self.get_object()
-        if not request.user == instance.post.user:
-            raise Http404()
-        
-        serializer = self.get_serializer(instance=instance, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"data": serializer.data, "success": "ok."})
-        else:
-            return Response(
-                {"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
-            )
-            
-    @action(detail=True, methods=["delete"], url_path="question/<pk>/delete")
-    def question_destroy(self, request, pk=None, *args, **kwargs):
-        instance = self.get_object()
-        if not request.user == instance.post.user:
-            raise Http404()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")
+    def get_subcategory(self, request, pk=None):
+        category = self.get_object()
+        subcategories_set = Subcategory.objects.filter(category=category)
+        subcategories = SubcategorySerializer(
+            subcategories_set, many=True
+        ).data
+        return Response({"subcategories": subcategories})
     
-    @action(detail=True, methods=["get"], url_path="test_run/<pk>")
-    def get_test(self, request, pk=None, *args, **kwargs):
-        instance = self.get_object()
-        request = set_language_to_user(request)
-        if opening_access(instance, request.user):
-            raise Http404()
-        serializer = self.get_serializer(instance)
-        return Response({"data": serializer.data})
 
 # draft_post
 class DraftPostViewSet(viewsets.ModelViewSet):

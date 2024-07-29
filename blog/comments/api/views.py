@@ -73,9 +73,8 @@ class CommentViewSet(viewsets.GenericViewSet):
         serializer = CommentPostSerializer(data=request.data)
         data = func_is_valid_comment(request, serializer)
 
-        post = Post.objects.get(id=request.data.get("post"))
-        if opening_access(post, request.user):
-            raise Http404()
+        post = get_object_or_404(Post, id=request.data.get("post"))
+        opening_access(post, request.user)
 
         return Response(data)
 
@@ -83,8 +82,7 @@ class CommentViewSet(viewsets.GenericViewSet):
     def index_comment_post(self, request, pk):
         post = get_object_or_404(Post, id=pk)
         request = set_language_to_user(request)
-        if opening_access(post, request.user):
-            raise Http404()
+        opening_access(post, request.user)
 
         comments = get_list_or_404(Comment, post=post)
         comments = CommentPostShowSerializer(comments, many=True).data
@@ -103,8 +101,7 @@ class CommentViewSet(viewsets.GenericViewSet):
         post = get_object_or_404(Post, id=comment.post.pk)
 
         request = set_language_to_user(request)
-        if opening_access(post, request.user):
-            raise Http404()
+        opening_access(post, request.user)
 
         comment = CommentPostShowSerializer(comment).data
 
@@ -121,9 +118,8 @@ class CommentViewSet(viewsets.GenericViewSet):
         serializer = CommentSurveySerializer(data=request.data)
         data = func_is_valid_comment(request, serializer)
 
-        survey = Survey.objects.get(id=request.data.get("survey"))
-        if opening_access(survey, request.user):
-            raise Http404()
+        survey = get_object_or_404(Survey, id=request.data.get("survey"))
+        opening_access(survey, request.user)
 
         return Response(data)
 
@@ -131,8 +127,7 @@ class CommentViewSet(viewsets.GenericViewSet):
     def index_comment_survey(self, request, pk):
         survey = get_object_or_404(Survey, id=pk)
         request = set_language_to_user(request)
-        if opening_access(survey, request.user):
-            raise Http404()
+        opening_access(survey, request.user)
 
         comments = get_list_or_404(Comment, survey=survey)
         comments = CommentSurveyShowSerializer(comments, many=True).data
@@ -150,11 +145,9 @@ class CommentViewSet(viewsets.GenericViewSet):
         comment = get_object_or_404(Comment, id=pk)
         survey = get_object_or_404(Survey, id=comment.survey.pk)
 
-
         request = set_language_to_user(request)
-        if opening_access(survey, request.user):
-            raise Http404()
-
+        opening_access(survey, request.user)
+        
         comment = CommentSurveyShowSerializer(comment).data
         if comment["delete_from_user"]:
             comment["text"] = "This comment was deleted by the user."
@@ -167,36 +160,28 @@ class CommentViewSet(viewsets.GenericViewSet):
     @transaction.atomic
     def create_comment_to_test(self, request, *args, **kwargs):
         serializer = CommentTestSerializer(data=request.data)
+        test = get_object_or_404(Test.objects_show, id=request.data.get('test'))
+        opening_access(test, request.user)
         data = func_is_valid_comment(request, serializer)
         return Response(data)
 
     @action(detail=False, methods=["get"], url_path="index/test/<pk>")
     def index_comment_test(self, request, pk):
         request = set_language_to_user(request)
-        try:
-            # if not request.user.is_staff:
-            #     if not Test.objects.filter(
-            #         id=pk,
-            #         hide_to_user=False,
-            #         hide_to_moderator=False,
-            #         language=request.user.language,
-            #     ):
-            #         raise Exception()
+        test = get_object_or_404(Test.objects_show, id=pk)
+        opening_access(test, request.user)
 
-            comments = Comment.objects.filter(test=pk)
-            if not comments:
-                raise Exception()
-
-            comments = CommentTestShowSerializer(comments, many=True).data
-
-            for comment in comments:
-                comment["user"] = User.objects.get(id=comment["user"]).username
-
-                if comment["delete_from_user"]:
-                    comment["text"] = "This comment was deleted by the user."
-        except Exception:
+        comments = Comment.objects.filter(test=pk)
+        if not comments:
             raise Http404()
 
+        comments = CommentTestShowSerializer(comments, many=True).data
+
+        for comment in comments:
+            comment["user"] = User.objects.get(id=comment["user"]).username
+
+            if comment["delete_from_user"]:
+                comment["text"] = "This comment was deleted by the user."
         return Response({"data": comments})
 
     @action(detail=True, methods=["get"], url_path="show/test/<pk>")
@@ -204,14 +189,8 @@ class CommentViewSet(viewsets.GenericViewSet):
         request = set_language_to_user(request)
         try:
             comment = get_object_or_404(Comment, id=pk)
-            if not request.user.is_staff:
-                if not Test.objects.filter(
-                    id=comment.post,
-                    hide_to_user=False,
-                    hide_to_moderator=False,
-                    language=request.user.language,
-                ):
-                    raise Exception()
+            test = get_object_or_404(Test.objects_show, id=comment.test)
+            opening_access(test, request.user)
 
             comment = CommentTestShowSerializer(comment).data
 
@@ -229,6 +208,8 @@ class CommentViewSet(viewsets.GenericViewSet):
     @transaction.atomic
     def create_comment_to_quest(self, request):
         serializer = CommentQuestSerializer(data=request.data)
+        quest = get_object_or_404(Quest, id=request.data.get('quest'))
+        opening_access(quest, request.user)
         data = func_is_valid_comment(request, serializer)
         return Response(data)
 
@@ -236,15 +217,9 @@ class CommentViewSet(viewsets.GenericViewSet):
     def index_comment_quest(self, request, pk):
         request = set_language_to_user(request)
         try:
-            if not request.user.is_staff:
-                if not Quest.objects.filter(
-                    id=pk,
-                    hide_to_user=False,
-                    hide_to_moderator=False,
-                    language=request.user.language,
-                ):
-                    raise Exception()
-
+            quest = get_object_or_404(Quest, id=pk)
+            opening_access(quest, request.user)
+            
             comments = Comment.objects.filter(post=pk)
             if not comments:
                 raise Exception()
@@ -266,14 +241,8 @@ class CommentViewSet(viewsets.GenericViewSet):
         request = set_language_to_user(request)
         try:
             comment = get_object_or_404(Comment, id=pk)
-            if not request.user.is_staff:
-                if not Quest.objects.filter(
-                    id=comment.post,
-                    hide_to_user=False,
-                    hide_to_moderator=False,
-                    language=request.user.language,
-                ):
-                    raise Exception()
+            quest = get_object_or_404(Quest, id=comment.quest)
+            opening_access(quest, request.user)
 
             comment = CommentQuestShowSerializer(comment).data
 
@@ -290,18 +259,8 @@ class CommentViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=["delete"], url_path="delete/<pk>")
     @transaction.atomic
     def delete_from_post(self, request, pk):
-        try:
-            comment = get_object_or_404(Comment, id=pk)
-        except Exception:
-            raise Http404()
-
-        if comment.post:
-            e = comment.post
-        elif comment.survey:
-            e = comment.survey
-        else:
-            e = None
-
+        comment = get_object_or_404(Comment, id=pk)
+        e = comment.test or comment.quest or comment.post or comment.survey
         if e is not None:
             is_exp = opening_access(e, request.user)
             if (
@@ -320,18 +279,10 @@ class CommentViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=["post"], url_path="delete_from_user/<pk>")
     @transaction.atomic
     def delete_from_user(self, request, pk):
-        try:
-            comment = get_object_or_404(Comment, id=pk)
-            if comment.delete_from_user:
-                raise Exception()
-        except Exception:
+        comment = get_object_or_404(Comment, id=pk)
+        if comment.delete_from_user:
             raise Http404()
-
-        if comment.post:
-            e = comment.post
-        elif comment.survey:
-            e = comment.survey
-
+        e = comment.test or comment.quest or comment.post or comment.survey
         is_exp = opening_access(e, request.user)
         if (
             comment.user != request.user
@@ -377,10 +328,9 @@ class AnswerViewSet(viewsets.GenericViewSet):
     def create_answer_to_post(self, request):
         serializer = AnswerPostSerializer(data=request.data)
         data = func_is_valid_answer(request, serializer)
-
-        post = Post.objects.get(id=request.data.get("post"))
-        if opening_access(post, request.user):
-            raise Http404()
+        
+        post = get_object_or_404(Post, id=request.data.get("post"))
+        opening_access(post, request.user)
 
         return Response(data)
 
@@ -390,29 +340,30 @@ class AnswerViewSet(viewsets.GenericViewSet):
         serializer = AnswerSurveySerializer(data=request.data)
         data = func_is_valid_answer(request, serializer)
 
-        survey = Survey.objects.get(id=request.data.get("survey"))
-        if opening_access(survey, request.user):
-            raise Http404()
+        survey = get_object_or_404(Survey, id=request.data.get("survey"))
+        opening_access(survey, request.user)
 
         return Response(data)
 
     @action(detail=True, methods=["post"], url_path="create/test")
     @transaction.atomic
     def create_answer_to_test(self, request):
-        data = {}
-
         serializer = AnswerTestSerializer(data=request.data)
         data = func_is_valid_answer(request, serializer)
+
+        test = get_object_or_404(Test.objects_show, id=request.data.get("test"))
+        opening_access(test, request.user)
 
         return Response(data)
 
     @action(detail=True, methods=["post"], url_path="create/quest")
     @transaction.atomic
     def create_answer_to_quest(self, request):
-        data = {}
-
         serializer = AnswerQuestSerializer(data=request.data)
         data = func_is_valid_answer(request, serializer)
+        
+        quest = get_object_or_404(Quest, id=request.data.get("quest"))
+        opening_access(quest, request.user)
 
         return Response(data)
 
@@ -426,8 +377,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             answers = AnswerPostShowSerializer(answers, many=True).data
 
         request = set_language_to_user(request)
-        if opening_access(e, request.user):
-            raise Http404()
+        opening_access(e, request.user)
 
         for answer in answers:
             answer["user"] = User.objects.get(id=answer["user"]).username
@@ -444,8 +394,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             answers = AnswerSurveyShowSerializer(answers, many=True).data
 
         request = set_language_to_user(request)
-        if opening_access(e, request.user):
-            raise Http404()
+        opening_access(e, request.user)
 
         for answer in answers:
             answer["user"] = User.objects.get(id=answer["user"]).username
@@ -461,8 +410,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             e = get_object_or_404(Test, id=comment.test.pk)
             answers = AnswerTestShowSerializer(answers, many=True).data
 
-        # if opening_access(e, request.user):
-        #     raise Http404()
+        opening_access(e, request.user)
 
         for answer in answers:
             answer["user"] = User.objects.get(id=answer["user"]).username
@@ -478,8 +426,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             e = get_object_or_404(Quest, id=comment.quest.pk)
             answers = AnswerQuestShowSerializer(answers, many=True).data
 
-        # if opening_access(e, request.user):
-        #     raise Http404()
+        opening_access(e, request.user)
 
         for answer in answers:
             answer["user"] = User.objects.get(id=answer["user"]).username
@@ -495,8 +442,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             answer = AnswerPostShowSerializer(answer).data
 
         request = set_language_to_user(request)
-        if opening_access(e, request.user):
-            raise Http404()
+        opening_access(e, request.user)
 
         answer["user"] = User.objects.get(id=answer["user"]).username
 
@@ -511,8 +457,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             answer = AnswerSurveyShowSerializer(answer).data
 
         request = set_language_to_user(request)
-        if opening_access(e, request.user):
-            raise Http404()
+        opening_access(e, request.user)
 
         answer["user"] = User.objects.get(id=answer["user"]).username
 
@@ -526,8 +471,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             e = get_object_or_404(Post, id=answer.test.pk)
             answer = AnswerTestShowSerializer(answer).data
 
-        # if opening_access(e, request.user):
-        #     raise Http404()
+        opening_access(e, request.user)
 
         answer["user"] = User.objects.get(id=answer["user"]).username
 
@@ -541,8 +485,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
             e = get_object_or_404(Quest, id=answer.quest.pk)
             answer = AnswerQuestShowSerializer(answer).data
 
-        # if opening_access(e, request.user):
-        #     raise Http404()
+        opening_access(e, request.user)
 
         answer["user"] = User.objects.get(id=answer["user"]).username
 
@@ -552,15 +495,9 @@ class AnswerViewSet(viewsets.GenericViewSet):
     @transaction.atomic
     def delete_answer(self, request, pk):
         if request.method == "DELETE":
-            try:
-                answer = get_object_or_404(Answer, pk=pk)
-            except Exception:
-                raise Http404()
+            answer = get_object_or_404(Answer, pk=pk)
 
-            if answer.comment.post:
-                e = answer.comment.post
-            elif answer.comment.survey:
-                e = answer.comment.survey
+            e = answer.comment.post or answer.comment.survey or answer.comment.test or answer.comment.quest
 
             is_exp = opening_access(e, request.user)
             if (

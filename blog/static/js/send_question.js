@@ -1,11 +1,9 @@
 let form_question = document.querySelector('#form_question');
-
 form_question.addEventListener('submit', form_prevent_default);
 
 async function form_prevent_default(e) {
     e.preventDefault();
 }
-
 let save_btn = document.getElementById('id_save');
 save_btn.addEventListener('click', create_question);
 async function create_question (e) {
@@ -48,12 +46,11 @@ async function create_question (e) {
     } else if (post_id) {
         data = {
             ...data,
+            text: question_text,
             post: post_id
         }
         url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/question/create/';
     }
-
-    console.log(data);
     
     let config = {
         headers: {
@@ -64,12 +61,12 @@ async function create_question (e) {
     .then(function(r) {
         if (r.data.success) {
             alert('saved successfully');
-            if (test_id) {
+            if (post_id) {
+                window.location.replace(window.location.protocol + '//' + window.location.host + '/posts/show/' + post_slug);
+            } else if (test_id) {
                 window.location.replace(window.location.protocol + '//' + window.location.host + '/tests/' + test_slug);
             } else if (quest_id) {
                 window.location.replace(window.location.protocol + '//' + window.location.host + '/quests/' + quest_slug);
-            } else if (post_id) {
-                window.location.replace(window.location.protocol + '//' + window.location.host + '/posts/show/' + post_slug);
             }
         } else {
             alert(r.data.error);

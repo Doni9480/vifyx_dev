@@ -110,7 +110,9 @@
 
                     <!-- Entry Content
                     ============================================= -->
-                    <div class="mb-4">{{ test.content|safe }}</div>
+                    {% if test.content %}
+                        <div class="mb-4">{{ test.content|safe }}</div>
+                    {% endif %}
 
                     {% comment %} <div class="entry-content mt-3">
                         {% if vote %}

@@ -3,17 +3,21 @@ document.querySelector('#form_post').addEventListener('submit', function(e) {
 });
 
 // document.querySelector('#id_publish').addEventListener('click', send_post);
-document.querySelector('#id_save').addEventListener('click', send_draft);
+document.querySelector('#id_save').addEventListener('click', send_test);
 
-async function send_draft() {
+async function send_test() {
     let preview = document.querySelector('input[name="preview"]');
     let title = document.querySelector('input[name="title"]');
     let description = document.querySelector('#id_description');
     let content = document.querySelector('#id_content');
     let language = document.querySelector('#id_language');
+    let category = document.querySelector('#id_category');
+    let subcategory = document.querySelector('#id_subcategory');
+    let level_access = document.querySelector('#id_level_access');
     let tags = document.querySelectorAll('input[name="tags"]');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
+    let blog = document.querySelector('input[name="blog"]');
 
     tags_list = [];
     let is_empty_tags = true;
@@ -38,9 +42,19 @@ async function send_draft() {
     if (language.value == 'english' || language.value == 'russian') {
         form_data.append('language', language.value);
     }
+    if (category && ! isNaN(Number(category.value))) {
+        form_data.append('category', category.value);
+    }
+    if (subcategory && ! isNaN(Number(subcategory.value))) {
+        form_data.append('subcategory', subcategory.value);
+    }
     if (! is_empty_tags) {
         form_data.append('tags', tags_list);
     }
+    if (level_access && !isNaN(Number(level_access.value))) {
+        form_data.append('level_access', level_access.value);
+    }
+    form_data.append('blog', blog.value);
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/create/';

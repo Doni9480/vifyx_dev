@@ -7,8 +7,10 @@ from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes
 from django.conf import settings
 from django.forms import ValidationError
+from django.http import Http404
 
 from users.models import User, TotalScore
+from blogs.models import PaidFollow
 
 
 def get_info(request, user):
@@ -49,3 +51,21 @@ def send_scores():
             for user in users:
                 user.unearned_scores = scores
                 user.save()
+
+def opening_access(elem, user):
+    is_exp = False
+    if elem.level_access:
+        if user.is_anonymous:
+            return True
+        paid_follow = PaidFollow.objects.filter(blog=elem.blog, follower=user)
+        if not paid_follow or paid_follow[0].blog_access_level.level < elem.level_access.level:
+            is_exp = True
+
+    if elem.hide_to_moderator or elem.hide_to_user and not user.is_staff:
+        is_exp = True
+    if elem.language != user.language and user.language != 'any':
+        is_exp = True      
+    if elem.user == user:
+        is_exp = False
+    if is_exp:
+        raise Http404()

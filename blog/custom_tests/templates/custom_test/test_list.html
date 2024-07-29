@@ -1,7 +1,7 @@
 {% extends "layouts/basic.html" %}
 {% load static %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Tests{% endblock %}
 
 {% block content %}
 <!-- Page Title
@@ -11,13 +11,13 @@
         <div class="page-title-row">
 
             <div class="page-title-content">
-                <h1>Test</h1>
+                <h1>Tests</h1>
             </div>
 
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{% url 'main' %}">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Test</li>
+                    <li class="breadcrumb-item active" aria-current="page">Tests</li>
                 </ol>
             </nav>
 
@@ -29,7 +29,7 @@
 <section id="content">
     <div class="content-wrap">
         <div class="container">
-
+            {% csrf_token %}
             <div class="row gx-5 col-mb-80">
                 <!-- Post Content
                 ============================================= -->
@@ -56,6 +56,9 @@
                                             <li><a href="{% url 'users:profile' blog.user.username %}"><i class="uil uil-user"></i> {{ blog.user.username }}</a></li>
                                             <li><a href="/{{ blog.namespace }}/show/{{ blog.slug }}/"><i class="uil uil-comments-alt"></i> {{ blog.count_comments }} Comments</a></li>
                                             <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ blog.count_views }}</span></li>
+                                            {% if request.user != blog.user %}
+                                                <li><button type="button" id="button_hide" value="{{ blog.user.username }}" class="btn btn-dark">hide from this user</button></li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                     <div class="entry-content">
@@ -76,19 +79,19 @@
                     {% if page_obj.paginator.num_pages > 1 %}
                         <ul class="pagination" style="overflow: auto;">
                             {% if page_obj.has_previous %}
-                                <li class="page-item"><a class="page-link" href="{% url 'main' %}?page={{ page_obj.previous_page_number }}" tabindex="-1" aria-disabled="true">Previous</a></li>
+                                <li class="page-item"><a class="page-link" href="{% url 'list_tests' %}?page={{ page_obj.previous_page_number }}" tabindex="-1" aria-disabled="true">Previous</a></li>
                             {% endif %}
 
                             {% for p in page_obj.paginator.page_range %}
                                 {% if p == page_obj.number %}
-                                    <li class="page-item active"><a class="page-link" href="{% url 'main' %}?page={{ p }}">{{ p }}</a></li> 
+                                    <li class="page-item active"><a class="page-link" href="{% url 'list_tests' %}?page={{ p }}">{{ p }}</a></li> 
                                 {% else %}
-                                    <li class="page-item"><a class="page-link" href="{% url 'main' %}?page={{ p }}">{{ p }}</a></li>
+                                    <li class="page-item"><a class="page-link" href="{% url 'list_tests' %}?page={{ p }}">{{ p }}</a></li>
                                 {% endif %}                  
                             {% endfor %}
 
                             {% if page_obj.has_next %}
-                                <li class="page-item"><a class="page-link" href="{% url 'main' %}?page={{ page_obj.next_page_number }}">Next</a></li>
+                                <li class="page-item"><a class="page-link" href="{% url 'list_tests' %}?page={{ page_obj.next_page_number }}">Next</a></li>
                             {% endif %}
                         </ul>
                     {% endif %}
@@ -100,6 +103,7 @@
                 <!-- Sidebar
                 ============================================= -->
                 <aside class="sidebar col-lg-3">
+                    {% include "layouts/filter.html" %}
                     {% include "layouts/sidebar.html" %}
                 </aside><!-- .sidebar end -->
             </div>
@@ -112,5 +116,6 @@
 
 {% block js %}
 <script src="{% static 'js/functions.js' %}"></script>
+<script src="{% static 'js/hide_from_user.js' %}"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 {% endblock %}

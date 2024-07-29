@@ -64,6 +64,8 @@
         <div class="accordion accordion-lg mx-auto mb-0" style="max-width: 1000px;">
           <div>
             <form class="row mb-0" id="form_post" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="blog" value="{{ blog.pk }}">
+              <input type="hidden" name="namespace" value="quests">
               {% csrf_token %}
               <div class="col-12 form-group">
                 <label>Preview:</label>
@@ -117,6 +119,39 @@
               </div> {% endcomment %}
 
               <div class="col-12 form-group">
+                <label for="id_language">Language:</label>
+                <select id="id_language" class="form-select">
+                  <option disabled selected>Select a language</option>
+                  <option value="english">English</option>
+                  <option value="russian">Russian</option>
+                </select>
+              </div>
+
+              {% if categories %}
+                <div id="categories" class="col-12 form-group">
+                  <label for="id_category">Category:</label>
+                  <select id="id_category" class="form-select">
+                    <option disabled selected>Select a category</option>
+                    {% for category in categories %}
+                      <option value="{{ category.id }}">{{ category.category }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
+              {% if level_follows %}
+                <div class="col-12 form-group">
+                  <label for="id_level_access">This is private blog. Select the access level:</label>
+                  <select id="id_level_access" class="form-select">
+                    <option selected>free</option>
+                    {% for level_follow in level_follows %}
+                      <option value="{{ level_follow.level }}">Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
+              <div class="col-12 form-group">
                 <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
                 <div class="d-flex justify-content-between">
                   <button id="id_publish" type="submit" class="button button-3d button-black m-0">Publish</button>
@@ -134,8 +169,9 @@
 
 {% block js %}
   <script src="{% static 'js/functions.js' %}"></script>
-  <script src="{% static 'js/quest_questions.js' %}"></script>
+  {% comment %} <script src="{% static 'js/quest_questions.js' %}"></script> {% endcomment %}
   <script src="{% static 'js/quests/send_quest.js' %}"></script>
+  <script src="{% static 'js/get_subcategories.js' %}"></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script>
     function readURL(input) {

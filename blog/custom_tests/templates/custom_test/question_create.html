@@ -73,6 +73,10 @@
                 <label for="id_question">Question:</label>
                 <input type="text" name="id_test" style="display:none;" value={{test_obj.id}} />
                 <input type="text" name="test_slug" style="display:none;" value={{test_obj.slug}} />
+                {% if post %}
+                  <input type="hidden" name="post_slug" value={{post.slug}} />
+                  <input type="hidden" name="id_post" value="{{post.id}}">
+                {% endif %}
                 <textarea name="question" class="form-control" id="id_question" cols="30" rows="5">{% if form.question.value %}{{ form.question.value }}{% endif %}</textarea>
               </div>
 

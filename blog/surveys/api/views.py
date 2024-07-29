@@ -9,16 +9,16 @@ from django.http import Http404, QueryDict
 
 
 from surveys.api.serializers import *
-from surveys.models import SurveyTag, SurveyView, SurveyVote, Survey, DraftSurvey
+from surveys.models import SurveyTag, SurveyView, SurveyVote, Survey, DraftSurvey, Category, Subcategory
 from surveys.api.utils import get_views_and_comments_to_surveys
-from surveys.utils import opening_access
+from users.utils import opening_access
 from users.models import User, Percent
 from blog.decorators import recaptcha_checking
-from blog.utils import custom_get_object_or_404 as get_object_or_404, get_request_data, set_language_to_user
+from blog.utils import custom_get_object_or_404 as get_object_or_404, get_request_data, set_language_to_user, MyPagination
 from blogs.models import Blog
-from comments.models import Comment
+from blogs.utils import get_filter_kwargs, get_obj_set, get_category
 
-import ast
+from operator import attrgetter
 
 
 class SurveyViewSet(viewsets.ModelViewSet):
@@ -26,6 +26,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
     permission_classes_by_action = dict.fromkeys(['list', 'retrieve', 'add_view'], [AllowAny])
+    pagination_class = MyPagination
     # parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_serializer_class(self):
@@ -39,6 +40,8 @@ class SurveyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action == 'send_scores_to_option':
             return SurveyRadio.objects.all()
+        if self.action == 'get_subcategory':
+            return Category.objects.all()
         return super().get_queryset()
     
     def get_permissions(self):
@@ -66,7 +69,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
         return obj
 
     def create(self, request, *args, **kwargs):
-        _ = get_object_or_404(Blog, user=request.user.id, id=request.data.get("blog", False))
+        _ = get_object_or_404(Blog, user=request.user.id, id=request.data.get("blog"))
 
         data = {}
 
@@ -99,28 +102,23 @@ class SurveyViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         request = set_language_to_user(request)
-        filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
-        if request.user.language == 'any':
-            del filter_kwargs['language']
-        if request.user.is_staff:
-            del filter_kwargs['hide_to_moderator']
-            del filter_kwargs['hide_to_user']
+        filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'quests')
+        obj_set = get_obj_set(Survey.level_access_objects.filter(**filter_kwargs), request.user)
+        obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
             
         surveys = SurveyIndexSerializer(
-            Survey.level_access_objects.filter(**filter_kwargs),
+            obj_set,
             many=True,
         ).data
 
         surveys = get_views_and_comments_to_surveys(surveys)
-
-        return Response({"data": surveys})
+        page = self.paginate_queryset(surveys)
+        return self.get_paginated_response(page) 
 
     def retrieve(self, request, pk=None):
         survey_model = self.get_object()
         request = set_language_to_user(request)
-        if opening_access(survey_model, request.user):
-            raise Http404()
-
+        opening_access(survey_model, request.user)
         survey = SurveyShowSerializer(survey_model).data
 
         tags = SurveyTag.objects.filter(survey_id=survey["id"])
@@ -197,8 +195,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
     def add_view(self, request, pk=None):
         if request.user.is_authenticated:
             survey = self.get_object()
-            if opening_access(survey, request.user):
-                raise Http404()
+            opening_access(survey, request.user)
             view = SurveyView.objects.filter(survey=survey).filter(user=request.user.id)
             if not view:
                 SurveyView.objects.create(survey=survey, user=request.user)
@@ -210,8 +207,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
         data = {}
 
         option = self.get_object()
-        if opening_access(option.survey, request.user):
-            raise Http404()
+        opening_access(option.survey, request.user)
 
         if (
             (SurveyVote.objects.filter(user=request.user.id, survey=option.survey))
@@ -296,6 +292,15 @@ class SurveyViewSet(viewsets.ModelViewSet):
             data["success"] = "ok."
 
         return Response(data)
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")
+    def get_subcategory(self, request, pk=None):
+        category = self.get_object()
+        subcategories_set = Subcategory.objects.filter(category=category)
+        subcategories = SubcategorySerializer(
+            subcategories_set, many=True
+        ).data
+        return Response({"subcategories": subcategories})
 
 
 class DraftSurveyViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):

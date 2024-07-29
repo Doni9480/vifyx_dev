@@ -2,7 +2,7 @@ import json
 
 from rest_framework import serializers
 
-from surveys.models import Survey, DraftSurvey, SurveyTag, SurveyRadio, DraftSurveyRadio, DraftSurveyTag
+from surveys.models import Survey, DraftSurvey, SurveyTag, SurveyRadio, DraftSurveyRadio, DraftSurveyTag, Subcategory
 from notifications.models import Notification, NotificationBlog
 
 from blog.validators import check_language
@@ -24,11 +24,19 @@ class AnswerSerializer(serializers.ModelSerializer):
         ]
 
 
+class SubcategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategory
+        fields = (
+            "id",
+            "subcategory",
+        )
+
+
 class SurveySerializer(serializers.ModelSerializer):
     tags = serializers.CharField(required=False, write_only=True)
     answers_set = AnswerSerializer(source="answers", many=True)
     language = serializers.CharField(validators=[check_language])
-    level_access = serializers.IntegerField()
 
     class Meta:
         model = Survey
@@ -41,6 +49,8 @@ class SurveySerializer(serializers.ModelSerializer):
             "tags",
             "blog",
             "answers_set",
+            "category",
+            "subcategory",
             "level_access",
         ]
 
@@ -75,28 +85,22 @@ class SurveySerializer(serializers.ModelSerializer):
             # if '' in tags
             self.tags = [value for value in self.tags if value]
 
-        if attrs.get("level_access", False) and attrs["level_access"] < 1:
-            raise serializers.ValidationError(
-                {"level_access": "Please select a valid level access"}
-            )
-
         if attrs.get("blog") and self._instance:
             del attrs["blog"]
+            
+        level_access = attrs.get('level_access')
+        if level_access:
+            if self._instance:
+                blog = self._instance.blog
+            else:
+                blog = attrs['blog']
+            if not LevelAccess.objects.filter(id=level_access.pk, blog=blog):
+                raise serializers.ValidationError({'level_access': 'Invalid level access.'})
 
         return attrs
     
     def create(self, validated_data):
         answers_data = validated_data.pop('answers')
-        
-        if validated_data.get('level_access', None) and validated_data['level_access'] > 0:
-            validated_data['level_access'] = get_object_or_404(
-                LevelAccess, level=validated_data['level_access'], blog=validated_data['blog']
-            )
-        try:
-            if not (validated_data.get('level_access', None).__class__.__name__ == 'LevelAccess'):
-                del validated_data['level_access']
-        except KeyError as e:
-            pass
         
         survey = Survey(**validated_data)
         survey.user = self.user
@@ -112,6 +116,9 @@ class SurveySerializer(serializers.ModelSerializer):
         
         for attr, value in validated_data.items():
             setattr(survey, attr, value)
+            
+        if not validated_data.get('level_access'):
+            survey.level_access = None
         survey.save()
         
         ids = []
@@ -220,7 +227,6 @@ class DraftSurveySerializer(serializers.ModelSerializer):
     tags = serializers.CharField(required=False, write_only=True)
     answers_set = DraftAnswerSerializer(source="answers", many=True, required=False)
     language = serializers.CharField(required=False, validators=[check_language])
-    level_access = serializers.IntegerField(required=False)
 
     class Meta:
         model = DraftSurvey
@@ -232,15 +238,29 @@ class DraftSurveySerializer(serializers.ModelSerializer):
             "language",
             "tags",
             "blog",
+            "category",
+            "subcategory",
             "answers_set",
             "level_access",
         )
         
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
+        self._instance = kwargs.get('instance')
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
+        try:
+            if self._instance:
+                if attrs.get('category') and not attrs.get('subcategory'):
+                    raise Exception()
+            subcategory = attrs['subcategory']
+            category = attrs['category']
+            if subcategory.category != category:
+                raise Exception()
+        except Exception:
+            raise serializers.ValidationError({"subcategory": "Invalid subcategory."})
+        
         tags = attrs.get("tags")
 
         self.tags = []
@@ -250,10 +270,10 @@ class DraftSurveySerializer(serializers.ModelSerializer):
             # if '' in tags
             self.tags = [value for value in self.tags if value]
 
-        if attrs.get("level_access", False) and attrs["level_access"] < 1:
-            raise serializers.ValidationError(
-                {"level_access": "Please select a valid level access"}
-            )
+        level_access = attrs.get('level_access')
+        if level_access:
+            if not LevelAccess.objects.filter(id=level_access.pk, blog=attrs['blog']):
+                raise serializers.ValidationError({'level_access': 'Invalid level access.'})
 
         return attrs
     
@@ -261,16 +281,6 @@ class DraftSurveySerializer(serializers.ModelSerializer):
         answers_data = validated_data.get("answers", [])
         if answers_data:
             del validated_data['answers']
-            
-        if validated_data.get('level_access', None) and validated_data['level_access'] > 0:
-            validated_data['level_access'] = get_object_or_404(
-                LevelAccess, level=validated_data['level_access'], blog=validated_data['blog']
-            )
-        try:
-            if not (validated_data.get('level_access', None).__class__.__name__ == 'LevelAccess'):
-                del validated_data['level_access']
-        except KeyError as e:
-            pass
             
         draft_survey = DraftSurvey(**validated_data)
         draft_survey.user = self.user
@@ -287,14 +297,9 @@ class DraftSurveySerializer(serializers.ModelSerializer):
             del validated_data['answers']
         
         for attr, value in validated_data.items():
-            if attr == 'level_access':
-                if value <= 0:
-                    value = None
-                else:
-                    value = get_object_or_404(
-                        LevelAccess, level=value, blog=draft_survey.blog
-                    )
             setattr(draft_survey, attr, value)
+        if not validated_data.get('level_access'):
+            draft_survey.level_access = None
         draft_survey.save()
         
         ids = []

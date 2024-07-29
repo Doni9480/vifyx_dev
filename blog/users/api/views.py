@@ -11,11 +11,11 @@ from django.shortcuts import get_object_or_404
 
 from users.api.serializers import *
 from users.api.utils import delete_token
-from users.models import User, Percent
+from users.models import User, Percent, Hide
 
 from blogs.models import Blog, PaidFollow, BlogFollow
 
-from users.api.serializers import BlogFollowSerializer
+from users.api.serializers import BlogFollowSerializer, HideSerializer
 
 
 class RegisterViewSet(viewsets.GenericViewSet):
@@ -249,7 +249,59 @@ class UserViewSet(viewsets.ViewSet):
         return Response(
             {"language": "Invalid language (valid: russian, english, any)"}, status=status.HTTP_400_BAD_REQUEST
         )
+class ProfileViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=["get"])
+    def my_profile(self, request):
+        blogs = BlogSerializer(Blog.objects.filter(user=request.user), many=True).data
+
+        follows = BlogFollowSerializer(
+            BlogFollow.objects.filter(follower=request.user), many=True
+        ).data
+        for follow in follows:
+            follow["user"] = User.objects.get(id=follow["user"]).username
         
+        paid_follow_models = PaidFollow.objects.filter(follower=request.user)
+        paid_follows = []
+        for paid_follow_model in paid_follow_models:
+            paid_follows.append(BlogSerializer(paid_follow_model.blog).data)
+            
+        muted = HideSerializer(Hide.objects.filter(user=request.user), many=True).data
+        for hide in muted:
+            hide["user"] = User.objects.get(id=hide["user"]).username
+
+        data = {
+            "blogs": blogs,
+            "paid_follows": paid_follows,
+            "follows": follows,
+            "muted": muted
+        }
+
+        return Response({"data": data})
+
+    @action(detail=True, methods=["get"], url_path=r"(?P<username>[^/.]+)/profile")
+    def profile(self, request, username=None):
+        user = get_object_or_404(User, username=username)
+        blogs = BlogSerializer(Blog.objects.filter(user=user), many=True).data
+
+        return Response({"data": {"user": user.username, "blogs": blogs}})
+    
+    @action(detail=True, methods=["post"], url_path=r"(?P<username>[^/.]+)/hide_from_user")
+    def hide_from_user(self, request, username=None):
+        user = get_object_or_404(User, username=username)
+        if not (Hide.objects.filter(hider=request.user, user=user) or user == request.user):
+            Hide.objects.create(user=user, hider=request.user)
+        return Response({'success': 'ok.'})
+    
+    @action(detail=True, methods=["post"], url_path=r"(?P<username>[^/.]+)/show_from_user")
+    def show_from_user(self, request, username=None):
+        user = get_object_or_404(User, username=username)
+        hide = Hide.objects.filter(hider=request.user, user=user)
+        if hide:
+            hide.first().delete()
+        return Response({'success': 'ok.'})
+    
     @action(detail=True, methods=["post"])
     @transaction.atomic
     def connect_twitter_account(self, request):
@@ -285,40 +337,6 @@ class UserViewSet(viewsets.ViewSet):
         user_obj.telegram_wallet = None
         user_obj.save()
         return Response({"response": "You have successfully disconnected your Twitter account."})
-    
-    
-class ProfileViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-
-    @action(detail=False, methods=["get"])
-    def my_profile(self, request):
-        blogs = BlogSerializer(Blog.objects.filter(user=request.user), many=True).data
-
-        follows = BlogFollowSerializer(
-            BlogFollow.objects.filter(follower=request.user), many=True
-        ).data
-        for follow in follows:
-            follow["user"] = User.objects.get(id=follow["user"]).username
-        
-        paid_follow_models = PaidFollow.objects.filter(follower=request.user)
-        paid_follows = []
-        for paid_follow_model in paid_follow_models:
-            paid_follows.append(BlogSerializer(paid_follow_model.blog).data)
-
-        data = {
-            "blogs": blogs,
-            "paid_follows": paid_follows,
-            "follows": follows,
-        }
-
-        return Response({"data": data})
-
-    @action(detail=True, methods=["get"], url_path=r"(?P<username>[^/.]+)/profile")
-    def profile(self, request, username=None):
-        user = get_object_or_404(User, username=username)
-        blogs = BlogSerializer(Blog.objects.filter(user=user), many=True).data
-
-        return Response({"data": {"user": user.username, "blogs": blogs}})
 
 
 # from rest_framework.views import APIView

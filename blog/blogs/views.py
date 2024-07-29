@@ -6,7 +6,7 @@ from django.http import Http404
 
 from blogs.models import Blog, LevelAccess, PaidFollow, Donate
 from blogs.forms import BlogForm
-from blogs.utils import get_filter_kwargs
+from blogs.utils import get_filter_kwargs, get_blog_list
 
 from posts.models import Post, PostTag
 from posts.utils import get_views_and_comments_to_posts
@@ -15,14 +15,44 @@ from surveys.models import Survey, SurveyRadio, SurveyTag
 from surveys.utils import get_views_and_comments_to_surveys
 
 from custom_tests.models import Test
+from custom_tests.utils import get_views_and_comments_to_tests
 
 from quests.models import Quest
+from quests.utils import get_views_and_comments_to_quests
 
 from notifications.models import NotificationBlog
+
+from blog.translations import main_dict
 
 from itertools import chain
 from operator import attrgetter
 
+
+def main(request):    
+    filter_kwargs = get_filter_kwargs(request)
+    q = request.GET.get('q')
+    if q == 'tracked':
+        notification_blogs = NotificationBlog.objects.filter(follower=request.user)
+        blog_list = []
+        for notification_blog in notification_blogs:
+            filter_kwargs['blog'] = notification_blog.blog
+            blog_list += get_blog_list(filter_kwargs)
+    else:
+        blog_list = get_blog_list(filter_kwargs)
+    
+    paginator = Paginator(blog_list, 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    
+    data = {
+        "page_obj": page_obj,
+        "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
+    }
+    data = dict(
+        list(data.items()) + list(main_dict[request.user.language].items())
+    )
+
+    return render(request, "blogs/main.html", data)
 
 @login_required(login_url="/registration/login")
 def create(request):
@@ -36,16 +66,14 @@ def show(request, slug):
     blog = get_object_or_404(Blog, slug=slug)
     level_follows = LevelAccess.objects.filter(blog=blog)
     
-    filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language, 'blog': blog}
-    if request.user.language == 'any':
-        del filter_kwargs['language']
-    if request.user.is_staff:
-        del filter_kwargs['hide_to_moderator']
-        del filter_kwargs['hide_to_user']
+    filter_kwargs = get_filter_kwargs(request)
+    filter_kwargs['blog'] = blog
 
     posts = get_views_and_comments_to_posts(Post.objects.filter(**filter_kwargs))
     surveys = get_views_and_comments_to_surveys(Survey.objects.filter(**filter_kwargs))
-    blog_list = sorted(chain(posts, surveys), key=attrgetter("date"), reverse=True)
+    tests = get_views_and_comments_to_tests(Test.objects_show.filter(**filter_kwargs))
+    quests = get_views_and_comments_to_quests(Quest.objects.filter(**filter_kwargs))
+    blog_list = sorted(chain(posts, surveys, tests, quests), key=attrgetter("date"), reverse=True)
 
     paid_follow = PaidFollow.objects.filter(follower=request.user.id, blog=blog)
     if paid_follow:
@@ -89,7 +117,7 @@ def best_blogs(request):
             blog.scores += scores
             
     blogs = sorted(chain(blog_models), key=attrgetter("scores"), reverse=True)[:5]
-    return render(request, "popular.html", {"blogs": blogs})
+    return render(request, "blogs/popular.html", {"blogs": blogs})
 
 @login_required(login_url="/registration/login")
 def donate(request, slug):
@@ -139,8 +167,8 @@ def search(request, q):
     
     posts = get_views_and_comments_to_posts(Post.level_access_objects.filter(title__icontains=q, **filter_kwargs))
     surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(title__icontains=q, **filter_kwargs))
-    tests = Test.objects.filter(title__icontains=q)
-    quests = Quest.objects.filter(title__icontains=q)
+    tests = get_views_and_comments_to_tests(Test.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    quests = get_views_and_comments_to_quests(Quest.level_access_objects.filter(title__icontains=q, **filter_kwargs))
     
     blog_list = sorted(chain(posts, surveys, tests, quests), key=attrgetter("date"), reverse=True)
     

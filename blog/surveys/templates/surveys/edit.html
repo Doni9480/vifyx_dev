@@ -64,6 +64,7 @@
         <div class="accordion accordion-lg mx-auto mb-0" style="max-width: 1000px;">
           <div>
             <form class="row mb-0" id="form_survey" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="namespace" value="surveys">
               {% csrf_token %}
               <div class="col-12 form-group">
                 <label>Preview:</label>
@@ -107,6 +108,38 @@
                 {% endfor %}
               </div>
 
+              {% if categories %}
+                <div id="categories" class="col-12 form-group">
+                  <label for="id_category">Category:</label>
+                  <select id="id_category" class="form-select">
+                    <option disabled selected>Select a category</option>
+                    {% for category in categories %}
+                      {% if form.instance.category == category %}
+                        <option value="{{ category.id }}" selected>{{ category.category }}</option>
+                      {% else %}
+                        <option value="{{ category.id }}">{{ category.category }}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
+              {% if subcategories %}
+                <div class="col-12 form-group" id="subcategories">
+                  <label for="id_subcategory">Subcategory:</label>
+                  <select id="id_subcategory" class="form-select">
+                    <option disabled selected>Select a subcategory</option>
+                    {% for subcategory in subcategories %}
+                      {% if form.instance.subcategory == subcategory %}
+                        <option value="{{ subcategory.id }}" selected>{{ subcategory.subcategory }}</option>
+                      {% else %}
+                        <option value="{{ subcategory.id }}">{{ subcategory.subcategory }}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
               <div class="col-12 form-group">
                 <label>Tags:</label>
 
@@ -132,24 +165,16 @@
 
               </div>
 
-              {% if blog_levels %}
+              {% if level_follows %}
                 <div class="col-12 form-group">
                   <label for="id_level_access">This is private blog. Select the access level:</label>
                   <select id="id_level_access" class="form-select">
-                    <option selected disabled>Select the access level</option>
-                    {% for blog_level in blog_levels %}
-                      {% if blog_level.level == 1 %}
-                        {% if blog_level.level == form.instance.level_access %}
-                          <option value="1" selected>1 (free)</option>
-                        {% else %}
-                          <option value="1">1 (free)</option>
-                        {% endif %}
+                    <option selected>free</option>
+                    {% for level_follow in level_follows %}
+                      {% if level_follow == form.instance.level_access %}
+                        <option value="{{ level_follow.level }}" selected>Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
                       {% else %}
-                        {% if blog_level.level == form.instance.level_access %}
-                          <option value="{{ blog_level.level }}" selected>{{ blog_level.level }} ({{ blog_level.scores }} scores)</option>
-                        {% else %}
-                          <option value="{{ blog_level.level }}">{{ blog_level.level }} ({{ blog_level.scores }} scores)</option>
-                        {% endif %}
+                        <option value="{{ level_follow.level }}">Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
                       {% endif %}
                     {% endfor %}
                   </select>
@@ -176,6 +201,7 @@
   <script src="{% static 'js/tags.js' %}"></script>
   <script src="{% static 'js/answers.js' %}"></script>
   <script src="{% static 'js/edit_survey.js' %}"></script>
+  <script src="{% static 'js/get_subcategories.js' %}"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script>
     function readURL(input) {

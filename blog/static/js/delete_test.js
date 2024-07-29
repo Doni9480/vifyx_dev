@@ -12,7 +12,7 @@ async function delete_post(e) {
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/delete/' + test_id + '/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/' + test_id + '/delete/';
 
     let response = await fetch(url, {
         method: 'DELETE',
@@ -23,7 +23,7 @@ async function delete_post(e) {
     });
 
     if (response.ok) {
-            window.location.replace(window.location.protocol + '//' + window.location.host + '/test/');
+            window.location.replace(window.location.protocol + '//' + window.location.host + '/tests/');
     } else {
         alert('Backend error');
     }

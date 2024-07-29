@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Test, Question, QuestionAnswer
+from .models import Test, Question, QuestionAnswer, Category, Subcategory
 
 
 class QuestionAnswerInline(admin.TabularInline):
@@ -32,3 +32,6 @@ class QuestionAdmin(admin.ModelAdmin):
 class QuestionAnswerAdmin(admin.ModelAdmin):
     list_display = ("variant", "question", "is_true")
     list_filter = ("question__question",)
+
+admin.site.register(Category)
+admin.site.register(Subcategory)

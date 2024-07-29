@@ -16,6 +16,8 @@ async function send_survey(e) {
     let content = document.querySelector('#id_content');
     let answers = document.querySelectorAll('input[name="answers"]');
     let language = document.querySelector('#id_language');
+    let category = document.querySelector('#id_category');
+    let subcategory = document.querySelector('#id_subcategory');
     let tags = document.querySelectorAll('input[name="tags"]');
     let level_access = document.querySelector('#id_level_access');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
@@ -45,7 +47,13 @@ async function send_survey(e) {
     form_data.append('title', title.value);
     form_data.append('description', description.value);
     form_data.append('content', content.value);
-    if (level_access && level_access.value) {
+    if (category && ! isNaN(Number(category.value))) {
+        form_data.append('category', category.value);
+    }
+    if (subcategory && ! isNaN(Number(subcategory.value))) {
+        form_data.append('subcategory', subcategory.value);
+    }
+    if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);
     }
     if (! is_empty_answers) {
@@ -106,6 +114,14 @@ async function send_survey(e) {
                 language.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.language}</div>`);
             }
 
+            if (result.category) {
+                category.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.category}</div>`);
+            }
+
+            if (result.subcategory) {
+                subcategory.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.subcategory}</div>`);
+            }
+
             if (result.recaptcha) {
                 form_survey.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.recaptcha}</div>`);
             }
@@ -137,6 +153,8 @@ async function send_draft_survey(e) {
     let content = document.querySelector('#id_content');
     let answers = document.querySelectorAll('input[name="answers"]');
     let language = document.querySelector('#id_language');
+    let category = document.querySelector('#id_category');
+    let subcategory = document.querySelector('#id_subcategory');
     let tags = document.querySelectorAll('input[name="tags"]');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let level_access = document.querySelector('#id_level_access');
@@ -183,6 +201,12 @@ async function send_draft_survey(e) {
     }
     if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);
+    }
+    if (category && ! isNaN(Number(category.value))) {
+        form_data.append('category', category.value);
+    }
+    if (subcategory && ! isNaN(Number(subcategory.value))) {
+        form_data.append('subcategory', subcategory.value);
     }
     if (language.value == 'russian' || language.value == 'english') {
         form_data.append('language', language.value);   

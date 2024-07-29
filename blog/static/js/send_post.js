@@ -13,9 +13,12 @@ async function send_draft() {
     let tags = document.querySelectorAll('input[name="tags"]');
     let level_access = document.querySelector('#id_level_access');
     let language = document.querySelector('#id_language');
+    let category = document.querySelector('#id_category');
+    let subcategory = document.querySelector('#id_subcategory');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let is_paid = document.querySelector('input[name="is_paid"]');
     let add_survey = document.querySelector('input[name="add_survey"]');
+    let is_create_test = document.querySelector('input[name="is_create_test"]');
     let amount = document.querySelector('input[name="amount"]');
     let blog = document.querySelector('input[name="blog"]');  
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
@@ -43,6 +46,13 @@ async function send_draft() {
     if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);
     }
+    if (category && ! isNaN(Number(category.value))) {
+        form_data.append('category', category.value);
+    }
+    if (subcategory && ! isNaN(Number(subcategory.value))) {
+        form_data.append('subcategory', subcategory.value);
+    }
+    form_data.append('g_recaptcha_response', g_recaptcha_response.value);
     if (blog) {
         form_data.append('blog', blog.value);
     }
@@ -77,6 +87,11 @@ async function send_draft() {
         if (amount) {
             form_data.append('amount', amount.value);
         }
+    }
+    if (is_create_test.checked) {
+        form_data.append('is_create_test', true);
+    } else {
+        form_data.append('is_create_test', false);
     }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
@@ -132,6 +147,9 @@ async function send_post(e) {
     let tags = document.querySelectorAll('input[name="tags"]');
     let level_access = document.querySelector('#id_level_access');
     let add_survey = document.querySelector('input[name="add_survey"]');
+    let is_create_test = document.querySelector('input[name="is_create_test"]');
+    let category = document.querySelector('#id_category');
+    let subcategory = document.querySelector('#id_subcategory');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let is_paid = document.querySelector('input[name="is_paid"]');
     let amount = document.querySelector('input[name="amount"]');
@@ -151,7 +169,7 @@ async function send_post(e) {
     }
     form_data.append('title', title.value);
     form_data.append('content', content.value);
-    if (level_access && level_access.value) {
+    if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);
     }
 
@@ -182,7 +200,17 @@ async function send_post(e) {
         form_data.append('amount', amount.value);
     }
 
+    if (is_create_test.checked) {
+        form_data.append('is_create_test', 1);
+    }
+
     form_data.append('language', language.value);
+    if (category && ! isNaN(Number(category.value))) {
+        form_data.append('category', category.value);
+    }
+    if (subcategory && ! isNaN(Number(subcategory.value))) {
+        form_data.append('subcategory', subcategory.value);
+    }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     let url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/create/';
@@ -228,6 +256,14 @@ async function send_post(e) {
             if (result.language) {
                 language.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.language}</div>`);
             }
+            
+            if (result.category) {
+                category.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.category}</div>`);
+            }
+
+            if (result.subcategory) {
+                subcategory.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.subcategory}</div>`);
+            }
 
             if (result.level_access) {
                 level_access.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.level_access}</div>`);
@@ -243,6 +279,10 @@ async function send_post(e) {
 
             if (result.add_survey) {
                 add_survey.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.add_survey}</div>`);
+            }
+
+            if (result.is_create_test) {
+                is_create_test.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.is_create_test}</div>`);
             }
 
             if (result.blog) {

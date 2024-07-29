@@ -1,6 +1,6 @@
 from django.contrib import admin
 from mptt.admin import DraggableMPTTAdmin
-from quests.models import Quest, QuestionQuest, QuestionQuestAnswer
+from quests.models import Quest, QuestionQuest, QuestionQuestAnswer, Subcategory, Category
 
 
 @admin.register(Quest)
@@ -16,3 +16,6 @@ class QuestionQuestAdmin(DraggableMPTTAdmin):
 @admin.register(QuestionQuestAnswer)
 class QuestionQuestAnswerAdmin(DraggableMPTTAdmin):
     mptt_indent_field = "question"
+
+admin.site.register(Category)
+admin.site.register(Subcategory)

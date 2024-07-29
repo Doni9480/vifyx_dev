@@ -20,7 +20,7 @@ async function send_hide(e) {
     form_data.append('hide_to_user', false);
     form_data.append('hide_to_moderator', false);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/' + test + '/visibility/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/' + test + '/hide_test/';
     console.log(url);
 
     let response = await fetch(url, {
@@ -54,7 +54,7 @@ async function send_show(e) {
     form_data.append('hide_to_user', true);
     form_data.append('hide_to_moderator', true);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/' + test + '/visibility/';
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/' + test + '/show_test/';
     console.log(url);
 
     let response = await fetch(url, {
@@ -69,7 +69,6 @@ async function send_show(e) {
         let result = await response.json();
 
         if (result.success) {
-            alert(result)
             window.location.reload();
         } else if (result.ban) {
             document.querySelector('#form_show').insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.ban}</div>`);

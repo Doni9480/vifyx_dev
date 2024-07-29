@@ -22,9 +22,7 @@ from django.conf.urls.static import static
 from blog.views import redirect_main
 from blog.admin import login, logout
 
-from posts.views import main
-
-from blogs.views import best_blogs, search, search_tags
+from blogs.views import best_blogs, search, search_tags, main
 
 from scheduler.scheduler import TasksScheduler
 

@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from quests.models import Quest, QuestionQuest, QuestionQuestAnswer
-
+from quests.models import Quest, QuestionQuest, QuestionQuestAnswer, Subcategory
 from blog.validators import check_language
+from blogs.models import LevelAccess
+from notifications.models import Notification, NotificationBlog
+from blogs.models import BlogFollow
 
 
 class RecursiveQuestion(serializers.Serializer):
@@ -46,7 +48,7 @@ class QuestionQuestSerializer(serializers.ModelSerializer):
 
 
 class QuestionQuestDetailSerializer(serializers.ModelSerializer):
-    answer_set = QuestionQuestAnswerDetailSerializer(source="answers", many=True, read_only=False)
+    answers_set = QuestionQuestAnswerDetailSerializer(source="answers", many=True, read_only=False)
     children = RecursiveQuestion(many=True, required=False)
 
     class Meta:
@@ -56,18 +58,18 @@ class QuestionQuestDetailSerializer(serializers.ModelSerializer):
             "text",
             "quest",
             "children",
-            "answer_set",
+            "answers_set",
         )
 
     def create(self, validated_data):
-        answers_data = validated_data.pop('answer_set')
+        answers_data = validated_data.pop('answers_set')
         question = QuestionQuest.objects.create(**validated_data)
         for answer_data in answers_data:
             QuestionQuestAnswer.objects.create(question=question, **answer_data)
         return question
 
     def update(self, instance, validated_data):
-        answers_data = validated_data.pop('answer_set')
+        answers_data = validated_data.pop('answers_set')
         instance.text = validated_data.get('text', instance.text)
         instance.save()
 
@@ -112,6 +114,15 @@ class QuestionDetailSerializer(serializers.ModelSerializer):
             "quest",
             "answers",
         )
+        
+        
+class SubcategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategory
+        fields = (
+            "id",
+            "subcategory",
+        )
 
 
 class QuestSerializer(serializers.ModelSerializer):
@@ -119,10 +130,6 @@ class QuestSerializer(serializers.ModelSerializer):
         help_text="Таймер (опционально). Пример: 10 (в минутах)",
         required=False,
         default=0,
-    )
-    slug = serializers.CharField(
-        help_text="Можете оставить пустым так как есть автогенерация на основе 'title'.(Опционально)",
-        required=False,
     )
     preview = serializers.FileField()
     language = serializers.CharField(validators=[check_language])
@@ -132,14 +139,68 @@ class QuestSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
-            "slug",
             "language",
             "description",
             "content",
             "preview",
             "user",
+            "blog",
+            "category",
+            "subcategory",
+            "level_access",
             "timer",
         )
+        
+    def __init__(self, *args, **kwargs):
+        self._instance = kwargs.get("instance")
+        super().__init__(*args, **kwargs)
+
+    def validate(self, attrs):
+        try:
+            if self._instance:
+                if attrs.get('category') and not attrs.get('subcategory'):
+                    raise Exception()
+            subcategory = attrs['subcategory']
+            category = attrs['category']
+            if subcategory.category != category:
+                raise Exception()
+        except Exception:
+            raise serializers.ValidationError({"subcategory": "Invalid subcategory."})
+        
+        level_access = attrs.get('level_access')
+        if level_access:
+            if self.instance:
+                blog = self.instance.blog
+            else:
+                blog = attrs['blog']
+            if not LevelAccess.objects.filter(id=level_access.pk, blog=blog):
+                raise serializers.ValidationError({'level_access': 'Invalid level access.'})
+        return attrs
+    
+    def update(self, quest, validated_data):        
+        for attr, value in validated_data.items():
+            setattr(quest, attr, value)
+        if not validated_data.get('level_access'):
+            quest.level_access = None
+        quest.save()
+        
+        return quest
+    
+    def save(self):
+        quest = super(QuestSerializer, self).save()
+        
+        if (
+            not self.instance and not quest.level_access
+        ):
+            follows = BlogFollow.objects.filter(blog=quest.blog)
+            for follow in follows:
+                if follow.follower.is_notificated:
+                    if NotificationBlog.objects.filter(
+                        follower=follow.follower, blog=quest.blog, user=quest.user, get_notifications_blog=True
+                    ):
+                        Notification.objects.create(quest=quest, user=follow.follower)
+                        
+        return quest
 
 
 class QuestDetailSerializer(serializers.ModelSerializer):

@@ -2,11 +2,10 @@ from django.db import models
 from django.conf import settings
 
 from posts.models import Post
-
 from surveys.models import Survey
-
+from custom_tests.models import Test
+from quests.models import Quest
 from users.models import User
-
 from blogs.models import Donate, Blog
     
 
@@ -14,6 +13,8 @@ class Notification(models.Model):
     post = models.ForeignKey(to=Post, on_delete=models.CASCADE, verbose_name='Post', null=True)
     donate = models.ForeignKey(to=Donate, on_delete=models.CASCADE, verbose_name='Donate', null=True)
     survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey', null=True)
+    test = models.ForeignKey(to=Test, on_delete=models.CASCADE, verbose_name='Test', null=True)
+    quest = models.ForeignKey(to=Quest, on_delete=models.CASCADE, verbose_name='Quest', null=True)
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, verbose_name='user')
     is_read = models.BooleanField(verbose_name='Is read', default=False)
     date = models.DateTimeField(auto_now_add=True)

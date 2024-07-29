@@ -76,6 +76,15 @@ class Percent(models.Model):
 
     def clean(self):
         validate_only_one_instance(self)
+        
+
+class Hide(models.Model):
+    hider = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="hider"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
 
 
 @receiver(post_save, sender=User)

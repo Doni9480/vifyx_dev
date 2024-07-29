@@ -11,8 +11,25 @@ from transliterate import slugify
 
 from blogs.models import Blog, LevelAccess
 
+from custom_tests.models import Test
+
 from blog.managers import LevelAccessManager
 
+
+class Category(models.Model):
+    category = models.CharField(verbose_name='Category')
+    
+    def __str__(self):
+        return self.category
+    
+    
+class Subcategory(models.Model):
+    category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
+    subcategory = models.CharField(verbose_name='Subcategory')
+
+    def __str__(self):
+        return self.subcategory
+    
 
 class Post(models.Model):
     level_access_objects = LevelAccessManager()
@@ -35,12 +52,15 @@ class Post(models.Model):
         max_length=255,
         verbose_name="Language"
     )
+    category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
+    subcategory = models.ForeignKey(to=Subcategory, on_delete=models.CASCADE, verbose_name='Subcategory', null=True, blank=True)
     scores = models.IntegerField(verbose_name="scores", default=0)
     mouth_scores = models.IntegerField(verbose_name="Mouth scores", default=0)
     hide_to_user = models.BooleanField(default=False, verbose_name="Hide to user")
     hide_to_moderator = models.BooleanField(
         default=False, verbose_name="Hide to moderator"
     )
+    test = models.OneToOneField(to=Test, verbose_name='Test', on_delete=models.CASCADE, null=True, blank=True)
     namespace = models.CharField(verbose_name='Namespace', default='posts')
     add_survey = models.BooleanField(verbose_name="Add survey", default=False)
     is_paid = models.BooleanField(verbose_name="Is paid", default=False)
@@ -118,41 +138,6 @@ class PostView(models.Model):
         verbose_name_plural = "Views"
         
 
-class Question(models.Model):
-    question = models.TextField(
-        verbose_name="Question",
-    )
-    post = models.ForeignKey(
-        to=Post,
-        on_delete=models.CASCADE,
-        related_name='questions',
-        verbose_name="Тест",
-    )
-
-    def __str__(self):
-        return f"{self.question} - {self.post}"
-
-
-class QuestionAnswer(models.Model):
-    variant = models.CharField(
-        max_length=250,
-        verbose_name="Question answer",
-    )
-    question = models.ForeignKey(
-        Question,
-        on_delete=models.CASCADE,
-        related_name="answers",
-        verbose_name="Question",
-    )
-    is_true = models.BooleanField(
-        verbose_name="True Answer",
-        default=False,
-    )
-
-    def __str__(self):
-        return f"{self.variant} - {self.question}: {self.is_true}"
-        
-
 class BuyPost(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE
@@ -165,8 +150,9 @@ class BuyPost(models.Model):
 
 @receiver(post_delete, sender=Post)
 def on_delete(sender, **kwargs):
+    instance = kwargs['instance']
     images = []
-    html_str = kwargs["instance"].content
+    html_str = instance.content
 
     while "img" in html_str:
         left_enter = html_str.find("<img")
@@ -181,6 +167,9 @@ def on_delete(sender, **kwargs):
         right_enter = image.find('"')
         path = os.path.join(settings.MEDIA_ROOT / image[:right_enter])
         os.remove(os.path.join(path))
+    
+    if instance.test:
+        instance.test.delete() # delete test
 
 
 @cleanup.ignore
@@ -195,8 +184,11 @@ class DraftPost(models.Model):
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
     language = models.CharField(max_length=255, verbose_name='Language', null=True, blank=True)
+    category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category', null=True, blank=True)
+    subcategory = models.ForeignKey(to=Subcategory, on_delete=models.CASCADE, verbose_name='Subcategory', null=True, blank=True)
     add_survey = models.BooleanField(verbose_name="Add survey", default=False)
     is_paid = models.BooleanField(verbose_name="Is paid", default=False)
+    is_create_test = models.BooleanField(verbose_name='Test', default=False)
     amount = models.IntegerField(verbose_name="Amount", blank=True, null=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True

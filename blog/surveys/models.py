@@ -10,6 +10,21 @@ from blog.managers import LevelAccessManager
 from users.models import User
 
 
+class Category(models.Model):
+    category = models.CharField(verbose_name='Category')
+    
+    def __str__(self):
+        return self.category
+    
+    
+class Subcategory(models.Model):
+    category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
+    subcategory = models.CharField(verbose_name='Subcategory')
+
+    def __str__(self):
+        return self.subcategory
+
+
 class Survey(models.Model):
     objects = models.Manager()
     level_access_objects = LevelAccessManager()
@@ -21,6 +36,8 @@ class Survey(models.Model):
     content = models.TextField(verbose_name='Content', blank=True, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     language = models.CharField(max_length=255, verbose_name='Language')
+    category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
+    subcategory = models.ForeignKey(to=Subcategory, on_delete=models.CASCADE, verbose_name='Subcategory', null=True, blank=True)
     namespace = models.CharField(verbose_name='Namespace', default='posts')
     hide_to_user = models.BooleanField(default=False, verbose_name='Hide to user')
     hide_to_moderator = models.BooleanField(default=False, verbose_name='Hide to moderator')
@@ -104,6 +121,8 @@ class DraftSurvey(models.Model):
     description = models.TextField(verbose_name="Description", null=True, blank=True)
     content = models.TextField(verbose_name="Content", blank=True, null=True)
     language = models.CharField(max_length=255, verbose_name='Language', null=True, blank=True)
+    category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category', null=True, blank=True)
+    subcategory = models.ForeignKey(to=Subcategory, on_delete=models.CASCADE, verbose_name='Subcategory', null=True, blank=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
     user = models.ForeignKey(

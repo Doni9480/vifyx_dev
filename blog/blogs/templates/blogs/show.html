@@ -128,6 +128,8 @@
                     {% if request.user == blog.user %}
                         <div><a href="{% url 'posts:create' blog.slug %}" class="btn btn-primary mt-2">Create a new post</i></a></div>
                         <div><a href="{% url 'surveys:create' blog.slug %}" class="btn btn-success mt-2">Create a new survey</i></a></div>
+                        <div><a href="{% url 'test_create' blog.slug %}" class="btn btn-dark mt-2">Create a new test</i></a></div>
+                        <div><a href="{% url 'quest_create' blog.slug %}" class="btn btn-warning mt-2">Create a new quest</i></a></div>
                     {% else %}
                         <div><a href="{% url 'blogs:donate' blog.slug %}" class="btn btn-info mt-2">Donate</i></a></div>
                     {% endif %}

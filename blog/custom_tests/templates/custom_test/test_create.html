@@ -1,7 +1,7 @@
 {% extends 'layouts/basic.html' %}
 {% load static %}
 
-{% block title %}Create a post{% endblock %}
+{% block title %}Create a test{% endblock %}
 
 {% block head %}
   <style>
@@ -40,7 +40,7 @@
     <div class="container">
       <div class="page-title-row">
         <div class="page-title-content">
-          <h1>Create a post</h1>
+          <h1>Create a test</h1>
         </div>
 
         <nav aria-label="breadcrumb">
@@ -48,7 +48,7 @@
             <li class="breadcrumb-item">
               <a href="{% url 'main' %}">Home</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Create a post</li>
+            <li class="breadcrumb-item active" aria-current="page">Create a test</li>
           </ol>
         </nav>
       </div>
@@ -64,6 +64,8 @@
         <div class="accordion accordion-lg mx-auto mb-0" style="max-width: 1000px;">
           <div>
             <form class="row mb-0" id="form_post" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="blog" value="{{ blog.pk }}">
+              <input type="hidden" name="namespace" value="tests">
               {% csrf_token %}
               <div class="col-12 form-group">
                 <label>Preview:</label>
@@ -106,6 +108,30 @@
                 </select>
               </div>
 
+              {% if categories %}
+                <div id="categories" class="col-12 form-group">
+                  <label for="id_category">Category:</label>
+                  <select id="id_category" class="form-select">
+                    <option disabled selected>Select a category</option>
+                    {% for category in categories %}
+                      <option value="{{ category.id }}">{{ category.category }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
+              {% if level_follows %}
+                <div class="col-12 form-group">
+                  <label for="id_level_access">This is private blog. Select the access level:</label>
+                  <select id="id_level_access" class="form-select">
+                    <option selected>free</option>
+                    {% for level_follow in level_follows %}
+                      <option value="{{ level_follow.level }}">Level {{ level_follow.level }} ({{ level_follow.scores }} scores)</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              {% endif %}
+
               {% comment %} <div class="col-12 form-group">
                 <label>Questions:</label>
 
@@ -143,8 +169,9 @@
 
 {% block js %}
   <script src="{% static 'js/functions.js' %}"></script>
-  <script src="{% static 'js/test_questions.js' %}"></script>
+  {% comment %} <script src="{% static 'js/test_questions.js' %}"></script> {% endcomment %}
   <script src="{% static 'js/send_test.js' %}"></script>
+  <script src="{% static 'js/get_subcategories.js' %}"></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script>
     function readURL(input) {

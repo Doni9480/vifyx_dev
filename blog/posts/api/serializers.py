@@ -1,15 +1,14 @@
 from rest_framework import serializers
 from posts.models import DraftPost as DraftModel, DraftPostTag as DraftTag
-from posts.models import Post, PostTag, PostRadio, DraftPostRadio
-from posts.models import Question, QuestionAnswer
+from posts.models import Post, PostTag, PostRadio, DraftPostRadio, Subcategory
+from posts.api.utils import create_test
 from notifications.models import Notification, NotificationBlog
 from blogs.models import LevelAccess, BlogFollow
+from custom_tests.models import Test
 
 from blog.validators import check_language
 
 from django.shortcuts import get_object_or_404
-
-import json
 
 
 class TagMixin(serializers.ModelSerializer):
@@ -34,83 +33,6 @@ class TagMixin(serializers.ModelSerializer):
         return instance
 
 
-class QuestionAnswerSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(required=False)
-    
-    class Meta:
-        model = QuestionAnswer
-        fields = (
-            "id",
-            "variant",
-            "is_true",
-        )
-
-
-class QuestionSerializer(serializers.ModelSerializer):
-    answers_set = QuestionAnswerSerializer(source="answers", many=True)
-
-    class Meta:
-        model = Question
-        fields = (
-            "id",
-            "question",
-            "post",
-            "answers_set",
-        )
-        
-    def validate(self, attrs):
-        not_id = False
-        for answer in attrs['answers']:
-            if not answer.get('id', False):
-                not_id = True
-                break
-        if self.instance and not_id:
-            raise serializers.ValidationError({'error': 'Something went wrong.'})
-        
-        return attrs
-
-    def create(self, validated_data):
-        answers_data = validated_data.pop('answers')
-        question = Question(**validated_data)
-        question.save()
-        for answer_data in answers_data:
-            answer_data['question'] = question
-            QuestionAnswer.objects.create(**answer_data)
-        return question
-
-    def update(self, instance, validated_data):
-        answers_list = validated_data.pop('answers')
-        for answer in answers_list:
-            question_answer = get_object_or_404(QuestionAnswer, id=answer['id'])
-            question_answer.variant = answer['variant']
-            question_answer.is_true = answer['is_true']
-            question_answer.save()
-        
-        question_obj = Question.objects.filter(id=instance.id)[0]
-        question_obj.question = validated_data.get("question", instance.question)
-        question_obj.save()
-        return question_obj
-    
-
-class PostTestDetailSerializer(serializers.ModelSerializer):
-    preview = serializers.FileField(help_text="img", required=False)
-    question_set = QuestionSerializer(source="questions", many=True)
-
-    class Meta:
-        model = Post
-        fields = (
-            "id",
-            "preview",
-            "title",
-            "content",
-            "user",
-            "language",
-            "scores",
-            "slug",
-            "question_set",
-        )
-        
-
 class DraftAnswerSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     
@@ -126,7 +48,6 @@ class DraftSerializer(serializers.ModelSerializer):
     tags = serializers.CharField(required=False, write_only=True)
     answers_set = DraftAnswerSerializer(required=False, many=True, source="answers")
     language = serializers.CharField(required=False, validators=[check_language])
-    level_access = serializers.IntegerField(required=False)
 
     class Meta:
         model = DraftModel
@@ -137,10 +58,13 @@ class DraftSerializer(serializers.ModelSerializer):
             "blog",
             "answers_set",
             "language",
+            "category",
+            "subcategory",
             "add_survey",
             "is_paid",
             "amount",
             "tags",
+            "is_create_test",
             "level_access",
         )
         
@@ -158,10 +82,10 @@ class DraftSerializer(serializers.ModelSerializer):
             # if '' in tags
             self.tags = [value for value in self.tags if value]
 
-        if attrs.get("level_access", False) and attrs["level_access"] < 1:
-            raise serializers.ValidationError(
-                {"level_access": "Please select a valid level access"}
-            )
+        level_access = attrs.get('level_access')
+        if level_access:
+            if not LevelAccess.objects.filter(id=level_access.pk, blog=attrs['blog']):
+                raise serializers.ValidationError({'level_access': 'Invalid level access.'})
         
         if not attrs.get('is_paid', False):
             if attrs.get('amount', False):
@@ -180,16 +104,7 @@ class DraftSerializer(serializers.ModelSerializer):
         answers_data = validated_data.get("answers", [])
         if answers_data:
             del validated_data['answers']
-            
-        if validated_data.get('level_access', None) and validated_data['level_access'] > 0:
-            validated_data['level_access'] = get_object_or_404(
-                LevelAccess, level=validated_data['level_access'], blog=validated_data['blog']
-            )
-        try:
-            if not (validated_data.get('level_access', None).__class__.__name__ == 'LevelAccess'):
-                del validated_data['level_access']
-        except KeyError as e:
-            pass
+        
         draft_post = DraftModel(**validated_data)
         draft_post.user = self.user
         draft_post.save()
@@ -205,16 +120,14 @@ class DraftSerializer(serializers.ModelSerializer):
             del validated_data['answers']
             
         for attr, value in validated_data.items():
-            if attr == 'level_access':
-                if value <= 0:
-                    value = None
-                else:
-                    value = get_object_or_404(
-                        LevelAccess, level=value, blog=draft_post.blog
-                    )
             setattr(draft_post, attr, value)
             
+        if not validated_data.get('level_access'):
+            draft_post.level_access = None
+            
         draft_post.add_survey = validated_data.get('add_survey', False)
+        if not validated_data.get('subcategory'):
+            draft_post.subcategory = None
         draft_post.save()
         
         ids = []
@@ -234,7 +147,6 @@ class DraftSerializer(serializers.ModelSerializer):
         for option in options:
             if option.id not in ids and option.draft_post.user == self.user:
                 option.delete()
-
         return draft_post
 
     def save(self):
@@ -270,7 +182,7 @@ class PostSerializer(serializers.ModelSerializer):
     tags = serializers.CharField(required=False, write_only=True)
     answers_set = PostAnswerSerializer(source="answers", many=True, required=False)
     language = serializers.CharField(validators=[check_language])
-    level_access = serializers.IntegerField(required=False)
+    is_create_test = serializers.BooleanField(required=False, write_only=True)
     
     class Meta:
         model = Post
@@ -280,11 +192,14 @@ class PostSerializer(serializers.ModelSerializer):
             "content",
             "answers_set",
             "language",
+            "category",
+            "subcategory",
             "blog",
             "is_paid",
             "add_survey",
             "amount",
             "level_access",
+            "is_create_test",
             "tags",
         )
 
@@ -310,6 +225,17 @@ class PostSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
+        try:
+            if self._instance:
+                if attrs.get('category') and not attrs.get('subcategory'):
+                    raise Exception()
+            subcategory = attrs['subcategory']
+            category = attrs['category']
+            if subcategory.category != category:
+                raise Exception()
+        except Exception:
+            raise serializers.ValidationError({"subcategory": "Invalid subcategory."})
+        
         tags = attrs.get("tags")
 
         self.tags = []
@@ -321,6 +247,15 @@ class PostSerializer(serializers.ModelSerializer):
 
         if attrs.get("blog") and self._instance:
             del attrs["blog"]
+            
+        level_access = attrs.get('level_access')
+        if level_access:
+            if self._instance:
+                blog = self._instance.blog
+            else:
+                blog = attrs['blog']
+            if not LevelAccess.objects.filter(id=level_access.pk, blog=blog):
+                raise serializers.ValidationError({'level_access': 'Invalid level access.'})
             
         if attrs.get('is_paid', False) and not attrs.get('amount', False):
             raise serializers.ValidationError({
@@ -335,6 +270,11 @@ class PostSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'add_survey': "for options, you need to check the box."})
         if attrs.get('add_survey', False) and not attrs.get('answers', None):
             raise serializers.ValidationError({'answers_set': "This field is required."})
+        
+        self.create_test = attrs.get('is_create_test')
+        if self.create_test != None:
+            del attrs['is_create_test']
+            
         return attrs
     
     def create(self, validated_data):
@@ -342,22 +282,13 @@ class PostSerializer(serializers.ModelSerializer):
         if answers_data:
             del validated_data['answers']
             
-        if validated_data.get('level_access', None) and validated_data['level_access'] > 0:
-            validated_data['level_access'] = get_object_or_404(
-                LevelAccess, level=validated_data['level_access'], blog=validated_data['blog']
-            )
-        try:
-            if not (validated_data.get('level_access', None).__class__.__name__ == 'LevelAccess'):
-                del validated_data['level_access']
-        except KeyError as e:
-            pass
-            
         post = Post(**validated_data)
         post.user = self.user
         post.save()
         for answer_data in answers_data:
             answer_data['post'] = post
             PostRadio.objects.create(**answer_data)
+        
         return post
     
     def update(self, post, validated_data):
@@ -367,6 +298,9 @@ class PostSerializer(serializers.ModelSerializer):
         
         for attr, value in validated_data.items():
             setattr(post, attr, value)
+        
+        if not validated_data.get('level_access'):
+            post.level_access = None
         post.add_survey = validated_data.get('add_survey', False)
         post.save()
         
@@ -417,7 +351,17 @@ class PostSerializer(serializers.ModelSerializer):
                         follower=follow.follower, blog=post.blog, user=post.user, get_notifications_blog=True
                     ):
                         Notification.objects.create(post=post, user=follow.follower)
-
+        # creating test for post
+        if self.create_test:    
+            test = create_test(post)
+            post.test = test
+            post.save()
+        elif self._instance and self._instance.test:
+            test = self._instance.test
+            post.test = None
+            post.save()
+            test.delete()
+        
         return post
 
 
@@ -464,6 +408,15 @@ class PostIndexSerializer(serializers.ModelSerializer):
             "language",
             "user",
             "date",
+        )
+        
+        
+class SubcategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategory
+        fields = (
+            "id",
+            "subcategory",
         )
 
 

@@ -14,11 +14,15 @@ async function survey_edit(e) {
     let answers = document.querySelectorAll('input[name="answers"]');
     let tags = document.querySelectorAll('input[name="tags"]');
     let level_access = document.querySelector('#id_level_access');
+    let category = document.querySelector('#id_category');
+    let subcategory = document.querySelector('#id_subcategory');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
     tags_list = [];
+    let is_empty_tags = true;
     tags.forEach(tag => {
+        is_empty_tags = false;
         tags_list.push(tag.value);
     });
 
@@ -42,13 +46,20 @@ async function survey_edit(e) {
     form_data.append('description', description.value);
     form_data.append('content', content.value);
     if (answers_list) {
-        console.log(answers_list);
         form_data.append('answers_set', JSON.stringify(answers_list));
     }
-    if (level_access) {
+    if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);
     }
-    form_data.append('tags', tags_list);
+    if (category && ! isNaN(Number(category.value))) {
+        form_data.append('category', category.value);
+    }
+    if (subcategory && ! isNaN(Number(subcategory.value))) {
+        form_data.append('subcategory', subcategory.value);
+    }
+    if (! is_empty_tags) {
+        form_data.append('tags', tags_list);
+    }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     url = window.location.protocol + '//' + window.location.host + '/api/v1/surveys/' + survey_id + '/update/';
@@ -65,6 +76,7 @@ async function survey_edit(e) {
 
     if (response.ok) {
         let result = await response.json();
+        console.log(result);
 
         if (result.success) {
             window.location.replace(window.location.protocol + '//' + window.location.host + '/surveys/show/' + result.slug);
@@ -89,6 +101,14 @@ async function survey_edit(e) {
 
             if (result.content) {
                 content.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.content}</div>`);
+            }
+
+            if (result.category) {
+                category.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.category}</div>`);
+            }
+
+            if (result.subcategory) {
+                subcategory.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.subcategory}</div>`);
             }
 
             if (result.recaptcha) {

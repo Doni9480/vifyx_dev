@@ -11,7 +11,11 @@ from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
 from django.db import transaction
 
-from quests.models import Quest, QuestionQuest, QuestionQuestAnswer
+from quests.models import Quest, QuestionQuest, QuestionQuestAnswer, QuestView, Category, Subcategory
+from users.utils import opening_access
+from blogs.models import Blog
+from blogs.utils import get_filter_kwargs, get_obj_set, get_category
+from quests.api.utils import get_views_and_comments_to_quests
 from .serializers import (
     QuestSerializer,
     QuestVisibilitySerializer,
@@ -19,8 +23,12 @@ from .serializers import (
     QuestionQuestSerializer,
     QuestionQuestDetailSerializer,
     QuestionQuestAnswerSerializer,
+    SubcategorySerializer,
 )
 from blog.decorators import recaptcha_checking
+from blog.utils import set_language_to_user, MyPagination
+
+from operator import attrgetter
 
 
 class QuestViewSet(viewsets.ModelViewSet):
@@ -28,6 +36,27 @@ class QuestViewSet(viewsets.ModelViewSet):
     serializer_class = QuestSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+    pagination_class = MyPagination
+    
+    def get_queryset(self):
+        if self.action == 'get_subcategory':
+            return Category.objects.all()
+        return super().get_queryset()
+    
+    def list(self, request, *args, **kwargs):
+        request = set_language_to_user(request)
+        filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'quests')
+        obj_set = get_obj_set(Quest.level_access_objects.filter(**filter_kwargs), request.user)
+        obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
+            
+        quests = QuestSerializer(
+            obj_set,
+            many=True,
+        ).data
+
+        quests = get_views_and_comments_to_quests(quests)
+        page = self.paginate_queryset(quests)
+        return self.get_paginated_response(page) 
 
     @swagger_auto_schema(
         operation_description="Создание квеста\nВнимание!\nПри создании теста нужно использовать параметр [Сontent-type: multipart/form-data;]. Так как есть поле для изображения (preview)",
@@ -44,18 +73,25 @@ class QuestViewSet(viewsets.ModelViewSet):
     )
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        _ = get_object_or_404(Blog, user=request.user.id, id=request.data.get('blog'))
+        
         response_data = {}
-        data = request.data
-        data["slug"] = slugify(data["title"])
-        data["user"] = request.user.pk
-        serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            response_data["success"] = "ok."
-            response_data["data"] = serializer.data
-            return Response(response_data, status=status.HTTP_201_CREATED)
+        
+        if request.user.is_authenticated and request.user.is_published_post:
+            data = request.data.dict()
+            data["user"] = request.user.pk
+            serializer = self.get_serializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                response_data["success"] = "ok."
+                response_data["data"] = serializer.data
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                response_data["data"] = serializer.errors
         else:
-            response_data["data"] = serializer.errors
+            response_data['ban'] = 'You can\'t publish quests.'
+            
+        print(response_data)
         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
@@ -67,6 +103,7 @@ class QuestViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         response_data = {}
         instance = self.get_object()
+        opening_access(instance, request.user)
         serializer = QuestDetailSerializer(instance)
         response_data["data"] = serializer.data
         return Response(response_data)
@@ -82,10 +119,12 @@ class QuestViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         response_data = {}
         instance = self.get_object()
-        serializer = QuestDetailSerializer(instance, data=request.data, partial=True)
+        # serializer = QuestDetailSerializer(instance, data=request.data, partial=True)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
+            quest = serializer.save()
             response_data["data"] = serializer.data
+            response_data['data']['slug'] = quest.slug
             response_data["success"] = "ok."
             return Response(response_data)
         else:
@@ -99,7 +138,7 @@ class QuestViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"success": "ok."}, status=status.HTTP_204_NO_CONTENT)
 
     @swagger_auto_schema(
         operation_description="Управление видимости квеста",
@@ -124,6 +163,66 @@ class QuestViewSet(viewsets.ModelViewSet):
         else:
             data["data"] = serializer.errors
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=True, methods=["patch"], url_path="<pk>/hide_quest")
+    def hide_quest(self, request, pk=None):
+        data = {}
+
+        quest = self.get_object()
+        if request.user == quest.user:
+            quest.hide_to_user = True
+        elif request.user.is_staff:
+            quest.hide_to_moderator = True
+        else:
+            raise Http404()
+
+        quest.save()
+
+        data["success"] = "ok."
+
+        return Response(data)
+
+    @action(detail=True, methods=["patch"], url_path="<pk>/show_quest")
+    def show_quest(self, request, pk=None):
+        data = {}
+
+        quest = self.get_object()
+
+        if request.user != quest.user and not request.user.is_staff:
+            raise Http404()
+
+        if request.user == quest.user and not quest.hide_to_moderator:
+            quest.hide_to_user = False
+        elif request.user.is_staff:
+            quest.hide_to_moderator = False
+        else:
+            data["ban"] = "You can't show the quest"
+
+        quest.save()
+
+        if not data.get("ban", False):
+            data["success"] = "ok."
+
+        return Response(data)
+        
+    @action(detail=True, methods=["post"], url_path="views/add/<pk>")
+    @transaction.atomic
+    def add_view(self, request, pk=None):
+        quest = self.get_object()
+        opening_access(quest, request.user)
+        view = QuestView.objects.filter(quest=quest).filter(user=request.user.id)
+        if not view:
+            QuestView.objects.create(quest=quest, user=request.user)
+        return Response({"success": "ok."})
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")
+    def get_subcategory(self, request, pk=None):
+        category = self.get_object()
+        subcategories_set = Subcategory.objects.filter(category=category)
+        subcategories = SubcategorySerializer(
+            subcategories_set, many=True
+        ).data
+        return Response({"subcategories": subcategories})
 
 
 class QuestionQuestViewSet(viewsets.ModelViewSet):

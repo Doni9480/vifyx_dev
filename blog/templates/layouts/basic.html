@@ -22,7 +22,7 @@
 	<link rel="stylesheet" href="{% static 'css/components/radio-checkbox.css' %}">
 
 	<!-- Font Icons -->
-	<link rel="stylesheet" href="{% static 'css/font-icons.css' %}">
+	{% comment %} <link rel="stylesheet" href="{% static 'css/font-icons.css' %}"> {% endcomment %}
 
 	<!-- Custom CSS -->
 	<link rel="stylesheet" href="{% static 'css/custom.css' %}">
@@ -188,23 +188,18 @@
 												</a>
 											</li>
 											<li class="menu-item">
-												<a href="{% url 'test_create' %}" class="menu-link">
-													<div style="font-size: 14px;">Create test</div>
-												</a>
-											</li>
-											<li class="menu-item">
 												<a href="{% url 'list_quests' %}" class="menu-link">
 													<div style="font-size: 14px;">Quests</div>
 												</a>
 											</li>
 											<li class="menu-item">
-												<a href="{% url 'quest_create' %}" class="menu-link">
-													<div style="font-size: 14px;">Create quest</div>
+												<a href="{% url 'surveys:index' %}" class="menu-link">
+													<div style="font-size: 14px;">Surveys</div>
 												</a>
 											</li>
 											<li class="menu-item">
-												<a href="{% url 'surveys:index' %}" class="menu-link">
-													<div style="font-size: 14px;">Surveys</div>
+												<a href="{% url 'posts:index' %}" class="menu-link">
+													<div style="font-size: 14px;">Posts</div>
 												</a>
 											</li>
 											{% if request.user.is_authenticated %}
@@ -283,6 +278,36 @@
 																			<div>
 																				<div><img width="100" src="{% static 'images/donate.png' %}"></div>
 																			</div>
+																		</div>
+																	</a>
+																{% elif notification.test %}
+																	<a class="fix_text fix_color" href="{% url 'detail_test' notification.test.slug %}">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">A new test has been created</div>
+																				<div>{{ notification.test.title }}</div>
+																				<div>{{ notification.test.date|date:"d M Y H:i" }}</div>
+																			</div>
+																			{% if notification.test.preview %}
+																				<div>
+																					<div><img width="100" src="{{ notification.test.preview.url }}"></div>
+																				</div>
+																			{% endif %}
+																		</div>
+																	</a>
+																{% elif notification.quest %}
+																	<a class="fix_text fix_color" href="{% url 'detail_quest' notification.quest.slug %}">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">A new quest has been created</div>
+																				<div>{{ notification.quest.title }}</div>
+																				<div>{{ notification.quest.date|date:"d M Y H:i" }}</div>
+																			</div>
+																			{% if notification.quest.preview %}
+																				<div>
+																					<div><img width="100" src="{{ notification.quest.preview.url }}"></div>
+																				</div>
+																			{% endif %}
 																		</div>
 																	</a>
 																{% endif %}
@@ -480,6 +505,7 @@
 	<script src="{% static 'js/read_it.js' %}"></script>
 	<script src="{% static 'js/search.js' %}"></script>
 	<script src="{% static 'js/search_tags.js' %}"></script>
+	<script src="{% static 'js/select_category.js' %}"></script>
 	<script>
 		// Timezone settings
 		const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; // e.g. "America/New_York"

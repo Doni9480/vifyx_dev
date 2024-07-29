@@ -2,7 +2,7 @@ from django import forms
 from django_summernote.widgets import SummernoteWidget
 from django_summernote import fields
 
-from posts.models import Post, DraftPost, Question, QuestionAnswer
+from posts.models import Post, DraftPost
 
 
 class PostForm(forms.ModelForm):
@@ -14,23 +14,6 @@ class PostForm(forms.ModelForm):
             "preview",
             "title",
             "content",
-        )
-        
-
-class QuestionForm(forms.ModelForm):
-    class Meta:
-        model = Question
-        fields = (
-            "question",
-        )
-
-
-class QuestionAnswerForm(forms.ModelForm):
-    class Meta:
-        model = QuestionAnswer
-        fields = (
-            "variant",
-            "is_true",
         )
 
 

@@ -9,6 +9,8 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 
+from rest_framework.pagination import PageNumberPagination
+
 
 def my_custom_upload_to_func(instance, filename):
     ext = filename.split(".")[-1]
@@ -72,3 +74,8 @@ def set_language_to_user(request):
     if not hasattr(request.user, 'language'):
         request.user.language = 'any'
     return request
+
+
+class MyPagination(PageNumberPagination):
+    page_size = 5
+    max_page_size = 1000

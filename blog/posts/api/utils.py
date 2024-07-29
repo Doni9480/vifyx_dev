@@ -2,6 +2,8 @@ from comments.models import Comment, Answer
 
 from posts.models import PostView
 
+from custom_tests.models import Test
+
 from users.models import User
 
 
@@ -19,3 +21,13 @@ def get_views_and_comments_to_posts(posts):
         post["namespace"] = "posts"
 
     return posts
+
+def create_test(post):
+    test = Test.objects.create(
+        title=post.title,
+        user=post.user,
+        hidden=True,
+        blog=post.blog,
+        level_access=post.level_access,
+    )
+    return test

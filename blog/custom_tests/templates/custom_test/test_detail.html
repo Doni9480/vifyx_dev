@@ -33,9 +33,11 @@
 <!-- Content
 ============================================= -->
 <section id="content">
+    <input type="hidden" value="{{ post_slug }}" name="post_slug">
     <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
     <div class="content-wrap" style="background-color: #EEE">
         <div class="container">
+            <input type="hidden" name="blog_id" value="{{ test.blog.pk }}">
             <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
                 <!-- Single Post============================================= -->
                 <div class="entry">
@@ -52,6 +54,13 @@
                                     <li class="me-0"><a href="{% url 'users:profile' test.user.username  %}"><i class="uil uil-user"></i> {{ test.user.username }}</a></li>
                                     <li class="me-0"><i class="uil uil-comments-alt"></i> {{ count_comments }} Comments</li>
                                     <li class="me-0"><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"> <span style="margin-left: 5.5px;">{{ count_views }}</span></li>
+                                    {% if follow_exists and request.user.is_authenticated %}
+                                        {% if follow %}
+                                            <li class="me-0"><button type="button" class="btn btn-dark" id="follow">Follow</button></li>
+                                        {% else %}
+                                            <li class="me-0"><button type="button" class="btn btn-dark" id="unfollow">Unfollow</button></li>
+                                        {% endif %}
+                                    {% endif %}
                                 </ul>
                             </div><!-- .entry-meta end -->
                         </div>
@@ -149,19 +158,6 @@
                         </div>
                     {% endif %}
                 </div><!-- .entry end -->
-
-                <!-- Post Navigation
-                ============================================= -->
-                <div class="row text-center text-md-start justify-content-between my-5">
-                    <div class="col-md-auto">
-                        <a href="#" class="d-inline-flex align-items-center text-dark h-text-color"><i
-                                class="uil uil-angle-left-b fs-3 me-1"></i><span>15 Ways to create Healthy Habits</span></a>
-                    </div>
-                    <div class="col-md-auto">
-                        <a href="#" class="d-inline-flex align-items-center text-dark h-text-color"><span>The Next big thing is AI</span><i
-                                class="uil uil-angle-right-b fs-3 ms-1"></i></a>
-                    </div>
-                </div><!-- .post-navigation end -->
 
                 {% if request.user.is_staff or request.user == test.user %}
                     <div class="row">
@@ -416,6 +412,7 @@
     <script src="{% static 'js/delete_test.js' %}"></script>
     <script src="{% static 'js/send_comment.js' %}"></script>
     <script src="{% static 'js/send_scores_to_option.js' %}"></script>
+    <script src="{% static 'js/follow.js' %}"></script>
     <script src="{% static 'js/send_hide_test.js' %}"></script>
     <script>
         function delete_comment_block(id, username, text, date) {
@@ -488,7 +485,7 @@
     <script>
         async function add_view_to_test() {
             let test = document.querySelector('input[name="test_id"]').value;
-            let url = window.location.protocol + '//' + window.location.host + '/api/v1/test/views/add/' + test + '/';
+            let url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/views/add/' + test + '/';
             let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     
             let response = await fetch(url, {

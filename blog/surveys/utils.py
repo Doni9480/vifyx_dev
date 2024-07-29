@@ -1,8 +1,7 @@
 from comments.models import Comment, Answer
-
 from surveys.models import SurveyView
-
 from blogs.models import PaidFollow
+from django.http import Http404
 
                 
 def get_views_and_comments_to_surveys(surveys):
@@ -17,21 +16,3 @@ def get_views_and_comments_to_surveys(surveys):
         survey.namespace = 'surveys'
         
     return surveys
-
-def opening_access(survey, user):
-    is_exp = False
-    if survey.level_access:
-        if user.is_anonymous:
-            return True
-        paid_follow = PaidFollow.objects.filter(blog=survey.blog, follower=user)
-        if not paid_follow or paid_follow[0].blog_access_level.level < survey.level_access.level:
-            is_exp = True
-
-    if survey.hide_to_moderator or survey.hide_to_user and not user.is_staff:
-        is_exp = True
-    if survey.language != user.language and user.language != 'any':
-        is_exp = True      
-    if survey.user == user:
-        is_exp = False
-        
-    return is_exp

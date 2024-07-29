@@ -108,6 +108,52 @@
                                             </div>
                                         </div>
                                     </div>
+                                {% elif notification.test %}
+                                    <div class="entry col-12" id="element">
+                                        <div class="grid-inner">
+                                            <div class="entry-image">
+                                                {% if notification.test.preview %}
+                                                <a href="{{ notification.test.preview.url }}" data-lightbox="image"><img src="{{ notification.test.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                            {% endif %}
+                                            </div>
+                                            <div class="entry-title">
+                                                <h2><a href="{% url 'detail_test' notification.test.slug %}">{{ notification.test.title }}</a></h2>
+                                            </div>
+                                            <div class="entry-meta">
+                                                <ul>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.test.date|date:"d M Y H:i" }}</li>
+                                                    <li><a href="{% url 'users:profile' notification.test.user.username %}"><i class="uil uil-user"></i> {{ notification.test.user.username }}</a></li>
+                                                </ul>
+                                            </div>
+                                            <div class="entry-content">
+                                                <p>{{ notification.test.description }}</p>
+                                                <a href="{% url 'detail_test' notification.test.slug %}" class="more-link">Read More</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% elif notification.quest %}
+                                    <div class="entry col-12" id="element">
+                                        <div class="grid-inner">
+                                            <div class="entry-image">
+                                                {% if notification.quest.preview %}
+                                                <a href="{{ notification.quest.preview.url }}" data-lightbox="image"><img src="{{ notification.quest.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                            {% endif %}
+                                            </div>
+                                            <div class="entry-title">
+                                                <h2><a href="{% url 'detail_quest' notification.quest.slug %}">{{ notification.quest.title }}</a></h2>
+                                            </div>
+                                            <div class="entry-meta">
+                                                <ul>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.quest.date|date:"d M Y H:i" }}</li>
+                                                    <li><a href="{% url 'users:profile' notification.quest.user.username %}"><i class="uil uil-user"></i> {{ notification.quest.user.username }}</a></li>
+                                                </ul>
+                                            </div>
+                                            <div class="entry-content">
+                                                <p>{{ notification.quest.description }}</p>
+                                                <a href="{% url 'detail_quest' notification.quest.slug %}" class="more-link">Read More</a>
+                                            </div>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             {% endfor %}
                         {% else %}

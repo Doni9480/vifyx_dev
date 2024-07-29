@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 
 from campaign.models import Campaign, Task
 from users.forms import ChangeEmailForm, PasswordChangeForm
-from users.models import User, TotalScore
+from users.models import User, TotalScore, Hide
 from users.utils import send_email_for_change, get_user
 
 from blogs.models import Blog, PaidFollow, BlogFollow
@@ -97,11 +97,12 @@ def change_password(request, uidb64, token):
 
 @login_required(login_url="/registration/login")
 def my_profile(request):
-    tasks = Task.objects.filter(campaign__is_active=True)
+    tasks = Task.objects.all()
     blogs = Blog.objects.filter(user=request.user)
     follows = BlogFollow.objects.filter(follower=request.user)
     companies = Campaign.objects.filter(user=request.user)
     paid_follows = PaidFollow.objects.filter(follower=request.user)
+    muted = Hide.objects.filter(hider=request.user)
 
     total_scores = TotalScore.objects.all()[0]
     if len(str(total_scores.minute)) == 1:
@@ -111,6 +112,7 @@ def my_profile(request):
         "tasks": tasks,
         "blogs": blogs,
         "companies": companies,
+        "muted": muted,
         "follows": follows,
         "paid_follows": paid_follows,
         "hour": total_scores.hour + request.user.utc_offset,

@@ -185,7 +185,7 @@
                                 {% endif %}
                             </div>
 
-                            {% if questions %}<div><a href="{% url 'posts:test_run' post.slug %}" class="btn btn-success">Test run</a></div>{% endif %}
+                            {% if questions %}<div><a href="{% url 'test_run' post.test.slug %}" class="btn btn-success">Test run</a></div>{% endif %}
 
                             <!-- Tag Cloud
                             ============================================= -->
@@ -207,9 +207,9 @@
                         {% endif %}
                     </div><!-- .entry end -->
 
-                    {% if request.user == post.user %}
+                    {% if request.user == post.user and post.test %}
                         <div>
-                            <a href="{% url 'posts:post_create_question' post.slug %}" class="btn btn-success">Add question</a>
+                            <a href="{% url 'test_create_question' post.test.slug %}" class="btn btn-success">Add question</a>
                         </div>
                     {% endif %}
 
@@ -246,7 +246,7 @@
                                 <p>{{question.question}}</p>
                                 <div class="d-flex">
                                     <form method="POST" class="form-delete" style="inline-block;">
-                                        <a href="{% url 'posts:post_edit_question' slug=post.slug question_id=question.id %}" class="btn btn-success">Edit</a>
+                                        <a href="{% url 'test_edit_question' slug=post.test.slug question_id=question.id %}" class="btn btn-success">Edit</a>
 
                                         {% csrf_token %}
                                         <input type="hidden" name="question_id" value="{{ question.id }}">

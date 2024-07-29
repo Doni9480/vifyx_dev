@@ -1,0 +1,25 @@
+<div class="mb-5">
+    <select class="form-select mb-2" id="select_category">
+        <option selected disabled>Select a category</option>
+        {% for category in categories %}
+            {% if category.pk|slugify == request.GET.category %}
+                <option value="{{category.id}}" selected>{{category.category}}</option>
+            {% else %}
+                <option value="{{category.id}}">{{category.category}}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+
+    {% if select_category %}
+        <select class="form-select mb-2" id="select_subcategory">
+            <option selected disabled>Select a subcategory</option>
+            {% for subcategory in subcategories %}
+                {% if subcategory.pk|slugify == request.GET.subcategory %}
+                    <option value="{{subcategory.id}}" selected>{{subcategory.subcategory}}</option>
+                {% else %}
+                    <option value="{{subcategory.id}}">{{subcategory.subcategory}}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    {% endif %}
+</div>

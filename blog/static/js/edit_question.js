@@ -18,7 +18,7 @@ async function edit_question (e) {
     let quest_slug = document.querySelector('input[name="quest_slug"]')?.value;
     let post_slug = document.querySelector('input[name="post_slug"]')?.value;
     let question_id = document.querySelector('input[name="id_question"]').value;
-    let question_answers = document.querySelectorAll('.questions__item')
+    let question_answers = document.querySelectorAll('.questions__item');
     let answers_list = [];
     question_answers.forEach(function (item) {
         let answer_text = item.querySelector('input[name="variant"]').value;
@@ -55,12 +55,12 @@ async function edit_question (e) {
     .then(function(r) {
         if (r.data.success) {
             alert('saved successfully');
-            if (test_slug) {
+            if (post_slug) {
+                window.location.replace(window.location.protocol + '//' + window.location.host + '/posts/show/' + post_slug);
+            } else if (test_slug) {
                 window.location.replace(window.location.protocol + '//' + window.location.host + '/tests/' + test_slug);
             } else if (quest_slug) {
                 window.location.replace(window.location.protocol + '//' + window.location.host + '/quests/' + quest_slug);
-            } else if (post_slug) {
-                window.location.replace(window.location.protocol + '//' + window.location.host + '/posts/show/' + post_slug);
             }
         } else {
             alert(r.data.error);

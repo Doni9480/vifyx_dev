@@ -1,11 +1,6 @@
 from posts.models import Post
-
 from comments.models import Comment, Answer
-
 from posts.models import PostView
-
-from blogs.models import PaidFollow
-
 
 def popular_blogs():
     posts = Post.objects.all()
@@ -25,21 +20,3 @@ def get_views_and_comments_to_posts(posts):
         post.namespace = 'posts'
         
     return posts
-
-def opening_access(post, user):
-    is_exp = False
-    if post.level_access:
-        if user.is_anonymous:
-            return True
-        paid_follow = PaidFollow.objects.filter(blog=post.blog, follower=user)
-        if not paid_follow or paid_follow[0].blog_access_level.level < post.level_access.level:
-            is_exp = True
-
-    if post.hide_to_moderator or post.hide_to_user and not user.is_staff:
-        is_exp = True
-    if post.language != user.language and user.language != 'any':
-        is_exp = True      
-    if post.user == user:
-        is_exp = False
-        
-    return is_exp

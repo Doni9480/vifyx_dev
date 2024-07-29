@@ -19,7 +19,6 @@ async function send_hide(e) {
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/' + post + '/hide_post/';
-    console.log(url);
 
     let response = await fetch(url, {
         method: 'PATCH',
@@ -53,7 +52,6 @@ async function send_show(e) {
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     url = window.location.protocol + '//' + window.location.host + '/api/v1/posts/' + post + '/show_post/';
-    console.log(url);
 
     let response = await fetch(url, {
         method: 'PATCH',

@@ -1,6 +1,8 @@
 var form_search_tags = document.querySelector('#form_search_tags');
 
-form_search_tags.addEventListener('submit', send_search_tags);
+if (form_search_tags) {
+    form_search_tags.addEventListener('submit', send_search_tags);
+}
 
 async function send_search_tags(e) {
     e.preventDefault();

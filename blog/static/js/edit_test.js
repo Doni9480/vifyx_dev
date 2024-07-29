@@ -11,14 +11,11 @@ async function post_edit(e) {
     let title = document.querySelector('input[name="title"]');
     let description = document.querySelector('#id_description');
     let content = document.querySelector('#id_content');
-    let tags = document.querySelectorAll('input[name="tags"]');
+    let level_access = document.querySelector('#id_level_access');
+    let category = document.querySelector('#id_category');
+    let subcategory = document.querySelector('#id_subcategory');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
-
-    tags_list = [];
-    tags.forEach(tag => {
-        tags_list.push(tag.value);
-    });
 
     let form_data = new FormData();
     if (preview.files[0]) {
@@ -27,7 +24,15 @@ async function post_edit(e) {
     form_data.append('title', title.value);
     form_data.append('description', description.value);
     form_data.append('content', content.value);
-    form_data.append('tags', tags_list);
+    if (level_access && !isNaN(Number(level_access.value))) {
+        form_data.append('level_access', level_access.value);
+    }
+    if (category && ! isNaN(Number(category.value))) {
+        form_data.append('category', category.value);
+    }
+    if (subcategory && ! isNaN(Number(subcategory.value))) {
+        form_data.append('subcategory', subcategory.value);
+    }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 
     url = window.location.protocol + '//' + window.location.host + '/api/v1/tests/' + test_id + '/update/';
@@ -46,7 +51,7 @@ async function post_edit(e) {
         let result = await response.json();
 
         if (result.success) {
-            window.location.replace(window.location.protocol + '//' + window.location.host + '/tests/' + result.data.slug);
+            window.location.replace(window.location.protocol + '//' + window.location.host + '/tests/show/' + result.slug);
         } else {
             form_errors = document.querySelectorAll('#form-error');
 
@@ -60,6 +65,14 @@ async function post_edit(e) {
 
             if (result.title) {
                 title.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.title}</div>`);
+            }
+
+            if (result.category) {
+                category.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.category}</div>`);
+            }
+
+            if (result.subcategory) {
+                subcategory.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.subcategory}</div>`);
             }
 
             if (result.description) {

@@ -5,45 +5,59 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from custom_tests.models import Test, Question, QuestionAnswer
+from custom_tests.models import Test, Question, QuestionAnswer, TestView, Category, Subcategory
+from users.utils import opening_access
 from .serializers import (
     TestSerializer,
     TestDetailSerializer,
     TestEditSerializer,
     QuestionSerializer,
     TestVisibilitySerializer,
+    SubcategorySerializer,
 )
 from django.db import transaction
 from blog.utils import get_request_data
+from blogs.models import Blog
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
+from blog.utils import set_language_to_user, MyPagination
+from blogs.utils import get_filter_kwargs, get_obj_set, get_category
+from custom_tests.api.utils import get_views_and_comments_to_tests
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from operator import attrgetter
+
 
 class TestViewSet(viewsets.ModelViewSet):
-    queryset = Test.objects.all()
+    queryset = Test.objects_show.all()
     permission_classes = [IsAuthenticated]
     permission_classes_by_action = dict.fromkeys(['list', 'retrieve'], [AllowAny])
+    pagination_class = MyPagination
     # parser_classes = [MultiPartParser]
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
         if self.action == "list":
-            return Test.objects.all()
-        elif self.action in ["retrieve", "partial_update", "update_visibility"]:
+            return Test.level_access_objects.all()
+        elif self.action in ["partial_update", "update_visibility"]:
+            return Test.objects_show.filter(pk=pk)
+        elif self.action == 'get_subcategory':
+            return Category.objects.all()
+        elif self.action in ["retrieve"]:
             return Test.objects.filter(pk=pk)
         elif self.action in ["question_list"]:
             test_objects = Test.objects.filter(pk=pk)
             if test_objects.count():
-                return Question.objects.filter(test=test_objects[0])
+                opening_access(test_objects.first(), self.request.user)
+                return Question.objects.filter(test=test_objects.first())
             return []
         elif self.action in ["question_update", "question_destroy"]:
             return Question.objects.filter(pk=pk)
         else:
-            return Test.objects.all()
+            return Test.objects_show.all()
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -87,32 +101,48 @@ class TestViewSet(viewsets.ModelViewSet):
     #     ],
     #     responses={201: openapi.Response("Успешное создание", TestEditSerializer())},
     # )
-    # @transaction.atomic
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
+        _ = get_object_or_404(Blog, user=request.user.id, id=request.data.get('blog'))
+        
         response_data = {}
-        data = request.data
-        slug_title = default_slugify(data["title"])  # title on english language
-        if not slug_title:
-            slug_title = slugify(data["title"])  # title on russian language
-        data["slug"] = slug_title
-        data["user"] = request.user.pk
-        serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            response_data["success"] = "ok."
-            response_data["data"] = serializer.data
-            return Response(response_data, status=status.HTTP_201_CREATED)
+        
+        if request.user.is_authenticated and request.user.is_published_post:
+            data = request.data.dict()
+            data["user"] = request.user.pk
+            serializer = self.get_serializer(data=data, user=request.user)
+            if serializer.is_valid():
+                test = serializer.save()
+                test.user = request.user
+                test.save()
+                response_data["success"] = "ok."
+                response_data["data"] = serializer.data
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                response_data["data"] = serializer.errors
         else:
-            response_data["data"] = serializer.errors
+            response_data['ban'] = 'You can\'t publish tests.'
+            
+        print(response_data)
         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response({"data": serializer.data})
+        request = set_language_to_user(request)
+        filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'tests')
+        obj_set = get_obj_set(Test.level_access_objects.filter(**filter_kwargs), request.user)
+        obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
+        
+        tests = TestSerializer(
+            obj_set,
+            many=True,
+        ).data
+        tests = get_views_and_comments_to_tests(tests)
+        page = self.paginate_queryset(tests)
+        return self.get_paginated_response(page)
     
     def retrieve(self, request, pk=None, *args, **kwargs):
         instance = self.get_object()
+        opening_access(instance, request.user)
         serializer = self.get_serializer(instance)
         return Response({"data": serializer.data})
 
@@ -124,8 +154,8 @@ class TestViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=_data, partial=True)
         if serializer.is_valid():
-            serializer.save()
-            return Response({"data": serializer.data, "success": "ok."})
+            test = serializer.save()
+            return Response({"slug": test.slug, "success": "ok."})
         else:
             return Response(
                 {"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
@@ -188,8 +218,6 @@ class TestViewSet(viewsets.ModelViewSet):
         if not request.user.id == instance.test.user.id:
             raise Http404()
         
-        print(request.data)
-        
         serializer = self.get_serializer(instance=instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -206,3 +234,63 @@ class TestViewSet(viewsets.ModelViewSet):
             raise Http404()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["patch"], url_path="<pk>/hide_test")
+    def hide_test(self, request, pk=None):
+        data = {}
+
+        test = self.get_object()
+        if request.user == test.user:
+            test.hide_to_user = True
+        elif request.user.is_staff:
+            test.hide_to_moderator = True
+        else:
+            raise Http404()
+
+        test.save()
+
+        data["success"] = "ok."
+
+        return Response(data)
+
+    @action(detail=True, methods=["patch"], url_path="<pk>/show_test")
+    def show_test(self, request, pk=None):
+        data = {}
+
+        test = self.get_object()
+
+        if request.user != test.user and not request.user.is_staff:
+            raise Http404()
+
+        if request.user == test.user and not test.hide_to_moderator:
+            test.hide_to_user = False
+        elif request.user.is_staff:
+            test.hide_to_moderator = False
+        else:
+            data["ban"] = "You can't show the test"
+
+        test.save()
+
+        if not data.get("ban", False):
+            data["success"] = "ok."
+
+        return Response(data)
+        
+    @action(detail=True, methods=["post"], url_path="views/add/<pk>")
+    @transaction.atomic
+    def add_view(self, request, pk=None):
+        test = self.get_object()
+        opening_access(test, request.user)
+        view = TestView.objects.filter(test=test).filter(user=request.user.id)
+        if not view:
+            TestView.objects.create(test=test, user=request.user)
+        return Response({"success": "ok."})
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")
+    def get_subcategory(self, request, pk=None):
+        category = self.get_object()
+        subcategories_set = Subcategory.objects.filter(category=category)
+        subcategories = SubcategorySerializer(
+            subcategories_set, many=True
+        ).data
+        return Response({"subcategories": subcategories})

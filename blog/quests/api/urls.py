@@ -11,7 +11,7 @@ from .views import (
     # QuestQuestionEditView,
     # QuestQuestionCreateView,
     # QuestQuestionDeleteView,
-    QuestViewSet
+    QuestViewSet,
 )
 
 router = CustomRouter()

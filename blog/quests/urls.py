@@ -11,9 +11,9 @@ from quests.views import (
 
 urlpatterns = [
     path("", list_quests, name="list_quests"),
-    path("create/", quest_create, name="quest_create"),
+    path("blog/<slug:slug>/create/", quest_create, name="quest_create"),
     path("<slug:slug>/edit/", quest_edit, name="quest_edit"),
-    path("<slug:slug>/", detail_quest, name="detail_quest"),
+    path("show/<slug:slug>/", detail_quest, name="detail_quest"),
     path(
         "<slug:slug>/create_question/",
         quest_question_cerate,

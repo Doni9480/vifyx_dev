@@ -23,6 +23,15 @@
             </nav>
 
         </div>
+        <div class="mt-2">
+            {% if request.GET.q == 'tracked' %}
+                <a style="color:black; cursor: pointer;" href="{% url 'main' %}">Everything</a>
+                <a href="{% url 'main' %}?q=tracked" style="color:black; font-weight: bold; cursor: pointer;">Tracked</a>
+            {% else %}
+                <a href="{% url 'main' %}" style="color:black; font-weight: bold; cursor: pointer;">Everything</a>
+                <a style="color:black; cursor: pointer;" href="{% url 'main' %}?q=tracked">Tracked</a>
+            {% endif %}
+        </div>
     </div>
 </section><!-- .page-title end -->
 
@@ -30,38 +39,36 @@
 <section id="content">
     <div class="content-wrap">
         <div class="container">
-
             <div class="row gx-5 col-mb-80">
                 <!-- Post Content
                 ============================================= -->
                 <main class="postcontent col-lg-9">
-
                     <!-- Posts
                     ============================================= -->
                     <div id="posts" class="row grid-container gutter-30">
 
-                        {% for post in page_obj %}
+                        {% for e in page_obj %}
                             <div class="entry col-12" id="element">
                                 <div class="grid-inner">
                                     <div class="entry-image">
-                                        {% if post.preview %}
-                                            <a href="{{ post.preview.url }}" data-lightbox="image"><img src="{{ post.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                        {% if e.preview %}
+                                            <a href="{{ e.preview.url }}" data-lightbox="image"><img src="{{ e.preview.url }}" alt="Standard e with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
                                         {% endif %}
                                     </div>
                                     <div class="entry-title">
-                                        <h2><a href="{% url 'posts:show' post.slug %}">{{ post.title }}</a></h2>
+                                        <h2><a href="/{{ e.namespace }}/show/{{ e.slug }}/">{{ e.title }}</a></h2>
                                     </div>
                                     <div class="entry-meta">
                                         <ul>
-                                            <li><i class="uil uil-schedule"></i> {{ post.date|date:"d M Y" }}</li>
-                                            <li><a href="{% url 'users:profile' post.user.username %}"><i class="uil uil-user"></i> {{ post.user.username }}</a></li>
-                                            <li><a href="{% url 'posts:show' post.slug %}"><i class="uil uil-comments-alt"></i> {{ post.count_comments }} Comments</a></li>
-                                            <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ post.count_views }}</span></li>
+                                            <li><i class="uil uil-schedule"></i> {{ e.date|date:"d M Y" }}</li>
+                                            <li><a href="{% url 'users:profile' e.user.username %}"><i class="uil uil-user"></i> {{ e.user.username }}</a></li>
+                                            <li><a href="/{{ e.namespace }}/show/{{ e.slug }}/"><i class="uil uil-comments-alt"></i> {{ e.count_comments }} Comments</a></li>
+                                            <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ e.count_views }}</span></li>
                                         </ul>
                                     </div>
                                     <div class="entry-content">
-                                        <p>{{ post.description }}</p>
-                                        <a href="{% url 'posts:show' post.slug %}" class="more-link">Read More</a>
+                                        <p>{{ e.content|striptags|truncatechars:10 }}</p>
+                                        <a href="/{{ e.namespace }}/show/{{ e.slug }}/" class="more-link">Read More</a>
                                     </div>
                                 </div>
                             </div>
@@ -94,7 +101,6 @@
                     <!-- .pager end -->
 
                 </main><!-- .postcontent end -->
-
 
                 <!-- Sidebar
                 ============================================= -->

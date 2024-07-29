@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.paginator import Paginator
 
-from posts.forms import PostForm, DraftForm, QuestionForm, QuestionAnswerForm
+from posts.forms import PostForm, DraftForm
 from posts.models import (
     PostTag, 
     Post, 
@@ -14,39 +14,42 @@ from posts.models import (
     BuyPost, 
     PostRadio, 
     DraftPostRadio,
-    Question,
-    QuestionAnswer,
-    PostVote
+    PostVote,
+    Category,
+    Subcategory
 )
-from posts.utils import opening_access, get_views_and_comments_to_posts
-
-from blog.translations import main_dict
+from users.utils import opening_access
+from posts.utils import get_views_and_comments_to_posts
+from blogs.utils import get_filter_kwargs, get_obj_set, get_category
 
 from comments.models import Comment, Answer
 
 from blogs.models import Blog, LevelAccess, BlogFollow
 
+from operator import attrgetter
 
-def main(request):
-    filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
-    if request.user.language == 'any':
-        del filter_kwargs['language']
-    if request.user.is_staff:
-        del filter_kwargs['hide_to_moderator']
-        del filter_kwargs['hide_to_user']
-        
-    posts = Post.level_access_objects.filter(**filter_kwargs).order_by('-date')[:20]
 
-    paginator = Paginator(get_views_and_comments_to_posts(posts), 5)
+def index(request):
+    filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'posts')
+    if filter_kwargs.get('category'):
+        select_category = True
+    else:
+        select_category = False
+
+    obj_set = get_obj_set(Post.level_access_objects.filter(**filter_kwargs).order_by('-date'), request.user)
+    obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
+    
+    categories = Category.objects.all()
+
+    paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    data = dict(
-        list({"page_obj": page_obj}.items())
-        + list(main_dict[request.user.language].items())
-    )
-
-    return render(request, "main.html", data)
+    page_obj = get_views_and_comments_to_posts(paginator.get_page(page_number))
+    return render(request, 'posts/index.html', {
+        'page_obj': page_obj, 
+        'categories': categories,
+        "subcategories": subcategories,
+        "select_category": select_category,
+    })
 
 @login_required(login_url='/registration/login')
 def create(request, slug):
@@ -56,6 +59,7 @@ def create(request, slug):
         return redirect('posts:draft_post_create', blog.slug)
     
     level_follows = LevelAccess.objects.filter(blog=blog)
+    categories = Category.objects.all()
     
     form = PostForm()
     
@@ -63,14 +67,14 @@ def create(request, slug):
         'form': form, 
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
         'blog': blog,
+        'categories': categories,
         'level_follows': level_follows,
     }
     return render(request, 'posts/create.html', data)
     
 def show(request, slug):
     post = get_object_or_404(Post.objects, slug=slug)
-    if opening_access(post, request.user):
-        raise Http404()
+    opening_access(post, request.user)
     
     comments = Comment.objects.filter(post=post)
         
@@ -79,7 +83,6 @@ def show(request, slug):
 
     tags = PostTag.objects.filter(post=post)
     
-    questions = post.questions.all()
     
     count_views = PostView.objects.filter(post=post).count()
     
@@ -102,6 +105,10 @@ def show(request, slug):
             vote = vote_model[0]
             break
     
+    questions = []
+    if post.test:
+        questions = post.test.questions.all()
+    
     data = {
         'post': post,
         'follow_exists': bool(request.user != post.user),
@@ -111,10 +118,10 @@ def show(request, slug):
         'comments': comments,
         'answers': answers,
         'count_comments': count_comments,
-        'questions': questions,
         'count_views': count_views,
         'options': options,
         'vote': vote,
+        'questions': questions,
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY
     }
     
@@ -130,15 +137,18 @@ def edit(request, slug):
         
     answers = PostRadio.objects.filter(post=instance)
     form = PostForm(instance=instance)
-    
-    blog_levels = LevelAccess.objects.filter(blog=blog)
+    level_follows = LevelAccess.objects.filter(blog=blog)
+    categories = Category.objects.all()
+    subcategories = Subcategory.objects.filter(category=instance.category)
     
     data = {
-        'blog_levels': blog_levels,
+        'level_follows': level_follows,
         'form': form,
         'answers': answers,
         'tags': tags,
         'post_id': instance.id,
+        "categories": categories,
+        "subcategories": subcategories,
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY
     }
     
@@ -163,13 +173,8 @@ def best_posts_mouth(request):
 #  draft
 @login_required(login_url='/registration/login')
 def draft_post_create(request, slug):
-    try:
-
-        blog = get_object_or_404(Blog, slug=slug)
-
-        draft = get_object_or_404(DraftPost, user=request.user, blog=blog)
-    except Exception:
-        raise Http404()
+    blog = get_object_or_404(Blog, slug=slug)
+    draft = get_object_or_404(DraftPost, user=request.user, blog=blog)
     
     form = DraftForm(instance=draft)
     tags = DraftPostTag.objects.filter(draft=draft)
@@ -177,7 +182,8 @@ def draft_post_create(request, slug):
         tag.replaced = tag.title.replace(' ', '_')
         
     level_follows = LevelAccess.objects.filter(blog=blog)
-    
+    categories = Category.objects.all()
+    subcategories = Subcategory.objects.filter(category=draft.category)
     answers = DraftPostRadio.objects.filter(draft_post=draft)
         
     data = {
@@ -186,58 +192,10 @@ def draft_post_create(request, slug):
         'tags': tags,
         'blog': blog,
         'answers': answers,
+        'categories': categories,
+        'subcategories': subcategories,
         'level_follows': level_follows,
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
     }
     
     return render(request, 'drafts/create.html', data)
-
-@login_required(login_url="/registration/login")
-def post_question_create(request, slug):
-    post = get_object_or_404(Post, slug=slug)
-    
-    form = QuestionForm()
-    form_answer = QuestionAnswerForm()
-    
-    return render(
-        request,
-        "posts/question_create.html",
-        {
-            "form": form,
-            "form_answer": form_answer,
-            "post": post,
-            "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
-        },
-    )
-    
-@login_required(login_url="/registration/login")
-def post_question_edit(request, slug, question_id):
-    post = get_object_or_404(Post, slug=slug)
-    question_obj = get_object_or_404(Question, pk=question_id)
-    q_answer_list = QuestionAnswer.objects.filter(question=question_obj)
-    return render(
-        request,
-        "posts/question_edit.html",
-        {
-            "question": question_obj,
-            "question_answer": q_answer_list,
-            "post": post,
-            "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
-        },
-    )
-
-def test_run(request, slug):
-    post = get_object_or_404(Post, slug=slug)
-    if opening_access(post, request.user):
-        raise Http404()
-    
-    return render(
-        request,
-        "posts/test_run.html",
-        {
-            "post": post,
-            'count_comments': Comment.objects.filter(post=post).count() + Answer.objects.filter(post=post).count(),
-            'count_views': PostView.objects.filter(post=post).count(),
-            "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
-        },
-    )

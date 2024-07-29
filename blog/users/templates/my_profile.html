@@ -72,6 +72,13 @@
                                             <button class="nav-link" id="canvas-contact-alt-tab" data-bs-toggle="pill" data-bs-target="#contact-alt" type="button" role="tab" aria-controls="canvas-contact-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Blogs</a></button>
                                         </li>
                                     {% endif %}
+
+                                    {% if muted %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="canvas-muted-alt-tab" data-bs-toggle="pill" data-bs-target="#muted-alt" type="button" role="tab" aria-controls="canvas-muted-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Muted</a></button>
+                                        </li>
+                                    {% endif %}
+
                                     {% comment %} {% if companies %} {% endcomment %}
                                         <li class="nav-item" role="presentation">
                                             <button class="nav-link" id="canvas-companies-alt-tab" data-bs-toggle="pill" data-bs-target="#companies-alt" type="button" role="tab" aria-controls="canvas-companies-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Companies</a></button>
@@ -274,6 +281,28 @@
                                             {% endfor %}
                                         {% endif %}
                                     </div>
+
+                                    <div class="tab-pane fade" id="muted-alt" role="tabpanel" aria-labelledby="canvas-muted-tab" tabindex="0">
+
+                                        {% if muted %}
+                                            <p>Muted</p>
+
+                                            <table class="table table-bordered table-striped">
+                                                <tbody>
+                                                    {% for hide in muted %}
+                                                        <tr>
+                                                            <td style="vertical-align: middle;">
+                                                                <span>{{hide.user}}</span>
+                                                            </td>
+                                                            <td>
+                                                                <button type="button" id="button_show" value="{{hide.user.username}}" class="btn btn-danger">Delete</button>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        {% endif %}
+                                    </div>
                                 </div>
 
                             </div>
@@ -330,6 +359,7 @@
 <script src="{% static 'js/get_notifications.js' %}"></script>
 <script src="{% static 'js/autorenewal.js' %}"></script>
 <script src="{% static 'js/language.js' %}"></script>
+<script src="{% static 'js/show_from_user.js' %}"></script>
 <script>
 	function get_g_token() {
 		//global grecaptcha

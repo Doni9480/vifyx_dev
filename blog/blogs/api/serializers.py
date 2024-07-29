@@ -131,6 +131,7 @@ class TestSerializer(serializers.ModelSerializer):
             "slug",
             "date",
             "user",
+            "level_access",
         )
         
 
@@ -144,6 +145,7 @@ class QuestSerializer(serializers.ModelSerializer):
             "slug",
             "date",
             "user",
+            "level_access",
         )
 
 

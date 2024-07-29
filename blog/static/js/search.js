@@ -1,6 +1,8 @@
 var form_search = document.querySelector('#form_search');
 
-form_search.addEventListener('submit', send_search);
+if (form_search) {
+    form_search.addEventListener('submit', send_search);
+}
 
 async function send_search(e) {
     e.preventDefault();

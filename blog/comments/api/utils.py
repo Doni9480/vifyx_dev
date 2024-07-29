@@ -2,6 +2,7 @@ import datetime
 import pytz
 
 from blogs.models import PaidFollow
+from django.http import Http404
 
 
 def func_is_valid_comment(request, serializer):
@@ -79,5 +80,5 @@ def opening_access(e, user):
         is_exp = True      
     if e.user == user:
         is_exp = False
-        
-    return is_exp
+    if is_exp:
+        raise Http404()

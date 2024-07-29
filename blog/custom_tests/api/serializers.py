@@ -1,10 +1,11 @@
 from rest_framework import serializers
 # from drf_extra_fields.fields import Base64ImageField
-from custom_tests.models import Test, Question, QuestionAnswer
-
+from custom_tests.models import Test, Question, QuestionAnswer, Subcategory
 from blog.validators import check_language
-
 from django.shortcuts import get_object_or_404
+from blogs.models import LevelAccess
+from notifications.models import Notification, NotificationBlog
+from blogs.models import BlogFollow
 
 
 class QuestionAnswerSerializer(serializers.ModelSerializer):
@@ -65,6 +66,15 @@ class QuestionSerializer(serializers.ModelSerializer):
         return question_obj
 
 
+class SubcategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategory
+        fields = (
+            "id",
+            "subcategory",
+        )
+
+
 class TestSerializer(serializers.ModelSerializer):
     timer = serializers.IntegerField(
         help_text="Таймер (опционально). Пример: 10 (в минутах)", required=False
@@ -88,6 +98,7 @@ class TestSerializer(serializers.ModelSerializer):
             "user",
             "scores",
             "timer",
+            "date",
         )
 
 
@@ -127,9 +138,67 @@ class TestEditSerializer(serializers.ModelSerializer):
             "user",
             "language",
             "scores",
-            "slug",
+            "blog",
+            "category",
+            "subcategory",
+            "level_access",
         )
-
+        
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", 1)
+        self._instance = kwargs.get("instance")
+        super().__init__(*args, **kwargs)
+        
+    def validate(self, attrs):
+        try:
+            if self._instance:
+                if attrs.get('category') and not attrs.get('subcategory'):
+                    raise Exception()
+            subcategory = attrs['subcategory']
+            category = attrs['category']
+            if subcategory.category != category:
+                raise Exception()
+        except Exception:
+            raise serializers.ValidationError({"subcategory": "Invalid subcategory."})
+        
+        level_access = attrs.get('level_access')
+        if level_access:
+            if self.instance:
+                blog = self.instance.blog
+            else:
+                blog = attrs['blog']
+            if not LevelAccess.objects.filter(id=level_access.pk, blog=blog):
+                raise serializers.ValidationError({'level_access': 'Invalid level access.'})
+        return attrs
+    
+    def update(self, test, validated_data):        
+        for attr, value in validated_data.items():
+            setattr(test, attr, value)
+        if not validated_data.get('level_access'):
+            test.level_access = None
+        test.save()
+        
+        return test
+    
+    def save(self):
+        test = super(TestEditSerializer, self).save()
+        
+        if (
+            not self._instance and not test.level_access
+        ):
+            follows = BlogFollow.objects.filter(blog=test.blog)
+            print(follows)
+            for follow in follows:
+                if follow.follower.is_notificated:
+                    print('????')
+                    if NotificationBlog.objects.filter(
+                        follower=follow.follower, blog=test.blog, user=test.user, get_notifications_blog=True
+                    ):
+                        print('?????')
+                        Notification.objects.create(test=test, user=follow.follower)
+                        
+        return test
+    
 
 class TestVisibilitySerializer(serializers.ModelSerializer):
     class Meta:

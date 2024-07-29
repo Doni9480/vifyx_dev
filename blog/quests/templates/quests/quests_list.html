@@ -56,6 +56,9 @@
                                             <li><a href="{% url 'users:profile' blog.user.username %}"><i class="uil uil-user"></i> {{ blog.user.username }}</a></li>
                                             <li><a href="/{{ blog.namespace }}/show/{{ blog.slug }}/"><i class="uil uil-comments-alt"></i> {{ blog.count_comments }} Comments</a></li>
                                             <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ blog.count_views }}</span></li>
+                                            {% if request.user != blog.user %}
+                                                <li><button type="button" id="button_hide" value="{{ blog.user.username }}" class="btn btn-dark">hide from this user</button></li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                     <div class="entry-content">
@@ -100,6 +103,7 @@
                 <!-- Sidebar
                 ============================================= -->
                 <aside class="sidebar col-lg-3">
+                    {% include "layouts/filter.html" %}
                     {% include "layouts/sidebar.html" %}
                 </aside><!-- .sidebar end -->
             </div>
@@ -112,5 +116,6 @@
 
 {% block js %}
 <script src="{% static 'js/functions.js' %}"></script>
+<script src="{% static 'js/hide_from_user.js' %}"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 {% endblock %}
