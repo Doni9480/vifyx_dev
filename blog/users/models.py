@@ -45,6 +45,7 @@ class User(AbstractUser):
         unique=True,
         default=gen_referral_code,
         null=True,
+        blank=True,
         verbose_name="Referral code",
     )
 
