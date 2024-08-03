@@ -68,6 +68,7 @@ CONSTANCE_CONFIG = {
     'PERIODIC_SCORES': (100, 'Количество баллов периодического бонуса'),
     'TWITTER_CONNECT_SCORES': (150, 'Баллы за подключения Twitter аккаунта'),
     'TELEGRAM_WALLET_CONNECT_SCORES': (200, 'Баллы за подключение кошелька Telegram'),
+    'POINT_INVITATION_BY_REFERRAL_LINK': (500, 'Награда (в баллах) за каждого приглашенного пользователя по реферальной ссылке'),
 }
 
 MPTT_ADMIN_LEVEL_INDENT = 20

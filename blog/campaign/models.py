@@ -7,6 +7,7 @@ from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from django.core.exceptions import ValidationError
 from users.models import User
+from referrals.models import Referral
 
 
 class Campaign(models.Model):
@@ -111,6 +112,11 @@ class UserTaskChecking(models.Model):
     def save(self, *args, **kwargs) -> None:
         if self.is_completed and self.end_date is None:
             self.end_date = now()
+            user_referral = Referral.objects.filter(referral_user=self.user)
+            if len(user_referral):
+                referral = user_referral.first()
+                referral.tasks_completed = referral.tasks_completed + 1
+                referral.save()
         if self.task.campaign.reward_source == "owner":
             if self.is_received and self.received_data is None:
                 self.received_data = now()

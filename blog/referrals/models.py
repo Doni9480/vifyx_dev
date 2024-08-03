@@ -16,3 +16,10 @@ class Referral(models.Model):
     class Meta:
         verbose_name = "Referral"
         verbose_name_plural = "Referrals"
+        
+    def save(self, *args, **kwargs):
+        if self.pk:
+            # Сохранение старых значений перед вызовом save()
+            old_instance = Referral.objects.get(pk=self.pk)
+            self.old__tasks_completed = old_instance.tasks_completed
+        super(Referral, self).save(*args, **kwargs)

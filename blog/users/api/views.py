@@ -50,10 +50,11 @@ class RegisterViewSet(viewsets.GenericViewSet):
 
             data["response"] = "Successful registered a new user."
             data["token"] = token
-            if "referral_code" in request.POST:
+            
+            if "referral_code" in request.query_params.keys():
                 referral = ReferralHandler(request)
-                referral.save()
-                data["referral"] = referral.save(serializer.data["id"])
+                print(serializer.data)
+                data["referral"] = referral.save(dict(serializer.data))
         else:
             data = serializer.errors
 

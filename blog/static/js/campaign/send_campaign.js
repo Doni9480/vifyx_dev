@@ -110,8 +110,8 @@ async function send_post() {
     } else {
         let result = await response.json();
         
-        if (result.error.preview) {
-            preview.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.preview}</div>`);
+        if (result.error.image) {
+            preview.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.error.image}</div>`);
         }
 
         if (result.error.prize_fund) {

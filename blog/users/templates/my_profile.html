@@ -148,7 +148,9 @@
                                                 <div class="entry col-12">
                                                     <div class="grid-inner row align-items-center g-0">
                                                         <div class="col-md-4">
+                                                            {% if blog.image %}
                                                             <a class="entry-image" href="{{ blog.image.url }}" data-lightbox="image"><img src="{{ blog.image.url }}" alt="Standard blog with Image"></a>
+                                                            {% endif %}
                                                         </div>
                                                         <div class="col-md-8 ps-md-4">
                                                             <div class="entry-title title-sm">

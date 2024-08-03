@@ -10,6 +10,7 @@ class CampaignSerializer(serializers.ModelSerializer):
         required=False,
     )
     prize_fund = serializers.IntegerField(default=0, required=False)
+    image = serializers.ImageField(required=True)
 
     class Meta:
         model = Campaign
