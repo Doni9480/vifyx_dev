@@ -19,8 +19,6 @@ class ReferralHandler(object):
         return None
 
     def _check_referral_code_owner(self):
-        print("Checking", self.referral_code, self.request.user.referral_code)
-        print("Checking", type(self.referral_code), type(self.request.user.referral_code))
         if self.referral_code:
             owner_usr = User.objects.filter(referral_code=self.referral_code)
             print("Checking lis", owner_usr)
@@ -32,8 +30,6 @@ class ReferralHandler(object):
         return None
 
     def save(self, new_user=None):
-        print("Saving ...")
-        print(type(new_user), new_user)
         if self.referral_owner:
             if new_user and isinstance(new_user, User):
                 r = Referral(referral_user=new_user, code=self.referral_code)
