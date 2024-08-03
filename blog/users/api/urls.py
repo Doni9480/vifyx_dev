@@ -4,19 +4,6 @@ from users.api.views import (
     LoginViewSet,
     UserViewSet,
     ProfileViewSet,
-    # RegisterView,
-    # LoginView,
-    # LogoutView,
-    # GetScoresView,
-    # SendScoresToUserView,
-    # ForbidToCommentView,
-    # ForbidToPostView,
-    # AllowToCommentView,
-    # AllowToPostView,
-    # MyProfileView,
-    # ProfileView,
-    # PostsShowView,
-    # SurveysShowView,
 )
 from blog.routers import CustomRouter
 

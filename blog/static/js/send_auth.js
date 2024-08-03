@@ -9,6 +9,30 @@ function getCookie(name) {
     return null;
 }
 
+function check_referral_code(){
+    // Получаем текущий URL
+    let currentUrl = window.location.href;
+
+    // Используем регулярное выражение для поиска параметра referral_code
+    let referralCodeMatch = currentUrl.match(/\?(.*)/);
+
+    let referralCode = null;
+
+    if (referralCodeMatch) {
+        referralCode = referralCodeMatch[1];
+    }
+
+    if (referralCode) {
+        setTimeout(() => {
+            document.querySelectorAll(".accordion-header")[1].click();
+            console.log("clicking on header");
+        }, 1000);
+        return referralCode
+    } else {
+        return null;
+    }
+}
+check_referral_code();
 let form_login = document.querySelector('#login-form');
 let form_register = document.querySelector('#register-form');
 
@@ -105,7 +129,13 @@ async function register_send(e) {
 
     let form_data = JSON.stringify(obj);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/registration/';
+    referral = check_referral_code();
+    if (referral === null) {
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/users/registration/';
+    } else {
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/users/registration/?' + referral;
+    }
+    
 
     let response = await fetch(url, {
         method: 'POST',

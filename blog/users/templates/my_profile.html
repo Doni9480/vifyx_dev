@@ -72,20 +72,14 @@
                                             <button class="nav-link" id="canvas-contact-alt-tab" data-bs-toggle="pill" data-bs-target="#contact-alt" type="button" role="tab" aria-controls="canvas-contact-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Blogs</a></button>
                                         </li>
                                     {% endif %}
-
-                                    {% if muted %}
-                                        <li class="nav-item" role="presentation">
-                                            <button class="nav-link" id="canvas-muted-alt-tab" data-bs-toggle="pill" data-bs-target="#muted-alt" type="button" role="tab" aria-controls="canvas-muted-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Muted</a></button>
-                                        </li>
-                                    {% endif %}
-
-                                    {% comment %} {% if companies %} {% endcomment %}
                                         <li class="nav-item" role="presentation">
                                             <button class="nav-link" id="canvas-companies-alt-tab" data-bs-toggle="pill" data-bs-target="#companies-alt" type="button" role="tab" aria-controls="canvas-companies-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Companies</a></button>
                                         </li>
-                                    {% comment %} {% endif %} {% endcomment %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="canvas-general-alt-tab" data-bs-toggle="pill" data-bs-target="#general-alt" type="button" role="tab" aria-controls="canvas-general-alt" aria-selected="false"><i class="bi-pencil me-1"></i> general</a></button>
+                                        </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="canvas-tasks-alt-tab" data-bs-toggle="pill" data-bs-target="#tasks-alt" type="button" role="tab" aria-controls="canvas-tasks-alt" aria-selected="false"><i class="bi-pencil me-1"></i> Tasks</a></button>
+                                        <button class="nav-link" id="canvas-awards-alt-tab" data-bs-toggle="pill" data-bs-target="#awards-alt" type="button" role="tab" aria-controls="canvas-awards-alt" aria-selected="false"><i class="bi-pencil me-1"></i> awards</a></button>
                                     </li>
                                 </ul>
 
@@ -182,14 +176,35 @@
 
                                     </div>
 
-                                    <div class="tab-pane fade" id="tasks-alt" role="tabpanel" aria-labelledby="canvas-tasks-tab" tabindex="0">
+                                    <div class="tab-pane fade" id="general-alt" role="tabpanel" aria-labelledby="canvas-general-tab" tabindex="0">
+
+                                        <div class="row gutter-40 posts-md mt-4">
+                                            <div class="block-referral">
+                                                <h3>Referral Link</h3>
+                                                <div class="input-group">
+                                                    <p>Share this link with your friends and earn scores by referring new users. Your current referral link is: <span style="font-weight: bold;">http://127.0.0.1:8000/registration/login/?referral_code={{ request.user.referral_code }}</span></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="block-referral">
+                                                <h3>Telegram wallet</h3>
+                                                <div class="input-group">
+                                                    <div class="telegram-wallet-btn" id="ton-connect"></div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="tab-pane fade" id="awards-alt" role="tabpanel" aria-labelledby="canvas-awards-tab" tabindex="0">
 
                                         <!-- Posts
                                         ============================================= -->
                                         <div class="row gutter-40 posts-md mt-4">
                                             {% csrf_token %}
                                             {% for blog in tasks %}
-                                                {% if blog.campaign.user != request.user %}
+                                                {% if blog.campaign.user != request.user and blog.usertaskchecking_set.first.is_completed and not blog.usertaskchecking_set.first.is_received %}
                                                 <div class="entry col-12">
                                                     <div class="grid-inner row align-items-center g-0">
                                                         <div class="col-md-4">
@@ -216,6 +231,7 @@
                                                                         <li><a style="cursor: pointer;" id="{{ blog.pk }}" class="delete_task" value="{{ blog.pk }}">Delete</a></li>
                                                                     {% endif %}
                                                                 </ul>
+                                                                <button type="button" class="btn btn-primary get-reward" data-pk="{{blog.pk}}">GET</button>
                                                             </div>
                                                             <div class="entry-content">
                                                                 <a href="{% url 'task_detail' blog.campaign.slug blog.pk %}" class="more-link">Read More</a>
@@ -436,5 +452,65 @@
         }
     }
 
+</script>
+
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<script>
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'http://167.172.96.11/static/manifest/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect'
+    });
+
+    {% comment %} async function connectToWallet() {
+        console.log("ini")
+        const connectedWallet = await tonConnectUI.connectWallet();
+        console.log("Connected")
+        console.log(connectedWallet);
+
+        let ton_address_save = window.location.protocol + '//' + window.location.host + '/api/v1/users/connect_telegram_wallet/';
+        await fetch(ton_address_save, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({  
+                telegram_wallet: connectedWallet.address
+            }),
+        })
+    } {% endcomment %}
+
+    {% comment %} // Call the function
+    connectToWallet().catch(error => {
+        console.error("Error connecting to wallet:", error);
+    }); {% endcomment %}
+</script>
+<script>
+    const list_get_reward = document.querySelectorAll('.get-reward');
+
+    async function get_reward_handler(e) {
+        e.preventDefault();
+        var reward_id = e.target.getAttribute('data-pk');
+        var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/companies/' + reward_id + '/receiving_an_award/' ;
+        var response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+        })
+
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Backend error');
+        }
+    }
+
+    if (list_get_reward) {
+        list_get_reward.forEach(reward => {
+            reward.addEventListener('click', get_reward_handler);
+        });
+    }
 </script>
 {% endblock %}

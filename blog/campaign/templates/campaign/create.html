@@ -94,7 +94,7 @@
 
               <div class="col-12 form-group">
                 <label for="id_title">Prize fund:</label>
-                <input type="number" max="{{ request.user.scores }}" id="id_title" name="prize_fund"  value="{{ form.prize_fund.value|default:"" }}" class="form-control" />
+                <input type="number" max="{{ request.user.scores }}" id="id_title" name="prize_fund"  value="{{ form.prize_fund.value|default:"0" }}" class="form-control" />
               </div>
 
               <div class="col-12 form-group">

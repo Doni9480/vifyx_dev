@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'blogs',
     'notifications',
     'campaign',
+    'referrals'
 ]
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'

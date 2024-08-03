@@ -59,6 +59,12 @@ def campaign_update(request, slug):
 #     model = Task
 #     template_name = "task.html"
 #     context_object_name = "task"
+class TaskListView(ListView):
+    paginate_by = 10
+    model = Task
+    template_name = "task/list.html"
+    
+    
 
 
 class TaskDetailView(DetailView):
