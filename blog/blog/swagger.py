@@ -8,7 +8,7 @@ from drf_yasg.generators import OpenAPISchemaGenerator
 
 class CustomSchema(OpenAPISchemaGenerator):
     def should_include_endpoint(self, path, method, view, public):
-        pattern = r"api\/v1\/([a-zA-Z0-9]+)\/"
+        pattern = r"api\/v1\/([a-zA-Z0-9_]+)\/"
         slugify_path = re.search(pattern, path)
         if slugify_path and slugify_path.group(1) not in [
             # "comments",

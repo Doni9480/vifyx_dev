@@ -81,6 +81,9 @@
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link" id="canvas-awards-alt-tab" data-bs-toggle="pill" data-bs-target="#awards-alt" type="button" role="tab" aria-controls="canvas-awards-alt" aria-selected="false"><i class="bi-pencil me-1"></i> awards</a></button>
                                     </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="canvas-periudic_bonus-alt-tab" data-bs-toggle="pill" data-bs-target="#periudic_bonus-alt" type="button" role="tab" aria-controls="canvas-periudic_bonus-alt" aria-selected="false"><i class="bi-pencil me-1"></i> periudic bonuses</a></button>
+                                    </li>
                                 </ul>
 
                                 <div id="canvas-TabContent2" class="tab-content">
@@ -205,43 +208,80 @@
                                         ============================================= -->
                                         <div class="row gutter-40 posts-md mt-4">
                                             {% csrf_token %}
-                                            {% for blog in tasks %}
-                                                {% if blog.campaign.user != request.user and blog.usertaskchecking_set.first.is_completed and not blog.usertaskchecking_set.first.is_received %}
+                                            {% for blog in completed_tasks %}
+                                                {% if blog.task.campaign.user != request.user %}
                                                 <div class="entry col-12">
                                                     <div class="grid-inner row align-items-center g-0">
                                                         <div class="col-md-4">
-                                                            
-                                                            {% if blog.usertaskchecking_set.all and blog.usertaskchecking_set.first.is_completed and blog.usertaskchecking_set.first.user.pk == request.user.pk %}
                                                                 <span style="color: #0f0;border: solid 3px #0f0;border-radius: 4px;">Выполнено</span>
-                                                            {% elif blog.usertaskchecking_set.all and blog.usertaskchecking_set.first.user.pk == request.user.pk %}
-                                                                <span style="color: #f00;border: solid 3px #f00;border-radius: 4px;">Не выполнено</span>
-                                                            {% else %}
-                                                                <span style="color: #888;border: solid 3px #888;border-radius: 4px;">Не начато</span>
-                                                            {% endif %}
-                                                            {% comment %} <a class="entry-image" href="{{ blog.image.url }}" data-lightbox="image"><img src="{{ blog.image.url }}" alt="Standard blog with Image"></a> {% endcomment %}
                                                         </div>
                                                         <div class="col-md-8 ps-md-4">
                                                             <div class="entry-title title-sm">
-                                                                <h3><a href="{% url 'task_detail' blog.campaign.slug blog.pk %}">{{ blog.name }}</a></h2>
+                                                                <h3><a href="{% url 'task_detail' blog.task.campaign.slug blog.task.pk %}">{{ blog.task.name }}</a></h2>
                                                             </div>
                                                             <div class="entry-meta">
                                                                 <ul>
                                                                     <li><i class="uil uil-schedule"></i> {{ blog.created_at|date:"d M Y" }}</li>
                                                                     
-                                                                    {% if request.user == blog.campaign.user %}
-                                                                        <li><a href="{% url 'task_update' blog.campaign.slug blog.pk %}">Edit</a></li>
-                                                                        <li><a style="cursor: pointer;" id="{{ blog.pk }}" class="delete_task" value="{{ blog.pk }}">Delete</a></li>
+                                                                    {% if request.user == blog.task.campaign.user %}
+                                                                        <li><a href="{% url 'task_update' blog.task.campaign.slug blog.task.pk %}">Edit</a></li>
+                                                                        <li><a style="cursor: pointer;" id="{{ blog.task.pk }}" class="delete_task" value="{{ blog.task.pk }}">Delete</a></li>
                                                                     {% endif %}
                                                                 </ul>
-                                                                <button type="button" class="btn btn-primary get-reward" data-pk="{{blog.pk}}">GET</button>
+                                                                <button type="button" class="btn btn-primary get-reward" data-pk="{{blog.task.pk}}">GET</button>
                                                             </div>
                                                             <div class="entry-content">
-                                                                <a href="{% url 'task_detail' blog.campaign.slug blog.pk %}" class="more-link">Read More</a>
+                                                                <a href="{% url 'task_detail' blog.task.campaign.slug blog.task.pk %}" class="more-link">Read More</a>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 {% endif %}
+                                            {% endfor %}
+                                        </div>
+
+                                        {% comment %} <div class="mt-2" >
+                                            <a href="{% url 'campaign_create' %}"><button type="button" class="btn btn-primary">Add New Company</button></a>
+                                        </div> {% endcomment %}
+
+                                    </div>
+
+                                    <div class="tab-pane fade" id="periudic_bonus-alt" role="tabpanel" aria-labelledby="canvas-periudic_bonus-tab" tabindex="0">
+
+                                        <!-- Posts
+                                        ============================================= -->
+                                        <div class="row gutter-40 posts-md mt-4">
+                                            {% csrf_token %}
+                                            {{periudic_bonuses}}
+                                            {% for blog in periudic_bonuses %}
+                                                <div class="entry col-12">
+                                                    <div class="grid-inner row align-items-center g-0">
+                                                        {% comment %} <div class="col-md-4">
+                                                            
+                                                        </div> {% endcomment %}
+                                                        <div class="col-md-8 ps-md-4">
+                                                            <div class="entry-title title-sm">
+                                                                {% comment %} <div style="cursor: pointer;" id="{{ blog.pk }}" class="" value="{{ blog.pk }}">GET</div> {% endcomment %}
+                                                            </div>
+                                                            <div class="entry-meta">
+                                                                <ul style="padding: 0px 100px;">
+                                                                    <li>
+                                                                        <h4>{{ blog.title }}</h4>
+                                                                        <p>{{ blog.description }}</p>
+                                                                    </li>
+                                                                    <li>
+                                                                        {{blog.timer}}
+                                                                    </li>
+                                                                    <li>
+                                                                        <a href="{% url "get_periodic_bonus" blog.id %}">GET</a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                            <div class="entry-content">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             {% endfor %}
                                         </div>
 

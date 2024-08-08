@@ -49,6 +49,7 @@ urlpatterns = [
     path('tests/', include('custom_tests.urls')),
     path('quests/', include('quests.urls')),
     path('companies/', include('campaign.urls')),
+    path('periodic_bonuses/', include('periodic_bonuses.urls')),
     
     path('summernote/', include('django_summernote.urls')),
     path('api/v1/blogs/', include('blogs.api.urls')),
@@ -62,6 +63,7 @@ urlpatterns = [
     path('api/v1/tests/', include('custom_tests.api.urls')),
     path('api/v1/quests/', include('quests.api.urls')),
     path('api/v1/companies/', include('campaign.api.urls')),
+    path('api/v1/periodic_bonuses/', include('periodic_bonuses.api.urls')),
     
     # path('language/<str:language>/', language, name="language"),
 

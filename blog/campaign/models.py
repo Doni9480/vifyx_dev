@@ -50,7 +50,6 @@ class Task(models.Model):
         ("wallet_connect", "Wallet Connect"),
         ("twitter_connect", "Twitter Connect"),
         ("periodic_bonus", "Periodic Bonus"),
-        ("referral_registration", "Referral Registration"),
     )
     CONTENT_USAGE = (
         ("test", "Test"),
@@ -110,39 +109,49 @@ class UserTaskChecking(models.Model):
         return statistics
 
     def save(self, *args, **kwargs) -> None:
-        if self.is_completed and self.end_date is None:
-            self.end_date = now()
-            user_referral = Referral.objects.filter(referral_user=self.user)
-            if len(user_referral):
-                referral = user_referral.first()
-                referral.tasks_completed = referral.tasks_completed + 1
-                referral.save()
-        if self.task.campaign.reward_source == "owner":
-            if self.is_received and self.received_data is None:
-                self.received_data = now()
-                task_owner_scores = self.task.campaign.user.scores
-                campaign_owner_scores = self.task.campaign.prize_fund
-                if (
-                    task_owner_scores >= self.points_awarded
-                    and task_owner_scores >= campaign_owner_scores
-                ):
-                    self.task.campaign.user.scores = (
-                        task_owner_scores - self.points_awarded
-                    )
-                    self.task.campaign.user.save()
+        if self.pk:
+            old_instance = UserTaskChecking.objects.get(pk=self.pk)
+            self.old__is_completed = old_instance.is_completed
+            self.old__end_date = old_instance.end_date
+            
+        
+        # print('++++++++++++++++++++++++++++++++')
+        # print(self.is_completed, self.end_date)
+        # if self.is_completed and self.end_date is None:
+        #     self.end_date = now()
+        #     print(self.user, self.user.pk)
+        #     user_referral = Referral.objects.filter(referral_user=self.user.pk)
+        #     print(user_referral)
+        #     if len(user_referral):
+        #         referral = user_referral.first()
+        #         referral.tasks_completed += 1
+        #         referral.save()
+        # if self.task.campaign.reward_source == "owner":
+        #     if self.is_received and self.received_data is None:
+        #         self.received_data = now()
+        #         task_owner_scores = self.task.campaign.user.scores
+        #         campaign_owner_scores = self.task.campaign.prize_fund
+        #         if (
+        #             task_owner_scores >= self.points_awarded
+        #             and task_owner_scores >= campaign_owner_scores
+        #         ):
+        #             self.task.campaign.user.scores = (
+        #                 task_owner_scores - self.points_awarded
+        #             )
+        #             self.task.campaign.user.save()
 
-                    self.task.campaign.prize_fund = (
-                        campaign_owner_scores - self.points_awarded
-                    )
-                    self.task.campaign.save()
+        #             self.task.campaign.prize_fund = (
+        #                 campaign_owner_scores - self.points_awarded
+        #             )
+        #             self.task.campaign.save()
 
-                    total_points = self.user.scores
-                    self.user.scores = total_points + self.points_awarded
-                    self.user.save()
-        if self.task.campaign.reward_source == "endless":
-            if self.is_received and self.received_data is None:
-                self.received_data = now()
-                total_points = self.user.scores
-                self.user.scores = total_points + self.points_awarded
-                self.user.save()
+        #             total_points = self.user.scores
+        #             self.user.scores = total_points + self.points_awarded
+        #             self.user.save()
+        # if self.task.campaign.reward_source == "endless":
+        #     if self.is_received and self.received_data is None:
+        #         self.received_data = now()
+        #         total_points = self.user.scores
+        #         self.user.scores = total_points + self.points_awarded
+        #         self.user.save()
         return super().save(*args, **kwargs)

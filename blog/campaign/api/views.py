@@ -16,7 +16,6 @@ from .serializers import (
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
-from constance import config
 
 
 class CampaignViewSet(viewsets.ModelViewSet):

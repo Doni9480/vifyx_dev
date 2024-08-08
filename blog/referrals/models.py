@@ -16,10 +16,30 @@ class Referral(models.Model):
     class Meta:
         verbose_name = "Referral"
         verbose_name_plural = "Referrals"
-        
+
     def save(self, *args, **kwargs):
         if self.pk:
             # Сохранение старых значений перед вызовом save()
             old_instance = Referral.objects.get(pk=self.pk)
             self.old__tasks_completed = old_instance.tasks_completed
         super(Referral, self).save(*args, **kwargs)
+
+
+class BonusCoefficients(models.Model):
+    from_num = models.PositiveIntegerField("From")
+    to_num = models.PositiveIntegerField("To")
+    coefficient = models.FloatField("Coefficient")
+
+    class Meta:
+        verbose_name = "Bonus coefficient"
+        verbose_name_plural = "Bonus coefficients"
+
+    def __str__(self):
+        return f"{self.from_num} - {self.to_num} > {self.coefficient}"
+
+    @staticmethod
+    def get_coefficient(number_of_users):
+        bonus = BonusCoefficients.objects.filter(
+            from_num__lte=number_of_users, to_num__gte=number_of_users
+        ).first()
+        return float(bonus.coefficient) if bonus else 1.0
