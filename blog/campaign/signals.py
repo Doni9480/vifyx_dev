@@ -41,9 +41,11 @@ def compare_fields(sender, instance, **kwargs):
                 total_points = instance.user.scores
                 instance.user.scores = total_points + instance.points_awarded
                 instance.user.save()
+                instance.save()
         if instance.task.campaign.reward_source == "endless":
             if instance.is_received and instance.received_data is None:
                 instance.received_data = now()
                 total_points = instance.user.scores
                 instance.user.scores = total_points + instance.points_awarded
                 instance.user.save()
+                instance.save()

@@ -101,7 +101,7 @@ def change_password(request, uidb64, token):
 def my_profile(request):
     bonuses_list = PeriodicBonuses.objects.all()
     periudic_bonuses = list(PeriodicBonusesSerializer(instance=bonuses_list, many=True, context={"request": request}).data)
-    completed_tasks = UserTaskChecking.objects.filter(user=request.user, is_completed=True)
+    completed_tasks = UserTaskChecking.objects.filter(user=request.user, is_completed=True, is_received=False)
     blogs = Blog.objects.filter(user=request.user)
     follows = BlogFollow.objects.filter(follower=request.user)
     companies = Campaign.objects.filter(user=request.user)

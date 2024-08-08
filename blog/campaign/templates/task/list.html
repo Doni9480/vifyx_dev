@@ -34,13 +34,14 @@
                 <!-- Post Content
                 ============================================= -->
                 <main class="postcontent col-lg-9">
+                    {{page_obj.object_list|default:"none"}}
 
                     <!-- Posts
                     ============================================= -->
                     <div id="posts" class="row grid-container gutter-30">
 
                         <div class="row gutter-40 posts-md mt-4">
-                            {% for blog in page_obj %}
+                            {% for blog in page_obj.object_list %}
                                 {% if blog.campaign.user != request.user and blog.is_active %}
                                 <div class="entry col-12">
                                     <div class="grid-inner row align-items-center g-0">

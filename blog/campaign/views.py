@@ -64,6 +64,11 @@ class TaskListView(ListView):
     model = Task
     template_name = "task/list.html"
     
+    def get_queryset(self):
+        user_tasks = UserTaskChecking.objects.filter(user=self.request.user.pk).values_list("task", flat=True)
+        queryset = super().get_queryset()
+        return queryset.exclude(pk__in=set(user_tasks))
+    
     
 
 
