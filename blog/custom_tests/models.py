@@ -13,18 +13,20 @@ import time
 
 
 class Category(models.Model):
-    category = models.CharField(verbose_name='Category')
+    category_rus = models.CharField(verbose_name='Category rus')
+    category_eng = models.CharField(verbose_name='Category eng')
     
     def __str__(self):
-        return self.category
+        return self.category_eng
     
     
 class Subcategory(models.Model):
     category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
-    subcategory = models.CharField(verbose_name='Subcategory')
+    subcategory_rus = models.CharField(verbose_name='Subcategory rus')
+    subcategory_eng = models.CharField(verbose_name='Subcategory eng')
 
     def __str__(self):
-        return self.subcategory
+        return self.subcategory_eng
 
 
 class Test(models.Model):
@@ -76,7 +78,7 @@ class Test(models.Model):
         verbose_name="scores",
         default=0,
     )
-    namespace = models.CharField(verbose_name='Namespace', default='posts')
+    namespace = models.CharField(verbose_name='Namespace', default='tests')
     hide_to_moderator = models.BooleanField(
         default=False,
         verbose_name="Hide to moderator",
@@ -129,6 +131,16 @@ class Test(models.Model):
             self.slug = "%s-%s" % (strtime[7:], title)
 
         super(Test, self).save()
+        
+
+class TestWeekView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_test_week')
+    test = models.ForeignKey(to=Test, on_delete=models.CASCADE, verbose_name='Test', null=True, related_name='test_week')
+
+
+class TestDayView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_test_day')
+    test = models.ForeignKey(to=Test, on_delete=models.CASCADE, verbose_name='test', null=True, related_name='test_day')
         
 
 class TestView(models.Model):

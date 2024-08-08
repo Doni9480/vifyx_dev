@@ -9,7 +9,17 @@ from django.http import Http404, QueryDict
 
 
 from surveys.api.serializers import *
-from surveys.models import SurveyTag, SurveyView, SurveyVote, Survey, DraftSurvey, Category, Subcategory
+from surveys.models import (
+    SurveyTag, 
+    SurveyView, 
+    SurveyVote, 
+    Survey, 
+    DraftSurvey, 
+    Category, 
+    Subcategory,
+    SurveyDayView,
+    SurveyWeekView
+)
 from surveys.api.utils import get_views_and_comments_to_surveys
 from users.utils import opening_access
 from users.models import User, Percent
@@ -25,7 +35,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
     queryset = Survey.objects.all()
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['list', 'retrieve', 'add_view'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['list', 'retrieve'], [AllowAny])
     pagination_class = MyPagination
     # parser_classes = [MultiPartParser, FormParser, JSONParser]
 
@@ -118,7 +128,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         survey_model = self.get_object()
         request = set_language_to_user(request)
-        opening_access(survey_model, request.user)
+        opening_access(survey_model, request.user, is_show=True)
         survey = SurveyShowSerializer(survey_model).data
 
         tags = SurveyTag.objects.filter(survey_id=survey["id"])
@@ -139,6 +149,11 @@ class SurveyViewSet(viewsets.ModelViewSet):
             survey["options"].append(
                 {"option": option.title, "scores": option.scores, "is_vote": vote}
             )
+            
+        if survey_model.is_not_subscribed:
+            del survey['options']
+            del survey['tags']
+            survey['is_not_subscribed'] = True
 
         survey["user"] = User.objects.get(id=survey["user"]).username
 
@@ -193,13 +208,12 @@ class SurveyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="<pk>/view/add")
     def add_view(self, request, pk=None):
-        if request.user.is_authenticated:
-            survey = self.get_object()
-            opening_access(survey, request.user)
-            view = SurveyView.objects.filter(survey=survey).filter(user=request.user.id)
-            if not view:
-                SurveyView.objects.create(survey=survey, user=request.user)
-
+        survey = self.get_object()
+        opening_access(survey, request.user)
+        views = [SurveyView, SurveyDayView, SurveyWeekView]
+        for view in views:
+            if not view.objects.filter(survey=survey).filter(user=request.user.id).first():
+                view.objects.create(survey=survey, user=request.user)
         return Response({"success": "ok."})
 
     @action(detail=True, methods=["post"], url_path="send_scores_to_option/<pk>")

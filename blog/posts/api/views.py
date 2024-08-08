@@ -27,7 +27,9 @@ from posts.models import (
     PostRadio,
     PostVote,
     Category,
-    Subcategory
+    Subcategory,
+    PostDayView,
+    PostWeekView,
 )
 
 from comments.models import Comment
@@ -46,10 +48,12 @@ from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 from operator import attrgetter
 
+import re
+
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['list', 'show', 'add_view', 'get_test'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['list', 'show', 'get_test'], [AllowAny])
     queryset = Post.objects.all()
     pagination_class = MyPagination
     # parser_classes = [MultiPartParser, FormParser]
@@ -162,12 +166,12 @@ class PostViewSet(viewsets.ModelViewSet):
     def show(self, request, pk=None):
         request = set_language_to_user(request)
         post_model = self.get_object()
-        if opening_access(post_model, request.user):
-            raise Http404()
+        opening_access(post_model, request.user, is_show=True)
         
         if post_model.is_paid and not BuyPost.objects.filter(user=request.user.id, post=post_model):
             post = PostShowNotBuySerializer(post_model).data
-            post['content'] = "This post is paid"
+            post['content'] = re.sub(re.compile('<.*?>'), '', post['content']) + '...'
+            post['is_not_bought'] = True
         else:
             post = PostShowSerializer(post_model).data
             
@@ -175,6 +179,10 @@ class PostViewSet(viewsets.ModelViewSet):
             post['tags'] = []   
             for tag in tags:
                 post['tags'].append(tag.title)
+                
+            if post_model.is_not_subscribed:
+                del post['tags']
+                post['is_not_subscribed'] = True
 
         if post['language'] == "2":
             post['language'] = "Russian"
@@ -187,19 +195,13 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="<pk>/view/add")
     def add_view(self, request, pk=None):
-        if request.user.is_authenticated:
-            post = self.get_object()
-            if opening_access(post, request.user):
-                raise Http404()
-            
-            view = PostView.objects.filter(post=post).filter(user=request.user.id)
-            if not view:
-                PostView.objects.create(
-                    post=post,
-                    user=request.user
-                )
-            
-        return Response({'success': 'ok.'})
+        post = self.get_object()
+        opening_access(post, request.user)
+        views = [PostView, PostWeekView, PostDayView]
+        for view in views:
+            if not view.objects.filter(post=post).filter(user=request.user.id).first():
+                view.objects.create(post=post, user=request.user)
+        return Response({"success": "ok."})
 
     @swagger_auto_schema(
         operation_description="Изменение данных",

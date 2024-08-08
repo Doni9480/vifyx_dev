@@ -90,11 +90,10 @@ def edit(request, slug):
 
 def show(request, slug):
     survey = get_object_or_404(Survey.objects, slug=slug)        
-    opening_access(survey, request.user)
+    opening_access(survey, request.user, is_show=True)
     comments = Comment.objects.filter(survey=survey) 
     answers = Answer.objects.filter(survey=survey)
     count_comments = comments.count() + answers.count()
-    
     options = SurveyRadio.objects.filter(survey=survey)
 
     tags = SurveyTag.objects.filter(survey=survey)

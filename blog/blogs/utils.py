@@ -5,13 +5,37 @@ from django.shortcuts import get_object_or_404
 from blog.utils import add_months
 from blogs.models import PaidFollow
 from users.models import User, Percent, Hide
-from posts.models import Post, Category as Category_post, Subcategory as Subcategory_post
+from posts.models import (
+    Post, 
+    Category as Category_post, 
+    Subcategory as Subcategory_post,
+    PostDayView,
+    PostWeekView
+)
 from posts.utils import get_views_and_comments_to_posts
-from surveys.models import Survey, Category as Category_survey, Subcategory as Subcategory_survey
+from surveys.models import (
+    Survey, 
+    Category as Category_survey, 
+    Subcategory as Subcategory_survey,
+    SurveyDayView,
+    SurveyWeekView
+)
 from surveys.utils import get_views_and_comments_to_surveys
-from custom_tests.models import Test, Category as Category_test, Subcategory as Subcategory_test
+from custom_tests.models import (
+    Test, 
+    Category as Category_test, 
+    Subcategory as Subcategory_test,
+    TestWeekView,
+    TestDayView
+)
 from custom_tests.utils import get_views_and_comments_to_tests
-from quests.models import Quest, Category as Category_quest, Subcategory as Subcategory_quest
+from quests.models import (
+    Quest, 
+    Category as Category_quest, 
+    Subcategory as Subcategory_quest,
+    QuestDayView,
+    QuestWeekView
+)
 from quests.utils import get_views_and_comments_to_quests
 from itertools import chain
 from operator import attrgetter
@@ -50,6 +74,16 @@ def paid_follows():
                     paid_follow.save()
             else:
                 paid_follow.delete()
+                
+def views_period_day():
+    views = [TestDayView, QuestDayView, PostDayView, SurveyDayView]
+    for view in views:
+        view.objects.all().delete()
+
+def views_period_week():
+    views = [TestWeekView, QuestWeekView, PostWeekView, SurveyWeekView]
+    for view in views:
+        view.objects.all().delete()
 
 def get_filter_kwargs(request):
     filter_kwargs = {'hide_to_user': False, 'hide_to_moderator': False, 'language': request.user.language}
@@ -114,3 +148,77 @@ def get_category(filter_kwargs, request, namespace):
             subcategories = []
         
     return filter_kwargs, subcategories
+
+E_DICTS = [
+        {
+            'obj': 'post', 
+            'model': Post, 
+            'view_day': PostDayView, 
+            'view_week': PostWeekView,
+            'func': get_views_and_comments_to_posts
+        }, 
+        {
+            'obj': 'survey', 
+            'model': Survey, 
+            'view_day': SurveyDayView, 
+            'view_week': SurveyWeekView,
+            'func': get_views_and_comments_to_surveys
+        },
+        {
+            'obj': 'quest', 
+            'model': Quest, 
+            'view_day': QuestDayView, 
+            'view_week': QuestWeekView,
+            'func': get_views_and_comments_to_quests
+        },
+        {
+            'obj': 'test', 
+            'model': Test, 
+            'view_day': TestDayView, 
+            'view_week': TestWeekView,
+            'func': get_views_and_comments_to_tests
+        }
+    ]
+
+def get_views_period(filter_kwargs, full=False):
+    popular = []
+    for e_dict in E_DICTS:
+        elements = e_dict['func'](e_dict['model'].level_access_objects.filter(**filter_kwargs))
+        for element in elements:
+            filter_model = {e_dict['obj']: element}
+            element.views_day = e_dict['view_day'].objects.filter(**filter_model).count()
+            element.views_week = e_dict['view_week'].objects.filter(**filter_model).count()
+        popular.append(elements)
+        
+    if full:
+        return (
+            sorted(chain(*popular), key=attrgetter("views_day"), reverse=True), 
+            sorted(chain(*popular), key=attrgetter("views_week"), reverse=True),
+        )
+    return (
+        sorted(chain(*popular), key=attrgetter("views_day"), reverse=True)[:3], 
+        sorted(chain(*popular), key=attrgetter("views_week"), reverse=True)[:3]
+    )
+    
+def get_users_period(full=False):
+    users = User.objects.all()
+    for user in users:
+        user.views_day = 0
+        user.views_week = 0
+    for e_dict in E_DICTS:
+        for user in users:
+            elements = e_dict['model'].objects.filter(user=user)
+            for element in elements:
+                filter_model = {e_dict['obj']: element}
+                user.views_day += e_dict['view_day'].objects.filter(**filter_model).count()
+                user.views_week += e_dict['view_week'].objects.filter(**filter_model).count()
+            
+    if full:
+        return (
+            sorted(chain(users), key=attrgetter("views_day"), reverse=True), 
+            sorted(chain(users), key=attrgetter("views_week"), reverse=True),
+        )
+    return (
+        sorted(chain(users), key=attrgetter("views_day"), reverse=True)[:3], 
+        sorted(chain(users), key=attrgetter("views_week"), reverse=True)[:3]
+    )

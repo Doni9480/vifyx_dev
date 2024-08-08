@@ -2,6 +2,7 @@ import binascii
 import os
 
 from django.db import models
+from django.db import utils
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.dispatch import receiver
@@ -9,11 +10,24 @@ from django.db.models.signals import post_save
 from django.core.exceptions import ValidationError
 
 from apscheduler.schedulers.background import BackgroundScheduler
+import uuid
 
+def gen_referral_code():
+    """Generate a unique 16-character alphanumeric string."""
+    # Generate a random 16-character alphanumeric string
+    while True:
+        code = binascii.hexlify(os.urandom(8)).decode()
+        try:
+            if User.objects.filter(referral_code=code).count() == 0:
+                return str(code)
+        except utils.ProgrammingError:
+            return str(code)
 
 class User(AbstractUser):
     email = models.EmailField(verbose_name="email address", unique=True)
-    first_name = models.CharField(max_length=255, verbose_name="First name", blank=False, null=False)
+    first_name = models.CharField(
+        max_length=255, verbose_name="First name", blank=False, null=False
+    )
     scores = models.IntegerField(verbose_name="scores", default=0)
     language = models.CharField(max_length=255, verbose_name="Language", default="any")
     unearned_scores = models.IntegerField(verbose_name="unearned scores", default=0)
@@ -21,8 +35,19 @@ class User(AbstractUser):
     is_published_comment = models.BooleanField(default=True)
     is_notificated = models.BooleanField(default=True, verbose_name="Is notificated")
     is_autorenewal = models.BooleanField(default=True, verbose_name="Is auto renewal")
-    twitter = models.CharField(max_length=255, null=True, blank=True, verbose_name="Twitter")
-    telegram_wallet = models.CharField(max_length=255, null=True, blank=True, verbose_name="Telegram wallet")
+    twitter = models.CharField(
+        max_length=255, null=True, blank=True, verbose_name="Twitter"
+    )
+    telegram_wallet = models.CharField(
+        max_length=255, null=True, blank=True, verbose_name="Telegram wallet"
+    )
+    referral_code = models.CharField(
+        unique=True,
+        default=gen_referral_code,
+        null=True,
+        blank=True,
+        verbose_name="Referral code",
+    )
 
     REQUIRED_FIELDS = ["last_name"]
 
@@ -33,6 +58,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def save(self, *args, **kwargs) -> None:
+        try:
+            if not self.referral_code:
+                self.referral_code = gen_referral_code()
+        except Exception as _:
+            print(_)
+        super().save(*args, **kwargs)
 
 
 class Token(models.Model):
@@ -48,7 +81,7 @@ class Token(models.Model):
     @classmethod
     def generate_key(cls):
         return binascii.hexlify(os.urandom(40)).decode()
-    
+
 
 def validate_only_one_instance(obj):
     model = obj.__class__

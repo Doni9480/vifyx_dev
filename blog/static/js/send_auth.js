@@ -9,6 +9,30 @@ function getCookie(name) {
     return null;
 }
 
+function check_referral_code(){
+    // Получаем текущий URL
+    let currentUrl = window.location.href;
+
+    // Используем регулярное выражение для поиска параметра referral_code
+    let referralCodeMatch = currentUrl.match(/\?(.*)/);
+
+    let referralCode = null;
+
+    if (referralCodeMatch) {
+        referralCode = referralCodeMatch[1];
+    }
+
+    if (referralCode) {
+        setTimeout(() => {
+            document.querySelectorAll(".accordion-header")[1].click();
+            console.log("clicking on header");
+        }, 1000);
+        return referralCode
+    } else {
+        return null;
+    }
+}
+check_referral_code();
 let form_login = document.querySelector('#login-form');
 let form_register = document.querySelector('#register-form');
 
@@ -48,6 +72,12 @@ async function login_send(e) {
     if (response.ok) {
         let result = await response.json();
 
+        form_errors = document.querySelectorAll('#form-error');
+
+        for (const form_error of form_errors) {
+            form_error.remove();
+        }
+
         if (result.token) {
             document.cookie =`blog_access_token=${result.token};max-age=31536000;path=/`;
 
@@ -60,12 +90,6 @@ async function login_send(e) {
             }
 
         } else {
-            form_errors = document.querySelectorAll('#form-error');
-
-            for (const form_error of form_errors) {
-                form_error.remove();
-            }
-
             if (result.username) {
                 username.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.username}</div>`);
             }
@@ -105,7 +129,13 @@ async function register_send(e) {
 
     let form_data = JSON.stringify(obj);
 
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/users/registration/';
+    referral = check_referral_code();
+    if (referral === null) {
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/users/registration/';
+    } else {
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/users/registration/?' + referral;
+    }
+    
 
     let response = await fetch(url, {
         method: 'POST',

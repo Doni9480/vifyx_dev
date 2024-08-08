@@ -3,9 +3,17 @@
         <option selected disabled>Select a category</option>
         {% for category in categories %}
             {% if category.pk|slugify == request.GET.category %}
-                <option value="{{category.id}}" selected>{{category.category}}</option>
+                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                    <option value="{{category.id}}" selected>{{category.category_eng}}</option>
+                {% else %}
+                    <option value="{{category.id}}" selected>{{category.category_rus}}</option>
+                {% endif %}
             {% else %}
-                <option value="{{category.id}}">{{category.category}}</option>
+                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                    <option value="{{category.id}}">{{category.category_eng}}</option>
+                {% else %}
+                    <option value="{{category.id}}">{{category.category_rus}}</option>
+                {% endif %}
             {% endif %}
         {% endfor %}
     </select>
@@ -15,9 +23,17 @@
             <option selected disabled>Select a subcategory</option>
             {% for subcategory in subcategories %}
                 {% if subcategory.pk|slugify == request.GET.subcategory %}
-                    <option value="{{subcategory.id}}" selected>{{subcategory.subcategory}}</option>
+                    {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                        <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_eng}}</option>
+                    {% else %}
+                        <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_rus}}</option>
+                    {% endif %}
                 {% else %}
-                    <option value="{{subcategory.id}}">{{subcategory.subcategory}}</option>
+                    {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                        <option value="{{subcategory.id}}">{{subcategory.subcategory_eng}}</option>
+                    {% else %}
+                        <option value="{{subcategory.id}}">{{subcategory.subcategory_rus}}</option>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
         </select>

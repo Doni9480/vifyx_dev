@@ -17,18 +17,20 @@ from blog.managers import LevelAccessManager
 
 
 class Category(models.Model):
-    category = models.CharField(verbose_name='Category')
+    category_rus = models.CharField(verbose_name='Category rus')
+    category_eng = models.CharField(verbose_name='Category eng')
     
     def __str__(self):
-        return self.category
+        return self.category_eng
     
     
 class Subcategory(models.Model):
     category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
-    subcategory = models.CharField(verbose_name='Subcategory')
+    subcategory_rus = models.CharField(verbose_name='Subcategory rus')
+    subcategory_eng = models.CharField(verbose_name='Subcategory eng')
 
     def __str__(self):
-        return self.subcategory
+        return self.subcategory_eng
     
 
 class Post(models.Model):
@@ -123,6 +125,16 @@ class PostTag(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class PostWeekView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_post_week')
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, verbose_name='Post', null=True, related_name='post_week')
+
+
+class PostDayView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_post_day')
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, verbose_name='Post', null=True, related_name='post_day')
 
 
 class PostView(models.Model):

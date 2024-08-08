@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from campaign.models import Campaign, Task
+from campaign.models import Campaign, Task, UserTaskChecking
 from users.forms import ChangeEmailForm, PasswordChangeForm
 from users.models import User, TotalScore, Hide
 from users.utils import send_email_for_change, get_user
@@ -16,6 +16,8 @@ from users.utils import send_email_for_change, get_user
 from blogs.models import Blog, PaidFollow, BlogFollow
 
 from blog.utils import check_recaptcha
+from periodic_bonuses.models import PeriodicBonuses
+from periodic_bonuses.api.serializers import PeriodicBonusesSerializer
 
 
 def login_register(request):
@@ -97,7 +99,9 @@ def change_password(request, uidb64, token):
 
 @login_required(login_url="/registration/login")
 def my_profile(request):
-    tasks = Task.objects.all()
+    bonuses_list = PeriodicBonuses.objects.all()
+    periudic_bonuses = list(PeriodicBonusesSerializer(instance=bonuses_list, many=True, context={"request": request}).data)
+    completed_tasks = UserTaskChecking.objects.filter(user=request.user, is_completed=True, is_received=False)
     blogs = Blog.objects.filter(user=request.user)
     follows = BlogFollow.objects.filter(follower=request.user)
     companies = Campaign.objects.filter(user=request.user)
@@ -109,7 +113,8 @@ def my_profile(request):
         total_scores.minute = "0" + str(total_scores.minute)
 
     data = {
-        "tasks": tasks,
+        "periudic_bonuses": periudic_bonuses,
+        "completed_tasks": completed_tasks,
         "blogs": blogs,
         "companies": companies,
         "muted": muted,
@@ -138,3 +143,9 @@ def profile(request, username):
     }
 
     return render(request, "profile.html", data)
+
+def edit_profile(request):
+    return render(request, "edit_profile.html")
+
+def edit_password(request):
+    return render(request, "edit_password.html")

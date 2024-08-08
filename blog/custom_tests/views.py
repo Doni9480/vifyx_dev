@@ -96,7 +96,7 @@ def list_tests(request):
 
 def detail_test(request, slug):
     test_obj = get_object_or_404(Test.objects_show, slug=slug)
-    opening_access(test_obj, request.user)
+    opening_access(test_obj, request.user, is_show=True)
 
     comment_for_test = Comment.objects.filter(test=test_obj)
     comment_for_test_answers = Answer.objects.filter(test=test_obj)

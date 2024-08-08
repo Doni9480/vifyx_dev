@@ -24,9 +24,9 @@ from blogs.api.serializers import (
     LevelFollowSerializer,
 )
 from blogs.models import Blog, LevelAccess, PaidFollow, Donate, BlogFollow
-from blog.utils import get_request_data
+from blog.utils import get_request_data, MyPagination
 from blogs.utils import get_filter_kwargs, get_blog_list
-from blogs.api.utils import get_blog_list
+from blogs.api.utils import get_blog_list, get_views_period, get_users_period
 from posts.api.utils import get_views_and_comments_to_posts
 from posts.models import Post, PostTag
 from surveys.api.utils import get_views_and_comments_to_surveys
@@ -49,8 +49,9 @@ class BlogViewSet(
 ):
     queryset = Blog.objects.all()
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['search', 'search_tags'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['search', 'search_tags', 'main', 'preview_popular'], [AllowAny])
     parser_classes = [MultiPartParser, FormParser]
+    pagination_class = MyPagination
 
     def get_serializer_class(self):
         if self.action == "pay":
@@ -68,7 +69,6 @@ class BlogViewSet(
             return [permission() for permission in self.permission_classes]
     
     @action(detail=False, methods=["get"], url_path='main')
-    @transaction.atomic
     def main(self, request):
         request = set_language_to_user(request)
         filter_kwargs = get_filter_kwargs(request)
@@ -81,7 +81,41 @@ class BlogViewSet(
                 blog_list += get_blog_list(filter_kwargs)
         else:
             blog_list = get_blog_list(filter_kwargs)
-        return Response({"data": blog_list})
+            
+        page = self.paginate_queryset(blog_list)
+        return self.get_paginated_response(page)
+    
+    @action(detail=False, methods=["get"], url_path='preview_popular')
+    def preview_popular(self, request):
+        request = set_language_to_user(request)
+        filter_kwargs = get_filter_kwargs(request)
+        popular_day, popular_week = get_views_period(filter_kwargs)
+        return Response({"popular_day": popular_day, "popular_week": popular_week})
+    
+    @action(detail=False, methods=["get"], url_path='popular')
+    def popular(self, request):
+        request = set_language_to_user(request)
+        filter_kwargs = get_filter_kwargs(request)
+        query = get_views_period(filter_kwargs, full=True)
+        q = request.GET.get('q')
+        if q == 'week': query = query[1]
+        else: query = query[0]
+        page = self.paginate_queryset(query)
+        return self.get_paginated_response(page)
+    
+    @action(detail=False, methods=["get"], url_path='preview_popular_users')
+    def preview_popular_users(self, request):
+        popular_day, popular_week = get_users_period()
+        return Response({"popular_day": popular_day, "popular_week": popular_week})
+    
+    @action(detail=False, methods=["get"], url_path='popular_users')
+    def popular_users(self, request):
+        query = get_users_period(full=True)
+        q = request.GET.get('q')
+        if q == 'week': query = query[1]
+        else: query = query[0]
+        page = self.paginate_queryset(query)
+        return self.get_paginated_response(page)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):

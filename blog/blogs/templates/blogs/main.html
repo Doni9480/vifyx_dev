@@ -105,6 +105,55 @@
                 <!-- Sidebar
                 ============================================= -->
                 <aside class="sidebar col-lg-3">
+                    <div>Selection of blogs</div>
+                    <button class="btn btn-link" id="btn_day">Day</button>
+                    <button class="btn btn-link" id="btn_week">Week</button>
+                    <div id="blogs_day" class="mb-2">
+                        {% for e in popular_day %}
+                            <a href="/{{ e.namespace }}/show/{{ e.slug }}/">
+                                <div>{{ e.title }}</div>
+                                {% if e.preview %}
+                                    <div><img src="{{ e.preview.url }}" width="200"></div>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'popular' %}?q=day" class="more-link">Read More</a>
+                    </div>
+
+                    <div id="blogs_week" class="mb-2" style="display: none;">
+
+                        {% for e in popular_week %}
+                            <a href="/{{ e.namespace }}/show/{{ e.slug }}/">
+                                <div>{{ e.title }}</div>
+                                {% if e.preview %}
+                                    <div><img src="{{ e.preview.url }}" width="200"></div>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'popular' %}?q=week" class="more-link">Read More</a>
+                    </div>
+
+                    <div class="mt-4">Who is being watched</div>
+                    <button class="btn btn-link" id="btn_day_users">Day</button>
+                    <button class="btn btn-link" id="btn_week_users">Week</button>
+                    <div id="users_day" class="mb-2">
+                        {% for e in users_day %}
+                            <a href="{% url 'users:profile' e.username %}">
+                                <div>{{ e.username }}</div>
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'popular_users' %}?q=day" class="more-link">Read More</a>
+                    </div>
+
+                    <div id="users_week" class="mb-2" style="display: none;">
+                        {% for e in users_week %}
+                            <a href="{% url 'users:profile' e.username %}">
+                                <div>{{ e.username }}</div>
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'popular_users' %}?q=week" class="more-link">Read More</a>
+                    </div>
+
                     {% include "layouts/sidebar.html" %}
                 </aside><!-- .sidebar end -->
             </div>
@@ -118,4 +167,25 @@
 {% block js %}
 <script src="{% static 'js/functions.js' %}"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script>
+    document.querySelector('#btn_day').addEventListener('click', function() {
+        document.querySelector('#blogs_day').style.display = 'block';
+        document.querySelector('#blogs_week').style.display = 'none';
+    });
+
+    document.querySelector('#btn_week').addEventListener('click', function() {
+        document.querySelector('#blogs_week').style.display = 'block';
+        document.querySelector('#blogs_day').style.display = 'none';
+    });
+
+    document.querySelector('#btn_day_users').addEventListener('click', function() {
+        document.querySelector('#users_day').style.display = 'block';
+        document.querySelector('#users_week').style.display = 'none';
+    });
+
+    document.querySelector('#btn_week_users').addEventListener('click', function() {
+        document.querySelector('#users_week').style.display = 'block';
+        document.querySelector('#users_day').style.display = 'none';
+    });
+</script>
 {% endblock %}

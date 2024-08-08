@@ -11,7 +11,16 @@ from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
 from django.db import transaction
 
-from quests.models import Quest, QuestionQuest, QuestionQuestAnswer, QuestView, Category, Subcategory
+from quests.models import (
+    Quest, 
+    QuestionQuest, 
+    QuestionQuestAnswer, 
+    QuestView, 
+    Category, 
+    Subcategory,
+    QuestDayView,
+    QuestWeekView
+)
 from users.utils import opening_access
 from blogs.models import Blog
 from blogs.utils import get_filter_kwargs, get_obj_set, get_category
@@ -103,9 +112,11 @@ class QuestViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         response_data = {}
         instance = self.get_object()
-        opening_access(instance, request.user)
-        serializer = QuestDetailSerializer(instance)
-        response_data["data"] = serializer.data
+        opening_access(instance, request.user, is_show=True)
+        serializer_data = QuestDetailSerializer(instance).data
+        if instance.is_not_subscribed:
+            serializer_data['is_not_subscribed'] = True
+        response_data["data"] = serializer_data
         return Response(response_data)
 
     @swagger_auto_schema(
@@ -210,9 +221,10 @@ class QuestViewSet(viewsets.ModelViewSet):
     def add_view(self, request, pk=None):
         quest = self.get_object()
         opening_access(quest, request.user)
-        view = QuestView.objects.filter(quest=quest).filter(user=request.user.id)
-        if not view:
-            QuestView.objects.create(quest=quest, user=request.user)
+        views = [QuestView, QuestDayView, QuestWeekView]
+        for view in views:
+            if not view.objects.filter(quest=quest).filter(user=request.user.id).first():
+                view.objects.create(quest=quest, user=request.user)
         return Response({"success": "ok."})
     
     @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")

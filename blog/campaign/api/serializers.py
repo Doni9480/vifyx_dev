@@ -9,7 +9,9 @@ class CampaignSerializer(serializers.ModelSerializer):
         help_text="Можете оставить пустым так как есть автогенерация на основе 'name'.(Опционально)",
         required=False,
     )
-    
+    prize_fund = serializers.IntegerField(default=0, required=False)
+    image = serializers.ImageField(required=True)
+
     class Meta:
         model = Campaign
         fields = (
@@ -24,9 +26,15 @@ class CampaignSerializer(serializers.ModelSerializer):
         )
 
 
+class CampaignStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Campaign
+        fields = ("is_active",)
+
+
 class TaskSerializer(serializers.ModelSerializer):
     user = serializers.CharField(read_only=True)
-    
+
     class Meta:
         model = Task
         fields = "__all__"
@@ -64,3 +72,7 @@ class UserTaskCheckingSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
         ]
+
+
+class NoneSerializer(serializers.Serializer):
+    pass

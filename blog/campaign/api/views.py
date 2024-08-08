@@ -1,4 +1,5 @@
 from django.utils.timezone import now
+import requests
 from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,11 +7,15 @@ from rest_framework.response import Response
 # from transliterate import slugify
 from django.utils.text import slugify
 from campaign.models import Campaign, Task, UserTaskChecking
-from .serializers import CampaignSerializer, TaskSerializer, UserTaskCheckingSerializer
+from .serializers import (
+    CampaignSerializer,
+    NoneSerializer,
+    TaskSerializer,
+    UserTaskCheckingSerializer,
+)
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
-from constance import config
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
@@ -20,11 +25,14 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == "list":
-            return Campaign.objects.all()
-        elif self.action == "retrieve":
+            return Campaign.objects.filter(is_active=True)
+        elif self.action in ("retrieve", "set_status_enable", "set_status_disable"):
             pk = self.kwargs.get("pk")
-            return Campaign.objects.filter(pk=pk)
-        return Campaign.objects.all()
+            objects = Campaign.objects.filter(pk=pk)
+            if len(objects) and objects.first().user.pk == self.request.user.pk:
+                return objects
+            return objects.filter(is_active=True)
+        return Campaign.objects.filter(is_active=True)
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:
@@ -34,7 +42,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
         elif self.action == "list_task":
             return TaskSerializer
         return CampaignSerializer
-    
+
     # def list(self, request, *args, **kwargs):
     #     return super().list(request, *args, **kwargs)
 
@@ -83,6 +91,38 @@ class CampaignViewSet(viewsets.ModelViewSet):
             {"data": serializer.data, "success": "ok."}, status=status.HTTP_200_OK
         )
 
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="<pk>/set_enable",
+    )
+    def set_status_enable(self, request, pk=None):
+        campaign = self.get_object()
+        if campaign.user != request.user:
+            return Response(
+                {"data": "You are not authorized to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        campaign.is_active = True
+        campaign.save()
+        return Response({"data": {"is_active": campaign.is_active}, "success": "ok."})
+
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="<pk>/set_disable",
+    )
+    def set_status_disable(self, request, pk=None):
+        campaign = self.get_object()
+        if campaign.user != request.user:
+            return Response(
+                {"data": "You are not authorized to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        campaign.is_active = False
+        campaign.save()
+        return Response({"data": {"is_active": campaign.is_active}, "success": "ok."})
+
 
 class TaskTypesViewSet(
     mixins.CreateModelMixin,
@@ -104,14 +144,13 @@ class TaskTypesViewSet(
         return Task.objects.all()
 
     def get_serializer_class(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ["create", "list", "retrieve", "partial_update"]:
             return TaskSerializer
-        return TaskSerializer
+        return NoneSerializer
 
-    def perform_create(self, serializer):
-        serializer.save()
+    # def perform_create(self, serializer):
+    #     serializer.save()
 
-    # @action(detail=True, methods=['post'], url_path="task/create")
     def create(self, request):
         # campaign = self.get_object()
         print("*" * 100)
@@ -132,6 +171,38 @@ class TaskTypesViewSet(
                 status=status.HTTP_403_FORBIDDEN,
             )
         return super().partial_update(request, *args, **kwargs)
+
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="<pk>/set_enable",
+    )
+    def set_status_enable(self, request, pk=None):
+        task = self.get_object()
+        if task.campaign.user != request.user:
+            return Response(
+                {"data": "You are not authorized to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        task.is_active = True
+        task.save()
+        return Response({"data": {"is_active": task.is_active}, "success": "ok."})
+
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="<pk>/set_disable",
+    )
+    def set_status_disable(self, request, pk=None):
+        task = self.get_object()
+        if task.campaign.user != request.user:
+            return Response(
+                {"data": "You are not authorized to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        task.is_active = False
+        task.save()
+        return Response({"data": {"is_active": task.is_active}, "success": "ok."})
 
 
 class TaskCheckingViewSet(viewsets.GenericViewSet):
@@ -194,3 +265,28 @@ class TaskCheckingViewSet(viewsets.GenericViewSet):
         return Response(
             {"error": "Task type is not supported."}, status=status.HTTP_400_BAD_REQUEST
         )
+
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="<pk>/receiving_an_award",
+    )
+    def receiving_an_award(self, request, pk=None):
+        user_task_checking = UserTaskChecking.objects.filter(
+            task=pk, is_completed=True
+        ).first()
+        if user_task_checking:
+            user_task_checking.is_received = True
+            user_task_checking.save()
+            return Response(
+                {
+                    "data": {"is_received": user_task_checking.is_received},
+                    "success": "ok.",
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": "Task not completed."},
+                status=status.HTTP_404_NOT_FOUND,
+            )

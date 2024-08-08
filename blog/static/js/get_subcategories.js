@@ -25,7 +25,7 @@ async function get_subcategory(e) {
         if (subcategories.length > 0) {
             var html_subcategories = ``;
             subcategories.forEach(subcategory => {
-                html_subcategories += `<option value="${subcategory.id}">${subcategory.subcategory}</option>`
+                html_subcategories += `<option value="${subcategory.id}">${subcategory.subcategory_eng} (${subcategory.subcategory_rus})</option>`
             });
 
             var html_text = `

@@ -1,16 +1,11 @@
 from rest_framework import serializers
-
 from posts.models import Post
-
 from surveys.models import Survey
-
 from quests.models import Quest
-
 from custom_tests.models import Test
-
 from blogs.models import Blog, LevelAccess, Donate
-
 from notifications.models import Notification
+from users.models import User
 
 
 class BlogSerializer(serializers.ModelSerializer):
@@ -174,3 +169,12 @@ class LevelFollowSerializer(serializers.ModelSerializer):
             attrs['level'] = level_access.level + 1
             
         return attrs
+    
+    
+class PopularUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+        )

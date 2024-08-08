@@ -118,7 +118,7 @@
                   <select id="id_category" class="form-select">
                     <option disabled selected>Select a category</option>
                     {% for category in categories %}
-                      <option value="{{ category.id }}">{{ category.category }}</option>
+                      <option value="{{ category.id }}">{{ category.category_eng }} ({{ category.category_rus }})</option>
                     {% endfor %}
                   </select>
                 </div>

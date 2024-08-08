@@ -10,18 +10,20 @@ import time
 
 
 class Category(models.Model):
-    category = models.CharField(verbose_name='Category')
+    category_rus = models.CharField(verbose_name='Category rus')
+    category_eng = models.CharField(verbose_name='Category eng')
     
     def __str__(self):
-        return self.category
+        return self.category_eng
     
     
 class Subcategory(models.Model):
     category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
-    subcategory = models.CharField(verbose_name='Subcategory')
+    subcategory_rus = models.CharField(verbose_name='Subcategory rus')
+    subcategory_eng = models.CharField(verbose_name='Subcategory eng')
 
     def __str__(self):
-        return self.subcategory
+        return self.subcategory_eng
 
 
 class Quest(models.Model):
@@ -118,6 +120,16 @@ class Quest(models.Model):
             self.slug = "%s-%s" % (strtime[7:], title)
 
         super(Quest, self).save()
+        
+        
+class QuestWeekView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_quest_week')
+    quest = models.ForeignKey(to=Quest, on_delete=models.CASCADE, verbose_name='Quest', null=True, related_name='quest_week')
+
+
+class QuestDayView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_quest_day')
+    quest = models.ForeignKey(to=Quest, on_delete=models.CASCADE, verbose_name='Quest', null=True, related_name='quest_day')
     
     
 class QuestView(models.Model):

@@ -5,7 +5,16 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from custom_tests.models import Test, Question, QuestionAnswer, TestView, Category, Subcategory
+from custom_tests.models import (
+    Test, 
+    Question, 
+    QuestionAnswer, 
+    TestView, 
+    Category, 
+    Subcategory,
+    TestDayView,
+    TestWeekView
+)
 from users.utils import opening_access
 from .serializers import (
     TestSerializer,
@@ -142,9 +151,11 @@ class TestViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None, *args, **kwargs):
         instance = self.get_object()
-        opening_access(instance, request.user)
-        serializer = self.get_serializer(instance)
-        return Response({"data": serializer.data})
+        opening_access(instance, request.user, is_show=True)
+        serializer_data = self.get_serializer(instance).data
+        if serializer_data.is_not_subscribed:
+            serializer_data['is_not_subscribed'] = True            
+        return Response({"data": serializer_data})
 
     @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
@@ -281,9 +292,10 @@ class TestViewSet(viewsets.ModelViewSet):
     def add_view(self, request, pk=None):
         test = self.get_object()
         opening_access(test, request.user)
-        view = TestView.objects.filter(test=test).filter(user=request.user.id)
-        if not view:
-            TestView.objects.create(test=test, user=request.user)
+        views = [TestView, TestWeekView, TestDayView]
+        for view in views:
+            if not view.objects.filter(test=test).filter(user=request.user.id).first():
+                view.objects.create(test=test, user=request.user)
         return Response({"success": "ok."})
     
     @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")

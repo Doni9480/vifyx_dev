@@ -389,6 +389,7 @@ class PostShowNotBuySerializer(serializers.ModelSerializer):
             "preview",
             "title",
             "is_paid",
+            "content",
             "amount",
             "language",
             "user",
@@ -416,7 +417,8 @@ class SubcategorySerializer(serializers.ModelSerializer):
         model = Subcategory
         fields = (
             "id",
-            "subcategory",
+            "subcategory_rus",
+            "subcategory_eng",
         )
 
 

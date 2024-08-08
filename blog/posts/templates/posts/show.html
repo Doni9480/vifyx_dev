@@ -88,6 +88,73 @@
                         </div><!-- .entry-image end -->
 
                         <div class="clear"></div>
+
+                        <!-- Entry Content
+                        ============================================= -->
+                        <div class="entry-content mt-3">
+                            {{ post.content|safe }}
+                        </div>
+
+                    </div><!-- .entry end -->
+                </div>
+            {% elif post.is_not_subscribed %}
+                <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
+                    {% csrf_token %}
+                    <!-- Single Post============================================= -->
+                    <div class="entry">
+                        <!-- Entry Title============================================= -->
+                        <div class="entry-title">
+                            <h2>{{ post.title }}</h2>
+                        </div><!-- .entry-title end -->
+                        <div class="row align-items-center mt-2">
+                            <div class="col-md-3">
+                                <!-- Entry Meta ============================================= -->
+                                <div>
+                                    <ul class="d-flex flex-column entry-meta no-separator">
+                                        <li class="me-0"><i class="uil uil-schedule"></i> {{ post.date|date:"d M Y" }}</li>
+                                        <li class="me-0"><a href="{% url 'users:profile' post.user.username %}"><i class="uil uil-user"></i> <span id="username">{{ post.user.username }}</span></a></li>
+                                        <li class="me-0"><i class="uil uil-comments-alt"></i> {{ count_comments }} Comments</li>
+                                        <li class="me-0"><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"> <span style="margin-left: 5.5px;">{{ count_views }}</span></li>
+                                        {% if follow_exists and request.user.is_authenticated %}
+                                            {% if follow %}
+                                                <li class="me-0"><button type="button" class="btn btn-dark" id="follow">Follow</button></li>
+                                            {% else %}
+                                                <li class="me-0"><button type="button" class="btn btn-dark" id="unfollow">Unfollow</button></li>
+                                            {% endif %}
+                                        {% endif %}
+                                    </ul>
+                                </div><!-- .entry-meta end -->
+                            </div>
+                            <div class="col-md-9">
+                                <p class="text-larger text-muted mt-3">To see the content, you need to buy a subscription</p>
+                                {% if request.user.is_authenticated %}
+                                    <a href="{% url 'blogs:show' post.blog.slug %}" type="button" class="btn btn-dark">Go to the blog</a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="clear"></div>
+
+                        <input type="hidden" name="post_id" value="{{ post.id }}">
+
+                        <!-- Entry Image
+                        ============================================= -->
+                        <div class="entry-image align-wide-xl my-3">
+                            {% if post.preview %}
+                                <img src="{{ post.preview.url }}" width="500" height="281"
+                                        allow="autoplay; fullscreen" allowfullscreen>
+                                <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                            {% endif %}
+                        </div><!-- .entry-image end -->
+
+                        <div class="clear"></div>
+
+                        <!-- Entry Content
+                        ============================================= -->
+                        <div class="entry-content mt-3">
+                            {{ post.content|safe }}
+                        </div>
+
                     </div><!-- .entry end -->
                 </div>
             {% else %}

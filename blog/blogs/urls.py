@@ -6,7 +6,7 @@ from blogs.views import (
     edit, 
     donate,
     donate_show,
-    create_level_follow,
+    create_level_follow
 )
 
 

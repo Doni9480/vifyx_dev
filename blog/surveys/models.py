@@ -11,18 +11,20 @@ from users.models import User
 
 
 class Category(models.Model):
-    category = models.CharField(verbose_name='Category')
+    category_rus = models.CharField(verbose_name='Category rus')
+    category_eng = models.CharField(verbose_name='Category eng')
     
     def __str__(self):
-        return self.category
+        return self.category_eng
     
     
 class Subcategory(models.Model):
     category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
-    subcategory = models.CharField(verbose_name='Subcategory')
+    subcategory_rus = models.CharField(verbose_name='Subcategory rus')
+    subcategory_eng = models.CharField(verbose_name='Subcategory eng')
 
     def __str__(self):
-        return self.subcategory
+        return self.subcategory_eng
 
 
 class Survey(models.Model):
@@ -38,7 +40,7 @@ class Survey(models.Model):
     language = models.CharField(max_length=255, verbose_name='Language')
     category = models.ForeignKey(to=Category, on_delete=models.CASCADE, verbose_name='Category')
     subcategory = models.ForeignKey(to=Subcategory, on_delete=models.CASCADE, verbose_name='Subcategory', null=True, blank=True)
-    namespace = models.CharField(verbose_name='Namespace', default='posts')
+    namespace = models.CharField(verbose_name='Namespace', default='surveys')
     hide_to_user = models.BooleanField(default=False, verbose_name='Hide to user')
     hide_to_moderator = models.BooleanField(default=False, verbose_name='Hide to moderator')
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
@@ -80,8 +82,18 @@ class SurveyTag(models.Model):
         return self.title
     
 
+class SurveyWeekView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_survey_week')
+    survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey', null=True, related_name='survey_week')
+
+
+class SurveyDayView(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_survey_day')
+    survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey', null=True, related_name='survey_day')
+    
+
 class SurveyView(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='User', on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user', on_delete=models.CASCADE, null=True)
     survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey', null=True)
     
     class Meta:

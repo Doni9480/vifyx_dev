@@ -55,7 +55,7 @@ def detail_quest(request, slug):
     if request.user.language != 'any':
         filter_kwargs['language'] = request.user.language
     quest_obj = get_object_or_404(Quest, **filter_kwargs)
-    opening_access(quest_obj, request.user)
+    opening_access(quest_obj, request.user, is_show=True)
 
     comment = Comment.objects.filter(quest=quest_obj)
     comment_answers = Answer.objects.filter(quest=quest_obj)

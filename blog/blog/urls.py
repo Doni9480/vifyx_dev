@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 from blog.views import redirect_main
 from blog.admin import login, logout
 
-from blogs.views import best_blogs, search, search_tags, main
+from blogs.views import best_blogs, search, search_tags, main, popular, popular_users
 
 from scheduler.scheduler import TasksScheduler
 
@@ -35,6 +35,8 @@ urlpatterns = [
 
     path('', redirect_main, name="redirect_main"),
     path('main/', main, name="main"),
+    path('popular/', popular, name="popular"),
+    path('popular_users/', popular_users, name="popular_users"),
     path('best_blogs/', best_blogs, name="best_blogs"),
     path('search/<str:q>/', search, name="search"),
     path('search_tags/<str:q>/', search_tags, name="search_tags"),
@@ -49,6 +51,7 @@ urlpatterns = [
     path('tests/', include('custom_tests.urls')),
     path('quests/', include('quests.urls')),
     path('companies/', include('campaign.urls')),
+    path('periodic_bonuses/', include('periodic_bonuses.urls')),
     
     path('summernote/', include('django_summernote.urls')),
     path('api/v1/blogs/', include('blogs.api.urls')),
@@ -62,6 +65,7 @@ urlpatterns = [
     path('api/v1/tests/', include('custom_tests.api.urls')),
     path('api/v1/quests/', include('quests.api.urls')),
     path('api/v1/companies/', include('campaign.api.urls')),
+    path('api/v1/periodic_bonuses/', include('periodic_bonuses.api.urls')),
     
     # path('language/<str:language>/', language, name="language"),
 

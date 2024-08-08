@@ -29,7 +29,8 @@ class SubcategorySerializer(serializers.ModelSerializer):
         model = Subcategory
         fields = (
             "id",
-            "subcategory",
+            "subcategory_rus",
+            "subcategory_eng",
         )
 
 

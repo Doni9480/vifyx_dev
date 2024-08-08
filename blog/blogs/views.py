@@ -6,7 +6,7 @@ from django.http import Http404
 
 from blogs.models import Blog, LevelAccess, PaidFollow, Donate
 from blogs.forms import BlogForm
-from blogs.utils import get_filter_kwargs, get_blog_list
+from blogs.utils import get_filter_kwargs, get_blog_list, get_views_period, get_users_period
 
 from posts.models import Post, PostTag
 from posts.utils import get_views_and_comments_to_posts
@@ -44,8 +44,15 @@ def main(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     
+    popular_day, popular_week = get_views_period(filter_kwargs)
+    users_day, users_week = get_users_period()
+    
     data = {
         "page_obj": page_obj,
+        "popular_day": popular_day,
+        "popular_week": popular_week,
+        "users_day": users_day,
+        "users_week": users_week,
         "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
     }
     data = dict(
@@ -53,6 +60,35 @@ def main(request):
     )
 
     return render(request, "blogs/main.html", data)
+
+def popular(request):
+    filter_kwargs = get_filter_kwargs(request)
+    query = get_views_period(filter_kwargs, full=True)
+    q = request.GET.get('q')
+    if q == 'week':
+        title = 'Popular of the week'
+        paginator = Paginator(query[1], 5)
+    else:
+        q = 'day'
+        title = 'Popular of the day'
+        paginator = Paginator(query[0], 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(request, "blogs/popular.html", {'page_obj': page_obj, 'title': title, 'q': q})
+
+def popular_users(request):
+    query = get_users_period(full=True)
+    q = request.GET.get('q')
+    if q == 'week':
+        title = 'Popular users of the week'
+        paginator = Paginator(query[1], 5)
+    else:
+        q = 'day'
+        title = 'Popular users of the day'
+        paginator = Paginator(query[0], 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(request, "blogs/popular_users.html", {'page_obj': page_obj, 'title': title, 'q': q})
 
 @login_required(login_url="/registration/login")
 def create(request):
@@ -117,7 +153,7 @@ def best_blogs(request):
             blog.scores += scores
             
     blogs = sorted(chain(blog_models), key=attrgetter("scores"), reverse=True)[:5]
-    return render(request, "blogs/popular.html", {"blogs": blogs})
+    return render(request, "blogs/popular_blogs.html", {"blogs": blogs})
 
 @login_required(login_url="/registration/login")
 def donate(request, slug):

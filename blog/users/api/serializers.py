@@ -10,6 +10,7 @@ from blogs.models import Blog, PaidFollow, BlogFollow
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(min_length=8)
     password2 = serializers.CharField(write_only=True)
+    referrer_code = serializers.CharField(write_only=True, required=False)
     language = serializers.CharField(required=False)
 
     class Meta:
@@ -21,6 +22,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "password",
             "password2",
             "language",
+            "referrer_code",
         )
         extra_kwargs = {
             "password": {"write_only": True},
@@ -134,4 +136,35 @@ class TelegramWalletUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("telegram_wallet",)
+
+
+class EditProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "username",
+            "first_name",
+        )
         
+        
+class EditPasswordSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(min_length=8)
+    password2 = serializers.CharField(write_only=True)
+    
+    class Meta:
+        model = User
+        fields = (
+            "password",
+            "password2",
+        )
+        
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password": "Passwords must match."})
+        return attrs
+        
+    def update(self, user, validated_data):
+        user.set_password(validated_data["password"])
+        user.save()
+        return user

@@ -102,9 +102,9 @@
                     <option disabled selected>Select a category</option>
                     {% for category in categories %}
                       {% if form.instance.category == category %}
-                        <option value="{{ category.id }}" selected>{{ category.category }}</option>
+                        <option value="{{ category.id }}" selected>{{ category.category_eng }} ({{ category.category_rus }})</option>
                       {% else %}
-                        <option value="{{ category.id }}">{{ category.category }}</option>
+                        <option value="{{ category.id }}">{{ category.category_eng }} ({{ category.category_rus }})</option>
                       {% endif %}
                     {% endfor %}
                   </select>
@@ -118,9 +118,9 @@
                     <option disabled selected>Select a subcategory</option>
                     {% for subcategory in subcategories %}
                       {% if form.instance.subcategory == subcategory %}
-                        <option value="{{ subcategory.id }}" selected>{{ subcategory.subcategory }}</option>
+                        <option value="{{ subcategory.id }}" selected>{{ subcategory.subcategory_eng }} ({{ subcategory.subcategory_rus }})</option>
                       {% else %}
-                        <option value="{{ subcategory.id }}">{{ subcategory.subcategory }}</option>
+                        <option value="{{ subcategory.id }}">{{ subcategory.subcategory_eng }} ({{ subcategory.subcategory_rus }})</option>
                       {% endif %}
                     {% endfor %}
                   </select>

@@ -12,6 +12,8 @@ from django.http import Http404
 from users.models import User, TotalScore
 from blogs.models import PaidFollow
 
+import re
+
 
 def get_info(request, user):
     current_site = get_current_site(request)
@@ -52,14 +54,20 @@ def send_scores():
                 user.unearned_scores = scores
                 user.save()
 
-def opening_access(elem, user):
+def opening_access(elem, user, is_show=False):
     is_exp = False
+    elem.is_not_subscribed = False
     if elem.level_access:
         if user.is_anonymous:
             return True
         paid_follow = PaidFollow.objects.filter(blog=elem.blog, follower=user)
-        if not paid_follow or paid_follow[0].blog_access_level.level < elem.level_access.level:
-            is_exp = True
+        if (not paid_follow or paid_follow[0].blog_access_level.level < elem.level_access.level) and elem.user != user:
+            if is_show:
+                elem.is_not_subscribed = True
+                if elem.content:
+                    elem.content = re.sub(re.compile('<.*?>'), '', elem.content) + '...'
+            else:
+                is_exp = True
 
     if elem.hide_to_moderator or elem.hide_to_user and not user.is_staff:
         is_exp = True

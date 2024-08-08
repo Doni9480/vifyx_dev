@@ -84,7 +84,11 @@
                                         </ul>
                                     </form>
                                     <div class="entry-content">
-                                        <p>{{ e.description }}</p>
+                                        {% if e.namespace == 'posts' %}
+                                            <p>{{ e.content|striptags|truncatechars:10 }}</p>
+                                        {% else %}
+                                            <p>{{ e.description }}</p>
+                                        {% endif %}
                                         <a href="/{{ e.namespace }}/show/{{ e.slug }}/" class="more-link">Read More</a>
                                     </div>
                                 </div>

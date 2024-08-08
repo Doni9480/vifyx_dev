@@ -27,6 +27,7 @@ from comments.models import Comment, Answer
 from blogs.models import Blog, LevelAccess, BlogFollow
 
 from operator import attrgetter
+import re
 
 
 def index(request):
@@ -74,7 +75,11 @@ def create(request, slug):
     
 def show(request, slug):
     post = get_object_or_404(Post.objects, slug=slug)
-    opening_access(post, request.user)
+    opening_access(post, request.user, is_show=True)
+    
+    buy_post = BuyPost.objects.filter(user=request.user.id, post=post)
+    if post.is_paid and not buy_post:
+        post.content = re.sub(re.compile('<.*?>'), '', post.content) + '...'
     
     comments = Comment.objects.filter(post=post)
         
@@ -113,7 +118,7 @@ def show(request, slug):
         'post': post,
         'follow_exists': bool(request.user != post.user),
         'follow': bool(not BlogFollow.objects.filter(follower=request.user.id, blog=post.blog)),
-        'no_buy_post': bool(post.is_paid and not BuyPost.objects.filter(user=request.user.id, post=post)),
+        'no_buy_post': bool(post.is_paid and not buy_post),
         'tags': tags,
         'comments': comments,
         'answers': answers,
