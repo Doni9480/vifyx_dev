@@ -38,7 +38,7 @@
     <div class="content-wrap" style="background-color: #EEE">
         <div class="container">
             <input type="hidden" name="blog_id" value="{{ test.blog.pk }}">
-            {% if test.is_not_subscribed %}
+            {% if not test.is_not_subscribed %}
                 <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
                     <!-- Single Post============================================= -->
                     <div class="entry">
