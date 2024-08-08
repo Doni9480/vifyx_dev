@@ -85,7 +85,7 @@
                                     </form>
                                     <div class="entry-content">
                                         {% if e.namespace == 'posts' %}
-                                            <p>{{ e.content|striptags|truncatechars:10 }}</p>
+                                            <p>{{ e.content|striptags|truncatechars:100 }}</p>
                                         {% else %}
                                             <p>{{ e.description }}</p>
                                         {% endif %}

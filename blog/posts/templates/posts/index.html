@@ -62,7 +62,7 @@
                                         </ul>
                                     </div>
                                     <div class="entry-content">
-                                        <p>{{ post.content|striptags|truncatechars:10 }}</p>
+                                        <p>{{ post.content|striptags|truncatechars:100 }}</p>
                                         <a href="{% url 'posts:show' post.slug %}" class="more-link">Read More</a>
                                     </div>
                                 </div>
