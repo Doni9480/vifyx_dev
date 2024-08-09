@@ -24,6 +24,8 @@ from blog.admin import login, logout
 
 from blogs.views import best_blogs, search, search_tags, main, popular, popular_users
 
+from users.models import Percent, Percent_for_content
+
 from scheduler.scheduler import TasksScheduler
 
 from .swagger import urlpatterns as urlpatterns_swagger
@@ -78,6 +80,12 @@ try:
     scheduler.run()
 except Exception as e:
     print(f"Scheduler error: {e}")
+    
+# default percent
+if Percent.objects.all().count() == 0:
+    Percent.objects.create()
+if Percent_for_content.objects.all().count() == 0:
+    Percent_for_content.objects.create()
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
