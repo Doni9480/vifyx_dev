@@ -111,6 +111,13 @@ class Percent(models.Model):
         validate_only_one_instance(self)
         
 
+class Percent_for_content(models.Model):
+    percent = models.IntegerField(verbose_name="percent_for_content", default=30)
+
+    def clean(self):
+        validate_only_one_instance(self)
+        
+
 class Hide(models.Model):
     hider = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="hider"
@@ -130,6 +137,8 @@ def create_scores(sender, **kwargs):
 def create_percent(sender, **kwargs):
     if Percent.objects.all().count() == 0:
         Percent.objects.create()
+    if Percent_for_content.objects.all().count() == 0:
+        Percent_for_content.objects.create()
 
 
 def send_scores():

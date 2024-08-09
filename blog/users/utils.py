@@ -9,8 +9,9 @@ from django.conf import settings
 from django.forms import ValidationError
 from django.http import Http404
 
-from users.models import User, TotalScore
+from users.models import User, TotalScore, Percent_for_content
 from blogs.models import PaidFollow
+from blogs.utils import slice_content
 
 import re
 
@@ -65,7 +66,7 @@ def opening_access(elem, user, is_show=False):
             if is_show:
                 elem.is_not_subscribed = True
                 if elem.content:
-                    elem.content = re.sub(re.compile('<.*?>'), '', elem.content) + '...'
+                    elem.content = slice_content(elem.content)
             else:
                 is_exp = True
 

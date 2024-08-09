@@ -20,7 +20,7 @@ from posts.models import (
 )
 from users.utils import opening_access
 from posts.utils import get_views_and_comments_to_posts
-from blogs.utils import get_filter_kwargs, get_obj_set, get_category
+from blogs.utils import get_filter_kwargs, get_obj_set, get_category, slice_content
 
 from comments.models import Comment, Answer
 
@@ -79,7 +79,7 @@ def show(request, slug):
     
     buy_post = BuyPost.objects.filter(user=request.user.id, post=post)
     if post.is_paid and not buy_post:
-        post.content = re.sub(re.compile('<.*?>'), '', post.content) + '...'
+        post.content = slice_content(post.content)
     
     comments = Comment.objects.filter(post=post)
         

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.db import transaction
 from django.http import Http404
 from users.models import User, Percent
-from blogs.utils import get_filter_kwargs, get_obj_set, get_category
+from blogs.utils import get_filter_kwargs, get_obj_set, get_category, slice_content
 
 from .serializers import (
     PostSerializer,
@@ -170,7 +170,7 @@ class PostViewSet(viewsets.ModelViewSet):
         
         if post_model.is_paid and not BuyPost.objects.filter(user=request.user.id, post=post_model):
             post = PostShowNotBuySerializer(post_model).data
-            post['content'] = re.sub(re.compile('<.*?>'), '', post['content']) + '...'
+            post['content'] = slice_content(post['content'])
             post['is_not_bought'] = True
         else:
             post = PostShowSerializer(post_model).data

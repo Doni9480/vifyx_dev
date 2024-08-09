@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 
 from blog.utils import add_months
 from blogs.models import PaidFollow
-from users.models import User, Percent, Hide
+from users.models import User, Percent, Hide, Percent_for_content
 from posts.models import (
     Post, 
     Category as Category_post, 
@@ -39,6 +39,7 @@ from quests.models import (
 from quests.utils import get_views_and_comments_to_quests
 from itertools import chain
 from operator import attrgetter
+import re
 
 
 @transaction.atomic
@@ -222,3 +223,10 @@ def get_users_period(full=False):
         sorted(chain(users), key=attrgetter("views_day"), reverse=True)[:3], 
         sorted(chain(users), key=attrgetter("views_week"), reverse=True)[:3]
     )
+    
+def slice_content(content):
+    content = re.sub(re.compile('<img.*?>'), '', content)
+    if len(content) >= 500:
+        len_content = int(len(content) * (1 - Percent_for_content.objects.all()[0].percent / 100))
+        content = content[:len_content] + '...'
+    return content

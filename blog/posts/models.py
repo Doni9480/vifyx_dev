@@ -13,7 +13,10 @@ from blogs.models import Blog, LevelAccess
 
 from custom_tests.models import Test
 
-from blog.managers import LevelAccessManager
+
+class LevelAccessManager(models.Manager):
+    def get_queryset(self):
+        return super(LevelAccessManager, self).get_queryset().filter(level_access=None, is_paid=False)
 
 
 class Category(models.Model):
