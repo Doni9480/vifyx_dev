@@ -78,7 +78,7 @@ def show(request, slug):
     opening_access(post, request.user, is_show=True)
     
     buy_post = BuyPost.objects.filter(user=request.user.id, post=post)
-    if post.is_paid and not buy_post:
+    if post.is_paid and not buy_post and request.user != post.user:
         post.content = slice_content(post.content)
     
     comments = Comment.objects.filter(post=post)

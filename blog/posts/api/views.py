@@ -168,7 +168,7 @@ class PostViewSet(viewsets.ModelViewSet):
         post_model = self.get_object()
         opening_access(post_model, request.user, is_show=True)
         
-        if post_model.is_paid and not BuyPost.objects.filter(user=request.user.id, post=post_model):
+        if post_model.is_paid and not BuyPost.objects.filter(user=request.user.id, post=post_model) and request.user != post_model.user:
             post = PostShowNotBuySerializer(post_model).data
             post['content'] = slice_content(post['content'])
             post['is_not_bought'] = True
