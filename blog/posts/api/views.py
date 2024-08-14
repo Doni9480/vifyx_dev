@@ -137,7 +137,7 @@ class PostViewSet(viewsets.ModelViewSet):
     )
     def list(self, request):
         request = set_language_to_user(request)
-        filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'posts')
+        filter_kwargs, subcategories, select_subcategories = get_category(get_filter_kwargs(request), request, 'posts')
         obj_set = get_obj_set(Post.level_access_objects.filter(**filter_kwargs).order_by('-date'), request.user)
         obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
             

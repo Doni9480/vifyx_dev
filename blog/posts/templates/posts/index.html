@@ -56,7 +56,7 @@
                                             <li><a href="{% url 'users:profile' post.user.username %}"><i class="uil uil-user"></i> {{ post.user.username }}</a></li>
                                             <li><a href="{% url 'posts:show' post.slug %}"><i class="uil uil-comments-alt"></i> {{ post.count_comments }} Comments</a></li>
                                             <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ post.count_views }}</span></li>
-                                            {% if request.user != post.user %}
+                                            {% if request.user.is_authenticated and request.user != post.user %}
                                                 <li><button type="button" id="button_hide" value="{{ post.user.username }}" class="btn btn-dark">hide from this user</button></li>
                                             {% endif %}
                                         </ul>
@@ -100,6 +100,7 @@
                 <!-- Sidebar
                 ============================================= -->
                 <aside class="sidebar col-lg-3">
+                    {% csrf_token %}
                     {% include "layouts/filter.html" %}
                     {% include "layouts/sidebar.html" %}
                 </aside><!-- .sidebar end -->

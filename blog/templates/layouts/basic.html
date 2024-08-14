@@ -183,6 +183,11 @@
 												</a>
 											</li>
 											<li class="menu-item">
+												<a href="{% url 'albums:index' %}" class="menu-link">
+													<div style="font-size: 14px;">Albums</div>
+												</a>
+											</li>
+											<li class="menu-item">
 												<a href="{% url 'list_tests' %}" class="menu-link">
 													<div style="font-size: 14px;">Tests</div>
 												</a>
@@ -311,6 +316,21 @@
 																			{% if notification.quest.preview %}
 																				<div>
 																					<div><img width="100" src="{{ notification.quest.preview.url }}"></div>
+																				</div>
+																			{% endif %}
+																		</div>
+																	</a>
+																{% elif notification.album %}
+																	<a class="fix_text fix_color" href="{% url 'albums:show' notification.album.slug %}">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">A new album has been created</div>
+																				<div>{{ notification.album.title }}</div>
+																				<div>{{ notification.album.date|date:"d M Y H:i" }}</div>
+																			</div>
+																			{% if notification.album.preview %}
+																				<div>
+																					<div><img width="100" src="{{ notification.album.preview.url }}"></div>
 																				</div>
 																			{% endif %}
 																		</div>

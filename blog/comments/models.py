@@ -1,14 +1,10 @@
 from django.db import models
-
 from users.models import User
-
 from posts.models import Post
-
 from surveys.models import Survey
-
 from custom_tests.models import Test
-
 from quests.models import Quest
+from albums.models import Album
 
 
 class Comment(models.Model):
@@ -26,6 +22,9 @@ class Comment(models.Model):
     )
     quest = models.ForeignKey(
         to=Quest, on_delete=models.CASCADE, verbose_name="Quest", null=True, blank=True
+    )
+    album = models.ForeignKey(
+        to=Album, on_delete=models.CASCADE, verbose_name="Album", null=True, blank=True
     )
     text = models.TextField(verbose_name="Text_comment")
     delete_from_user = models.BooleanField(
@@ -59,6 +58,9 @@ class Answer(models.Model):
     )
     quest = models.ForeignKey(
         to=Quest, on_delete=models.CASCADE, verbose_name="Quest", null=True, blank=True
+    )
+    album = models.ForeignKey(
+        to=Album, on_delete=models.CASCADE, verbose_name="Album", null=True, blank=True
     )
     text = models.TextField(verbose_name="Text_answer")
     date = models.DateTimeField(auto_now_add=True)

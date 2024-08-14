@@ -65,7 +65,7 @@ def opening_access(elem, user, is_show=False):
         if (not paid_follow or paid_follow[0].blog_access_level.level < elem.level_access.level) and elem.user != user:
             if is_show:
                 elem.is_not_subscribed = True
-                if elem.content:
+                if hasattr(elem, 'content') and elem.content:
                     elem.content = slice_content(elem.content)
             else:
                 is_exp = True

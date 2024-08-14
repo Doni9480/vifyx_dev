@@ -6,7 +6,7 @@ from notifications.models import Notification
 
 @login_required(login_url='/registration/login')
 def index(request):
-    notifications = Notification.objects.filter(user=request.user)
+    notifications = Notification.objects.filter(user=request.user).order_by('-date')
     paginator = Paginator(notifications, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)

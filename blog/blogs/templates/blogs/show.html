@@ -134,6 +134,7 @@
                         <div><a href="{% url 'surveys:create' blog.slug %}" class="btn btn-success mt-2">Create a new survey</i></a></div>
                         <div><a href="{% url 'test_create' blog.slug %}" class="btn btn-dark mt-2">Create a new test</i></a></div>
                         <div><a href="{% url 'quest_create' blog.slug %}" class="btn btn-warning mt-2">Create a new quest</i></a></div>
+                        <div><a href="{% url 'albums:create' blog.slug %}" class="btn btn-light mt-2">Create a new album</i></a></div>
                     {% else %}
                         <div><a href="{% url 'blogs:donate' blog.slug %}" class="btn btn-info mt-2">Donate</i></a></div>
                     {% endif %}

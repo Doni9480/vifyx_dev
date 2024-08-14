@@ -48,11 +48,12 @@ urlpatterns = [
     # path('drafts_survey/', include(('drafts_survey.urls', 'drafts_survey'), namespace="drafts_survey")),
     path('surveys/', include(('surveys.urls', 'surveys'), namespace="surveys")),
     path('notifications/', include(('notifications.urls', 'notifications'), namespace="notifications")),
+    path('albums/', include(('albums.urls', 'albums'), namespace="albums")),
     path('tests/', include('custom_tests.urls')),
     path('quests/', include('quests.urls')),
     path('companies/', include('campaign.urls')),
     path('periodic_bonuses/', include('periodic_bonuses.urls')),
-    
+
     path('summernote/', include('django_summernote.urls')),
     path('api/v1/blogs/', include('blogs.api.urls')),
     path('api/v1/users/', include('users.api.urls')),
@@ -66,6 +67,7 @@ urlpatterns = [
     path('api/v1/quests/', include('quests.api.urls')),
     path('api/v1/companies/', include('campaign.api.urls')),
     path('api/v1/periodic_bonuses/', include('periodic_bonuses.api.urls')),
+    path('api/v1/albums/', include('albums.api.urls')),
     
     # path('language/<str:language>/', language, name="language"),
 

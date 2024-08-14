@@ -5,6 +5,7 @@ from quests.models import Quest
 from custom_tests.models import Test
 from blogs.models import Blog, LevelAccess, Donate
 from notifications.models import Notification
+from albums.models import Album
 from users.models import User
 
 
@@ -133,6 +134,20 @@ class TestSerializer(serializers.ModelSerializer):
 class QuestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quest
+        fields = (
+            "id",
+            "preview",
+            "title",
+            "slug",
+            "date",
+            "user",
+            "level_access",
+        )
+        
+
+class AlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Album
         fields = (
             "id",
             "preview",

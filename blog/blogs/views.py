@@ -20,6 +20,9 @@ from custom_tests.utils import get_views_and_comments_to_tests
 from quests.models import Quest
 from quests.utils import get_views_and_comments_to_quests
 
+from albums.models import Album
+from albums.utils import get_views_and_comments_to_albums
+
 from notifications.models import NotificationBlog
 
 from blog.translations import main_dict
@@ -109,7 +112,8 @@ def show(request, slug):
     surveys = get_views_and_comments_to_surveys(Survey.objects.filter(**filter_kwargs))
     tests = get_views_and_comments_to_tests(Test.objects_show.filter(**filter_kwargs))
     quests = get_views_and_comments_to_quests(Quest.objects.filter(**filter_kwargs))
-    blog_list = sorted(chain(posts, surveys, tests, quests), key=attrgetter("date"), reverse=True)
+    albums = get_views_and_comments_to_albums(Album.objects.filter(**filter_kwargs))
+    blog_list = sorted(chain(posts, surveys, tests, quests, albums), key=attrgetter("date"), reverse=True)
 
     paid_follow = PaidFollow.objects.filter(follower=request.user.id, blog=blog)
     if paid_follow:
@@ -205,8 +209,9 @@ def search(request, q):
     surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(title__icontains=q, **filter_kwargs))
     tests = get_views_and_comments_to_tests(Test.level_access_objects.filter(title__icontains=q, **filter_kwargs))
     quests = get_views_and_comments_to_quests(Quest.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    albums = get_views_and_comments_to_albums(Album.level_access_objects.filter(title__icontains=q, **filter_kwargs))
     
-    blog_list = sorted(chain(posts, surveys, tests, quests), key=attrgetter("date"), reverse=True)
+    blog_list = sorted(chain(posts, surveys, tests, quests, albums), key=attrgetter("date"), reverse=True)
     
     paginator = Paginator(blog_list, 5)
     page_number = request.GET.get("page")

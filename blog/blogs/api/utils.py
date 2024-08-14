@@ -10,6 +10,9 @@ from custom_tests.api.serializers import TestSerializer
 from quests.models import Quest, QuestDayView, QuestWeekView
 from quests.api.serializers import QuestSerializer
 from quests.api.utils import get_views_and_comments_to_quests
+from albums.api.utils import get_views_and_comments_to_albums
+from albums.api.serializers import AlbumShowSerializer
+from albums.models import Album, AlbumDayView, AlbumWeekView
 from users.models import User
 from blogs.api.serializers import PopularUserSerializer
 
@@ -26,6 +29,9 @@ def get_blog_list(filter_kwargs):
     )
     quests = get_views_and_comments_to_quests(
         QuestSerializer(Quest.level_access_objects.filter(**filter_kwargs), many=True).data
+    )
+    albums = get_views_and_comments_to_albums(
+        AlbumShowSerializer(Album.level_access_objects.filter(**filter_kwargs, many=True)).data
     )
     blog_list = posts + surveys + tests + quests
     return blog_list
@@ -62,6 +68,14 @@ E_DICTS = [
         'view_week': TestWeekView, 
         'serializer': TestSerializer,
         'func': get_views_and_comments_to_tests
+    },
+    {
+        'obj': 'album',
+        'model': Album,
+        'view_day': AlbumDayView,
+        'view_week': AlbumWeekView,
+        'serializer': AlbumShowSerializer,
+        'func': get_views_and_comments_to_albums
     }
 ]
 

@@ -1,14 +1,12 @@
 var category = document.querySelector('#id_category');
-var namespace = document.querySelector('input[name="namespace"]');
+var _namespace = document.querySelector('input[name="namespace"]');
 
 category.addEventListener('change', get_subcategory);
-
 async function get_subcategory(e) {
     e.preventDefault();
 
     var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-    url = window.location.protocol + '//' + window.location.host + '/api/v1/' + namespace.value + '/' + e.target.value + '/get_subcategory/';
-
+    url = window.location.protocol + '//' + window.location.host + '/api/v1/' + _namespace.value + '/' + e.target.value + '/get_subcategory/';
     let response = await fetch(url, {
         method: 'POST',
         headers: {

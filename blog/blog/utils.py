@@ -70,6 +70,26 @@ def get_request_data(request_data):
     
     return data
 
+def set_deleted_photos(request_data):
+    if request_data.get('deleted_photos_set') and type(request_data['deleted_photos_set']) is str:
+        try:
+            request_data['deleted_photos_set'] = json.loads(request_data['deleted_photos_set'])
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return request_data
+
+def set_files_data(request_data, files):
+    try:
+        files_list = files.getlist('photos_set')
+        if files_list:
+            files_dict = []
+            for file in files_list:
+                files_dict.append({'photo': file})
+            request_data['photos_set'] = files_dict
+    except Exception as e:
+        pass
+    return request_data
+
 def set_language_to_user(request):
     if not hasattr(request.user, 'language'):
         request.user.language = 'any'

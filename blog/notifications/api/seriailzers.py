@@ -1,11 +1,10 @@
 from rest_framework import serializers
-
 from notifications.models import Notification
-
 from posts.models import Post
-
 from surveys.models import Survey
-
+from quests.models import Quest
+from albums.models import Album
+from custom_tests.models import Test
 from blogs.models import Donate
 
 
@@ -17,7 +16,8 @@ class NotificationPostSerializer(serializers.ModelSerializer):
             'preview',
             'title',
             'slug',
-            'date'
+            'date',
+            'namespace'
         )
 
 
@@ -29,7 +29,47 @@ class NotificationSurveySerializer(serializers.ModelSerializer):
             'preview',
             'title',
             'slug',
-            'date'
+            'date',
+            'namespace'
+        )
+        
+
+class NotificationTestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = (
+            'id',
+            'preview',
+            'title',
+            'slug',
+            'date',
+            'namespace'
+        )
+        
+
+class NotificationQuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quest
+        fields = (
+            'id',
+            'preview',
+            'title',
+            'slug',
+            'date',
+            'namespace'
+        )
+        
+        
+class NotificationAlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Album
+        fields = (
+            'id',
+            'preview',
+            'title',
+            'slug',
+            'date',
+            'namespace'
         )
 
 
@@ -59,6 +99,45 @@ class NotificationPostShowSerializer(serializers.ModelSerializer):
 class NotificationSurveyShowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Survey
+        fields = (
+            'id',
+            'preview',
+            'title',
+            'slug',
+            'date',
+            'user'
+        )
+        
+
+class NotificationTestShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = (
+            'id',
+            'preview',
+            'title',
+            'slug',
+            'date',
+            'user'
+        )
+        
+        
+class NotificationQuestShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quest
+        fields = (
+            'id',
+            'preview',
+            'title',
+            'slug',
+            'date',
+            'user'
+        )
+        
+        
+class NotificationAlbumShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Album
         fields = (
             'id',
             'preview',

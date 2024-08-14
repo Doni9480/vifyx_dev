@@ -5,6 +5,7 @@ from posts.models import Post
 from surveys.models import Survey
 from custom_tests.models import Test
 from quests.models import Quest
+from albums.models import Album
 from users.models import User
 from blogs.models import Donate, Blog
     
@@ -15,6 +16,7 @@ class Notification(models.Model):
     survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey', null=True)
     test = models.ForeignKey(to=Test, on_delete=models.CASCADE, verbose_name='Test', null=True)
     quest = models.ForeignKey(to=Quest, on_delete=models.CASCADE, verbose_name='Quest', null=True)
+    album = models.ForeignKey(to=Album, on_delete=models.CASCADE, verbose_name='Album', null=True)
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, verbose_name='user')
     is_read = models.BooleanField(verbose_name='Is read', default=False)
     date = models.DateTimeField(auto_now_add=True)

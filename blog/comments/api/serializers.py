@@ -37,6 +37,15 @@ class CommentSurveySerializer(serializers.ModelSerializer):
             "text",
             "survey",
         )
+        
+
+class CommentAlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = (
+            "text",
+            "album",
+        )
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -92,6 +101,19 @@ class CommentQuestShowSerializer(serializers.ModelSerializer):
             "text",
             "date",
             "quest",
+            "user",
+            "delete_from_user",
+        )
+        
+
+class CommentAlbumShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = (
+            "id",
+            "text",
+            "date",
+            "album",
             "user",
             "delete_from_user",
         )
@@ -155,6 +177,16 @@ class AnswerQuestSerializer(serializers.ModelSerializer):
             "quest",
             "comment",
         )
+        
+
+class AnswerAlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = (
+            "text",
+            "album",
+            "comment",
+        )
 
 
 class AnswerPostShowSerializer(serializers.ModelSerializer):
@@ -207,6 +239,19 @@ class AnswerQuestShowSerializer(serializers.ModelSerializer):
             "user",
             "comment",
         )
+        
+
+class AnswerAlbumShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = (
+            "id",
+            "text",
+            "date",
+            "album",
+            "user",
+            "comment",
+        )
 
 
 class AnswerFullSerializer(serializers.ModelSerializer):
@@ -223,10 +268,13 @@ class AnswerFullSerializer(serializers.ModelSerializer):
     quest = serializers.IntegerField(
         required=False, help_text="Укажите ID квеста или оставите пустым"
     )
+    album = serializers.IntegerField(
+        required=False, help_text="Укажите ID альбома или оставите пустым"
+    )
     comment = serializers.IntegerField(
         required=False, help_text="Укажите ID комментария или оставите пустым"
     )
     class Meta:
         model = Answer
-        fields = ("text", "post", "survey", "test", "quest", "comment")
+        fields = ("text", "post", "survey", "test", "quest", "album", "comment")
         

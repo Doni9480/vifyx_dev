@@ -1,41 +1,75 @@
-<div class="mb-5">
-    <select class="form-select mb-2" id="select_category">
-        <option selected disabled>Select a category</option>
-        {% for category in categories %}
-            {% if category.pk|slugify == request.GET.category %}
-                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
-                    <option value="{{category.id}}" selected>{{category.category_eng}}</option>
-                {% else %}
-                    <option value="{{category.id}}" selected>{{category.category_rus}}</option>
-                {% endif %}
-            {% else %}
-                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
-                    <option value="{{category.id}}">{{category.category_eng}}</option>
-                {% else %}
-                    <option value="{{category.id}}">{{category.category_rus}}</option>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-    </select>
-
-    {% if select_category %}
-        <select class="form-select mb-2" id="select_subcategory">
-            <option selected disabled>Select a subcategory</option>
-            {% for subcategory in subcategories %}
-                {% if subcategory.pk|slugify == request.GET.subcategory %}
+{% if request.user.is_authenticated %} 
+    <div class="mb-5">
+        <input type="hidden" name="category_namespace" value="{{ category_namespace }}">
+        {% if there_category %}
+            <button type="button" class="btn btn-danger" id="reset_category">Reset category</button>
+        {% endif %}
+        <select class="form-select mb-2" id="select_category">
+            <option selected disabled>Select a category</option>
+            {% for category in categories %}
+                {% if request.user.is_authenticated and category == request.user.posts_category or category == request.user.surveys_category or category == request.user.tests_category or category == request.user.quests_category or category == request.user.albums_category %}
                     {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
-                        <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_eng}}</option>
+                        <option value="{{category.id}}" selected>{{category.category_eng}}</option>
                     {% else %}
-                        <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_rus}}</option>
+                        <option value="{{category.id}}" selected>{{category.category_rus}}</option>
                     {% endif %}
                 {% else %}
                     {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
-                        <option value="{{subcategory.id}}">{{subcategory.subcategory_eng}}</option>
+                        <option value="{{category.id}}">{{category.category_eng}}</option>
                     {% else %}
-                        <option value="{{subcategory.id}}">{{subcategory.subcategory_rus}}</option>
+                        <option value="{{category.id}}">{{category.category_rus}}</option>
                     {% endif %}
                 {% endif %}
             {% endfor %}
         </select>
-    {% endif %}
-</div>
+
+        {% if select_category %}
+            {% for select_subcategory in select_subcategories %}
+                <div>
+                    <input type="hidden" name="deleted_select_subcategory" value="{{ select_subcategory.pk }}">
+                    <select class="form-select mb-2 edit" id="select_subcategory">
+                        <option selected disabled>Select a subcategory</option>
+                        {% for subcategory in subcategories %}
+                            {% if subcategory.pk == select_subcategory.pk %}
+                                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                                    <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_eng}}</option>
+                                {% else %}
+                                    <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_rus}}</option>
+                                {% endif %}
+                            {% else %}
+                                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                                    <option value="{{subcategory.id}}">{{subcategory.subcategory_eng}}</option>
+                                {% else %}
+                                    <option value="{{subcategory.id}}">{{subcategory.subcategory_rus}}</option>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endfor %}
+
+            {% if not more_sub %}
+                <div>
+                    <select class="form-select mb-2" id="select_subcategory">
+                        <option selected disabled>Select a subcategory</option>
+                        {% for subcategory in subcategories %}
+                            {% if subcategory.pk|slugify == request.GET.subcategory %}
+                                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                                    <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_eng}}</option>
+                                {% else %}
+                                    <option value="{{subcategory.id}}" selected>{{subcategory.subcategory_rus}}</option>
+                                {% endif %}
+                            {% else %}
+                                {% if not request.user.language or request.user.language == 'english' or request.user.language == 'any' %}
+                                    <option value="{{subcategory.id}}">{{subcategory.subcategory_eng}}</option>
+                                {% else %}
+                                    <option value="{{subcategory.id}}">{{subcategory.subcategory_rus}}</option>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endif %}

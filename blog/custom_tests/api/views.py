@@ -137,7 +137,7 @@ class TestViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         request = set_language_to_user(request)
-        filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'tests')
+        filter_kwargs, subcategories, select_subcategories = get_category(get_filter_kwargs(request), request, 'tests')
         obj_set = get_obj_set(Test.level_access_objects.filter(**filter_kwargs), request.user)
         obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
         
@@ -153,7 +153,7 @@ class TestViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         opening_access(instance, request.user, is_show=True)
         serializer_data = self.get_serializer(instance).data
-        if serializer_data.is_not_subscribed:
+        if instance.is_not_subscribed:
             serializer_data['is_not_subscribed'] = True            
         return Response({"data": serializer_data})
 

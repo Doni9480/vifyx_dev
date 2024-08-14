@@ -1,0 +1,493 @@
+{% extends "layouts/basic.html" %}
+{% load tz %}
+{% load static %}
+
+{% block title %}Album{% endblock %}
+
+{% block head %}
+<script src='https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}'></script>
+<style>
+    .progress-bar-1 {
+        background-color: #e7e8e6;
+        padding: 10px 0;
+        border-radius: 10px;
+    }
+
+    .progress-bar-2 {
+        position: relative;
+        top: -20px;
+        background-color: #7cfc00;
+        padding: 10px 0;
+        border-radius: 10px;
+    }
+    
+    .progress-bar-3 {
+        position: relative;
+        top: -20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content
+============================================= -->
+<section id="content">
+    <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+    <div class="content-wrap" style="background-color: #EEE">
+        <div class="container">
+            <input type="hidden" name="blog_id" value="{{ album.blog.pk }}">
+            {% if not album.is_not_subscribed %}
+                <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
+                    <!-- Single Post============================================= -->
+                    <div class="entry">
+                        <!-- Entry Title============================================= -->
+                        <div class="entry-title">
+                            <h2 class="fix_text">{{ album.title }}</h2>
+                        </div><!-- .entry-title end -->
+                        <div class="row align-items-center mt-2">
+                            <div class="col-md-3">
+                                <!-- Entry Meta ============================================= -->
+                                <div>
+                                    <ul class="d-flex flex-column entry-meta no-separator">
+                                        <li class="me-0"><i class="uil uil-schedule"></i> {{ album.date|date:"d M Y" }}</li>
+                                        <li class="me-0"><a href="{% url 'users:profile' album.user.username  %}"><i class="uil uil-user"></i> {{ album.user.username }}</a></li>
+                                        <li class="me-0"><i class="uil uil-comments-alt"></i> {{ count_comments }} Comments</li>
+                                        <li class="me-0"><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"> <span style="margin-left: 5.5px;">{{ count_views }}</span></li>
+                                        {% if follow_exists and request.user.is_authenticated %}
+                                            {% if follow %}
+                                                <li class="me-0"><button type="button" class="btn btn-dark" id="follow">Follow</button></li>
+                                            {% else %}
+                                                <li class="me-0"><button type="button" class="btn btn-dark" id="unfollow">Unfollow</button></li>
+                                            {% endif %}
+                                        {% endif %}
+                                    </ul>
+                                </div><!-- .entry-meta end -->
+                            </div>
+                            {% if album.description %}
+                                <div class="col-md-9">
+                                    <p class="text-larger text-muted mt-3">{{ album.description }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="clear"></div>
+
+                        <input type="hidden" name="album_id" value="{{ album.id }}">
+
+                        {% if album.preview %}
+                            <!-- Entry Image
+                            ============================================= -->
+                            <div class="entry-image align-wide-xl my-3">
+
+                                    <img src="{{ album.preview.url }}" width="500" height="281"
+                                            allow="autoplay; fullscreen" allowfullscreen>
+                                    <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+
+                            </div><!-- .entry-image end -->
+                        {% endif %}
+
+                        {% for photo in photos %}
+                            <div id="photos" style="margin: 10px;">
+                                <img src="{{ photo.photo.url }}">
+                            </div>
+                        {% endfor %}
+
+                        <div class="clear"></div>
+
+                        {% if request.user == album.user %}
+                            <div class="d-flex justify-content-between align-items-start">
+                                <a href="{% url 'albums:edit' album.slug %}" class="btn btn-success">Edit</a>
+                                <form method="POST" id="form_delete" style="inline-block;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="album_id" value="{{ album.id }}">
+                                    <button class="btn btn-danger" style="inline-block;" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div><!-- .entry end -->
+
+                    {% if request.user.is_staff or request.user == album.user %}
+                        <div class="row">
+                            {% if not album.hide_to_user and not album.hide_to_moderator %}
+                                <form method="POST" id="form_hide" style="display: inline-block;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-info" type="submit">Hide</button>
+                                </form>
+                            {% else %}
+                                <form method="POST" id="form_show" style="display: inline-block;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-success" type="submit">Show</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Comments
+                    ============================================= -->
+                    <div id="comments">
+
+                        <h3 id="comments-title"><span>{{ count_comments }}</span> Comments</h3>
+
+                        <!-- Comments List
+                        ============================================= -->
+                        <ol class="commentlist">
+                            {% for comment in comments %}
+                                <input type="hidden" value="{{ comment.id }}" id="comment">
+                                {% if comment.delete_from_user %}
+                                    <li id="comment_{{ comment.id }}" class="comment byuser comment-author-_smcl_admin even thread-odd thread-alt depth-1"
+                                        id="li-comment-2">
+
+                                        <div id="comment-2" class="comment-wrap">
+
+
+                                            <div class="comment-content d-flex justify-content-between align-items-center">
+                                                <span style="color: #adb5bd;">This comment was deleted by the user.</span>
+                                                <div>
+                                                    {% if request.user == album.user or request.user.is_staff %}
+                                                        <div><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="delete_forever({{ comment.id }})" id="{{ comment.id }}">delete</a></div>
+                                                    {% endif %}
+
+                                                    {% if request.user.is_authenticated %}
+                                                        <div class="mt-4" style="text-align: right;"><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="form_reply({{ comment.id }})">reply</a></div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <div class="clear"></div>
+
+                                        </div>
+                                        <ul class="children">
+                                            {% for answer in answers %}
+                                                {% if answer.comment == comment %}
+                                                    <li id="answer_{{ answer.id }}" class="comment byuser comment-author-_smcl_admin odd alt depth-2" id="li-comment-3">
+                
+                                                        <div id="comment-3" class="comment-wrap">
+                
+                                                            <div class="comment-content d-flex justify-content-between align-items-start">
+                                                                <div>
+                                                                    <div class="comment-author"><a href="{% url 'users:profile' answer.user.username %}"
+                                                                                                    rel='external nofollow' class='url'>{{ answer.user.username }}</a><span>{{ answer.date|date:"d M Y G:i" }}</span>
+                                                                    </div>
+                    
+                                                                    <p>{{ answer.text }}</p>
+                                                                </div>
+                                                                {% if request.user == answer.user %}
+                                                                    <a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="delete_answer({{ answer.id }})" id="{{ answer.id }}">delete</a>
+                                                                {% endif %}
+                                                            </div>
+                
+                                                            <div class="clear"></div>
+                
+                                                        </div>
+                                                        
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                        {% if request.user.is_authenticated %}
+                                            <form class="row mt-2" method="post" style="display: none;" id="answerform">
+                                                {% csrf_token %}
+                                                <input type="hidden" value="{{ comment.id }}" name="comment_id">
+                                                <div class="w-100"></div>
+                    
+                                                <div class="col-12 form-group">
+                                                    <label for="answer">Answer</label>
+                                                    <textarea id="id_answer" name="answer" cols="58" rows="7" tabindex="4"
+                                                                class="form-control"></textarea>
+                                                </div>
+                    
+                                                <div class="col-12 form-group">
+                                                    <button name="submit" type="submit" id="submit-button" tabindex="5" class="button button-3d m-0">
+                                                        Submit Answer
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        {% endif %}
+                                    </li>
+                                {% else %}
+                                    <li id="comment_{{ comment.id }}" class="comment byuser comment-author-_smcl_admin even thread-odd thread-alt depth-1"
+                                        id="li-comment-2">
+
+                                        <div id="comment-2" class="comment-wrap">
+
+
+                                            <div class="comment-content d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="comment-author"><a href='{% url "users:profile" comment.user.username %}'
+                                                                                    rel='external nofollow' class='url'>{{ comment.user.username }}</a><span>{{ comment.date|date:"d M Y G:i" }}</span>
+                                                    </div>
+
+                                                    <p>{{ comment.text }}</p>
+                                                </div>
+                                                <div>
+                                                {% if request.user == album.user or request.user.is_staff %}
+                                                    <div><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="delete_forever({{ comment.id }})" id="{{ comment.id }}">delete</a></div>
+                                                {% elif request.user == comment.user %}
+                                                    <div><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="delete_from_user({{ comment.id }})" id="{{ comment.id }}">delete</a></div>
+                                                {% endif %}
+
+                                                {% if request.user.is_authenticated %}
+                                                    <div class="mt-4" style="text-align: right;"><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="form_reply({{ comment.id }})">reply</a></div>
+                                                {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <div class="clear"></div>
+
+                                        </div>
+                                        <ul class="children">
+                                            {% for answer in answers %}
+                                                {% if answer.comment == comment %}
+                                                    <li id="answer_{{ answer.id }}" class="comment byuser comment-author-_smcl_admin odd alt depth-2" id="li-comment-3">
+                
+                                                        <div id="comment-3" class="comment-wrap">
+                
+                                                            <div class="comment-content d-flex justify-content-between align-items-start">
+                                                                <div>
+                                                                    <div class="comment-author"><a href="{% url 'users:profile' answer.user.username %}"
+                                                                                                    rel='external nofollow' class='url'>{{ answer.user.username }}</a><span>{{ answer.date|date:"d M Y G:i" }}</span>
+                                                                    </div>
+                    
+                                                                    <p>{{ answer.text }}</p>
+                                                                </div>
+                                                                {% if request.user == answer.user or request.user.is_staff %}
+                                                                    <a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="delete_answer({{ answer.id }})" id="{{ answer.id }}">delete</a>
+                                                                {% endif %}
+                                                            </div>
+                
+                                                            <div class="clear"></div>
+                
+                                                        </div>
+                                                        
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+
+                                        {% if request.user.is_authenticated %}
+                                            <form class="row mt-2" method="post" style="display: none;" id="answerform">
+                                                {% csrf_token %}
+                                                <input type="hidden" value="{{ comment.id }}" name="comment_id">
+                                                <div class="w-100"></div>
+                    
+                                                <div class="col-12 form-group">
+                                                    <label for="answer">Answer</label>
+                                                    <textarea id="id_answer" name="answer" cols="58" rows="7" tabindex="4"
+                                                                class="form-control"></textarea>
+                                                </div>
+                    
+                                                <div class="col-12 form-group">
+                                                    <button name="submit" type="submit" id="submit-button" tabindex="5" class="button button-3d m-0">
+                                                        Submit Answer
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ol><!-- .commentlist end -->
+
+                        <div class="clear"></div>
+
+                        {% if request.user.is_authenticated %}
+                            <!-- Comment Form
+                            ============================================= -->
+                            <div id="respond">
+
+                                <h3>Leave a <span>Comment</span></h3>
+
+                                <form class="row" method="post" id="commentform">
+                                    {% csrf_token %}
+                                    <div class="w-100"></div>
+
+                                    <div class="col-12 form-group">
+                                        <label for="comment">Comment</label>
+                                        <textarea id="id_comment" name="comment" cols="58" rows="7" tabindex="4"
+                                                    class="form-control"></textarea>
+                                    </div>
+
+                                    <div class="col-12 form-group">
+                                        <button name="submit" type="submit" id="submit-button" tabindex="5" class="button button-3d m-0">
+                                            Submit Comment
+                                        </button>
+                                    </div>
+                                </form>
+
+                            </div><!-- #respond end -->
+                        {% endif %}
+
+                    </div><!-- #comments end -->
+
+                </div>
+            {% else %}
+                <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
+                    {% csrf_token %}
+                    <!-- Single Post============================================= -->
+                    <div class="entry">
+                        <!-- Entry Title============================================= -->
+                        <div class="entry-title">
+                            <h2>{{ album.title }}</h2>
+                        </div><!-- .entry-title end -->
+                        <div class="row align-items-center mt-2">
+                            <div class="col-md-3">
+                                <!-- Entry Meta ============================================= -->
+                                <div>
+                                    <ul class="d-flex flex-column entry-meta no-separator">
+                                        <li class="me-0"><i class="uil uil-schedule"></i> {{ album.date|date:"d M Y" }}</li>
+                                        <li class="me-0"><a href="{% url 'users:profile' album.user.username %}"><i class="uil uil-user"></i> <span id="username">{{ album.user.username }}</span></a></li>
+                                        <li class="me-0"><i class="uil uil-comments-alt"></i> {{ count_comments }} Comments</li>
+                                        <li class="me-0"><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"> <span style="margin-left: 5.5px;">{{ count_views }}</span></li>
+                                        {% if follow_exists and request.user.is_authenticated %}
+                                            {% if follow %}
+                                                <li class="me-0"><button type="button" class="btn btn-dark" id="follow">Follow</button></li>
+                                            {% else %}
+                                                <li class="me-0"><button type="button" class="btn btn-dark" id="unfollow">Unfollow</button></li>
+                                            {% endif %}
+                                        {% endif %}
+                                    </ul>
+                                </div><!-- .entry-meta end -->
+                            </div>
+                            <div class="col-md-9">
+                                <p class="text-larger text-muted mt-3">To see the content, you need to buy a subscription</p>
+                                {% if request.user.is_authenticated %}
+                                    <a href="{% url 'blogs:show' album.blog.slug %}" type="button" class="btn btn-dark">Go to the blog</a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="clear"></div>
+
+                        <input type="hidden" name="album_id" value="{{ album.id }}">
+
+                        <!-- Entry Image
+                        ============================================= -->
+                        <div class="entry-image align-wide-xl my-3">
+                            {% if album.preview %}
+                                <img src="{{ album.preview.url }}" width="500" height="281"
+                                        allow="autoplay; fullscreen" allowfullscreen>
+                                <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                            {% endif %}
+                        </div><!-- .entry-image end -->
+
+                        <div class="clear"></div>
+
+                    </div><!-- .entry end -->
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% if request.user == album.user %}
+        <input type="hidden" name="delete_comment_from" value="forever">
+    {% else %}
+        <input type="hidden" name="delete_comment_from" value="from_user">
+    {% endif %}
+</section><!-- #content end -->
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/functions.js' %}"></script>
+    <script src="{% static 'js/delete_album.js' %}"></script>
+    <script src="{% static 'js/send_comment.js' %}"></script>
+    <script src="{% static 'js/send_scores_to_option.js' %}"></script>
+    <script src="{% static 'js/follow.js' %}"></script>
+    <script src="{% static 'js/send_hide_album.js' %}"></script>
+    <script>
+        function delete_comment_block(id, username, text, date) {
+            return `
+                <li id="comment_${id}" class="comment byuser comment-author-_smcl_admin even thread-odd thread-alt depth-1"
+                    id="li-comment-2">
+
+                    <div id="comment-2" class="comment-wrap">
+
+
+                        <div class="comment-content d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="comment-author"><a href='/profile/${username}/'
+                                                                rel='external nofollow' class='url'>${username}</a><span>${date}</span>
+                                </div>
+
+                                <p>${text}</p>
+                            </div>
+                            <div>
+
+                                <div><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="delete_${document.querySelector('input[name="delete_comment_from"]').value}(${id})" id="${id}">delete</a></div>
+
+                                <div class="mt-4" style="text-align: right;"><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="form_reply(${id})">reply</a></div>
+                            </div>
+                        </div>
+
+                        <div class="clear"></div>
+
+                    </div>
+
+                    <ul class="children"></ul>
+
+                    <form class="row mt-2" method="post" style="display: none;" id="answerform">
+                        {% csrf_token %}
+                        <input type="hidden" value="${id}" name="comment_id">
+                        <div class="w-100"></div>
+
+                        <div class="col-12 form-group">
+                            <label for="answer">Answer</label>
+                            <textarea id="id_answer" name="answer" cols="58" rows="7" tabindex="4"
+                                        class="form-control"></textarea>
+                        </div>
+
+                        <div class="col-12 form-group">
+                            <button name="submit" type="submit" id="submit-button" tabindex="5" class="button button-3d m-0">
+                                Submit Answer
+                            </button>
+                        </div>
+                    </form>
+                </li>
+            `;
+        }
+
+        function delete_comment_block_user(id) {
+            return `
+                <div class="comment-content d-flex justify-content-between align-items-center">
+                    <span style="color: #adb5bd;">This comment was deleted by the user.</span>
+                    <div>
+                        <div class="mt-4" style="text-align: right;"><a style="cursor: pointer; color: var(--cnvs-themecolor);" onclick="form_reply(${id})">reply</a></div>
+                    </div>
+                </div>
+
+                <div class="clear"></div>
+            `;
+        }
+
+    </script>
+    <script src="{% static 'js/delete_comment.js' %}"></script>
+    <script src="{% static 'js/delete_question.js' %}"></script>
+    <script>
+        async function add_view_to_album() {
+            let album = document.querySelector('input[name="album_id"]').value;
+            let url = window.location.protocol + '//' + window.location.host + '/api/v1/albums/' + album + '/view/add/';
+            let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+            let response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                },
+            });
+        }
+
+        add_view_to_album();
+    </script>
+    <script>
+        function get_g_token() {
+            //global grecaptcha
+            grecaptcha.ready(function() {
+                grecaptcha.execute('{{recaptcha_site_key}}').then(function(token) {
+                    document.getElementById('g_recaptcha_response').value = token;
+                });
+            });
+        }
+
+        get_g_token();
+    </script>
+{% endblock %}

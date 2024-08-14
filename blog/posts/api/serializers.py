@@ -4,7 +4,6 @@ from posts.models import Post, PostTag, PostRadio, DraftPostRadio, Subcategory
 from posts.api.utils import create_test
 from notifications.models import Notification, NotificationBlog
 from blogs.models import LevelAccess, BlogFollow
-from custom_tests.models import Test
 
 from blog.validators import check_language
 

@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'campaign',
     'referrals',
     'periodic_bonuses',
+    'albums',
 ]
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'

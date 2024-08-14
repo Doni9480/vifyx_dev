@@ -7,7 +7,6 @@ from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from blogs.models import Blog, LevelAccess
 from blog.managers import LevelAccessManager
-from users.models import User
 
 
 class Category(models.Model):
@@ -115,7 +114,7 @@ class SurveyRadio(models.Model):
 
 
 class SurveyVote(models.Model):
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE, verbose_name='User')
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='User')
     survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey')
     option = models.ForeignKey(to=SurveyRadio, on_delete=models.CASCADE, verbose_name='Option', null=True)
 

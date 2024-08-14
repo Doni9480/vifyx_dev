@@ -59,7 +59,7 @@ def test_edit(request, slug):
 
 
 def list_tests(request):
-    filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'tests')
+    filter_kwargs, subcategories, select_subcategories = get_category(get_filter_kwargs(request), request, 'tests')
     if filter_kwargs.get('category'):
         select_category = True
     else:
@@ -89,7 +89,11 @@ def list_tests(request):
             "page_obj": page_obj,
             "categories": categories,
             "subcategories": subcategories,
+            "select_subcategories": select_subcategories,
+            "more_sub": len(list(select_subcategories)) == len(list(subcategories)),
             "select_category": select_category,
+            "category_namespace": "tests",
+            "there_category": request.user.tests_category if not request.user.is_anonymous else None,
         }
     )
 

@@ -15,7 +15,7 @@ from operator import attrgetter
 
 
 def list_quests(request):
-    filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'quests')
+    filter_kwargs, subcategories, select_subcategories = get_category(get_filter_kwargs(request), request, 'quests')
     if filter_kwargs.get('category'):
         select_category = True
     else:
@@ -45,7 +45,11 @@ def list_quests(request):
             "page_obj": page_obj,
             "categories": categories,
             "subcategories": subcategories,
+            "select_subcategories": select_subcategories,
+            "more_sub": len(list(select_subcategories)) == len(list(subcategories)),
             "select_category": select_category,
+            "category_namespace": "quests",
+            "there_category": request.user.quests_category if not request.user.is_anonymous else None,
         }
     )
 

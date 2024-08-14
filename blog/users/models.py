@@ -9,8 +9,14 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.core.exceptions import ValidationError
 
+from posts.models import Category as Category_post, Subcategory as Subcategory_post
+from surveys.models import Category as Category_survey, Subcategory as Subcategory_survey
+from custom_tests.models import Category as Category_test, Subcategory as Subcategory_test
+from quests.models import Category as Category_quest, Subcategory as Subcategory_quest
+from albums.models import Category as Category_album, Subcategory as Subcategory_album
+
 from apscheduler.schedulers.background import BackgroundScheduler
-import uuid
+
 
 def gen_referral_code():
     """Generate a unique 16-character alphanumeric string."""
@@ -48,6 +54,11 @@ class User(AbstractUser):
         blank=True,
         verbose_name="Referral code",
     )
+    posts_category = models.ForeignKey(to=Category_post, on_delete=models.CASCADE, null=True, blank=True)
+    surveys_category = models.ForeignKey(to=Category_survey, on_delete=models.CASCADE, null=True, blank=True)
+    quests_category = models.ForeignKey(to=Category_quest, on_delete=models.CASCADE, null=True, blank=True)
+    tests_category = models.ForeignKey(to=Category_test, on_delete=models.CASCADE, null=True, blank=True)
+    albums_category = models.ForeignKey(to=Category_album, on_delete=models.CASCADE, null=True, blank=True)
 
     REQUIRED_FIELDS = ["last_name"]
 
@@ -66,6 +77,31 @@ class User(AbstractUser):
         except Exception as _:
             print(_)
         super().save(*args, **kwargs)
+        
+
+class Subcategory_post(models.Model):
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(to=Subcategory_post, on_delete=models.CASCADE)
+    
+
+class Subcategory_survey(models.Model):
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(to=Subcategory_survey, on_delete=models.CASCADE)
+    
+
+class Subcategory_test(models.Model):
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(to=Subcategory_test, on_delete=models.CASCADE)
+    
+    
+class Subcategory_quest(models.Model):
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(to=Subcategory_quest, on_delete=models.CASCADE)
+    
+
+class Subcategory_album(models.Model):
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(to=Subcategory_album, on_delete=models.CASCADE)
 
 
 class Token(models.Model):

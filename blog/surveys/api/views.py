@@ -112,7 +112,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         request = set_language_to_user(request)
-        filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'quests')
+        filter_kwargs, subcategories, select_subcategories = get_category(get_filter_kwargs(request), request, 'quests')
         obj_set = get_obj_set(Survey.level_access_objects.filter(**filter_kwargs), request.user)
         obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
             
@@ -187,7 +187,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None):
         instance = self.get_object()
         if instance.user != request.user:
-            raise Exception()
+            raise Http404()
 
         if request.method == "DELETE":
             data = {}

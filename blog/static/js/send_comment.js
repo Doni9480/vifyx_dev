@@ -23,6 +23,7 @@ async function send_comment(e) {
     let post_id = document.querySelector('input[name="post_id"]');
     let test_id = document.querySelector('input[name="test_id"]');
     let quest_id = document.querySelector('input[name="quest_id"]');
+    let album_id = document.querySelector('input[name="album_id"]');
 
     let comment_text = document.querySelector('#id_comment');
     if (survey_id) {
@@ -33,6 +34,8 @@ async function send_comment(e) {
         let test_id = document.querySelector('input[name="test_id"]');
     } else if (quest_id) {
         let quest_id = document.querySelector('input[name="quest_id"]');
+    } else if (album_id) {
+        let album_id = document.querySelector('input[name="album_id"]');
     }
 
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
@@ -54,6 +57,9 @@ async function send_comment(e) {
     } else if (quest_id) {
         form_data.append('quest', Number(quest_id.value));
         url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/create/quest/';
+    } else if (album_id) {
+        form_data.append('album', Number(album_id.value));
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/create/album/';
     }
 
     let response = await fetch(url, {
@@ -111,6 +117,7 @@ async function send_answer(form_answer) {
     let post_id = document.querySelector('input[name="post_id"]');
     let test_id = document.querySelector('input[name="test_id"]');
     let quest_id = document.querySelector('input[name="quest_id"]');
+    let album_id = document.querySelector('input[name="album_id"]');
 
     if (survey_id) {
         form_data.append('survey', Number(survey_id.value));
@@ -124,6 +131,9 @@ async function send_answer(form_answer) {
     } else if (quest_id) {
         form_data.append('quest', Number(quest_id.value));
         url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/answer/create/quest/';
+    } else if (album_id) {
+        form_data.append('album', Number(album_id.value));
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/answer/create/album/';
     }
 
     let response = await fetch(url, {

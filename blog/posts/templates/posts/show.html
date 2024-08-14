@@ -32,6 +32,9 @@
 {% block content %}
 <!-- Content
 ============================================= -->
+{% if post.pit_main_page %}
+    <div style="z-index: 100; text-align: center; margin: 0 auto; background-color: #7cfc00;"><h1 style="text-align: center; margin: 0 auto;">{{ post.pit_main_page }}</h1></div>
+{% endif %}
 <section id="content">
     <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
     <div class="content-wrap" style="background-color: #EEE">

@@ -15,6 +15,12 @@ from notifications.api.seriailzers import (
     NotificationPostShowSerializer,
     NotificationSurveySerializer,
     NotificationSurveyShowSerializer,
+    NotificationTestSerializer,
+    NotificationTestShowSerializer,
+    NotificationQuestSerializer,
+    NotificationQuestShowSerializer,
+    NotificationAlbumSerializer,
+    NotificationAlbumShowSerializer,
     NotificationDonateSerializer,
     NotificationDonateShowSerializer,
     NotificationNoneSerializer
@@ -58,26 +64,42 @@ class NotificationViewSet(
 
     def list(self, request, *args, **kwargs):
         notifications = Notification.objects.filter(
-            user=request.user.id, is_read=False
+            user=request.user.id
         )
         
-        data = [[], [], []]
+        data = []
         for notification in notifications:
-            if notification.post:
-                data[0].append({
-                    **NotificationPostSerializer(notification.post).data,
-                    'namespace': 'posts',
-                })
-            elif notification.survey:
-                data[1].append({
-                    **NotificationSurveySerializer(notification.survey).data,
-                    'namespace': 'surveys',
-                })
-            elif notification.donate:
-                data[2].append({
-                    **NotificationDonateSerializer(notification.donate).data,
-                    'namespace': 'donates',
-                })
+            E_DICTS = [
+                {
+                    'obj': notification.post,
+                    'serializer': NotificationPostSerializer
+                },
+                {
+                    'obj': notification.survey,
+                    'serializer': NotificationSurveySerializer,
+                },
+                {
+                    'obj': notification.test,
+                    'serializer': NotificationTestSerializer,
+                },
+                {
+                    'obj': notification.quest,
+                    'serializer': NotificationQuestSerializer,
+                },
+                {
+                    'obj': notification.album,
+                    'serializer': NotificationAlbumSerializer,
+                },
+                {
+                    'obj': notification.donate,
+                    'serializer': NotificationDonateSerializer
+                }
+            ]
+            for e_dict in E_DICTS:
+                if e_dict['obj']:
+                    data.append({
+                        **e_dict['serializer'](e_dict['obj']).data,
+                    })
 
         return Response({"data": data})
 
@@ -94,6 +116,27 @@ class NotificationViewSet(
         survey = NotificationSurveyShowSerializer(notification_survey.survey).data
         survey["user"] = User.objects.get(id=survey["user"]).username
         return Response({"data": survey})
+
+    @action(detail=True, methods=["get"], url_path="show-quest")
+    def show_quest(self, request, pk=None):
+        notification_quest = get_object_or_404(Notification, quest=pk)
+        quest = NotificationQuestShowSerializer(notification_quest.quest).data
+        quest["user"] = User.objects.get(id=quest["user"]).username
+        return Response({"data": quest})
+    
+    @action(detail=True, methods=["get"], url_path="show-test")
+    def show_test(self, request, pk=None):
+        notification_test = get_object_or_404(Notification, test=pk)
+        test = NotificationTestShowSerializer(notification_test.test).data
+        test["user"] = User.objects.get(id=test["user"]).username
+        return Response({"data": test})
+    
+    @action(detail=True, methods=["get"], url_path="show-album")
+    def show_album(self, request, pk=None):
+        notification_album = get_object_or_404(Notification, album=pk)
+        album = NotificationAlbumShowSerializer(notification_album.album).data
+        album["user"] = User.objects.get(id=album["user"]).username
+        return Response({"data": album})
     
     @action(detail=True, methods=["get"], url_path="show-donate")
     def show_donate(self, request, pk=None):

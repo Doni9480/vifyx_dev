@@ -36,6 +36,19 @@ from quests.models import (
     QuestDayView,
     QuestWeekView
 )
+from albums.models import (
+    Album,
+    Category as Category_album,
+    Subcategory as Subcategory_album,
+    AlbumDayView,
+    AlbumWeekView
+)
+from users.models import Subcategory_post as Usersubcategory_post
+from users.models import Subcategory_survey as Usersubcategory_survey
+from users.models import Subcategory_test as Usersubcategory_test
+from users.models import Subcategory_quest as Usersubcategory_quest
+from users.models import Subcategory_album as Usersubcategory_album
+from albums.utils import get_views_and_comments_to_albums
 from quests.utils import get_views_and_comments_to_quests
 from itertools import chain
 from operator import attrgetter
@@ -101,7 +114,8 @@ def get_blog_list(filter_kwargs):
     surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(**filter_kwargs))
     tests = get_views_and_comments_to_tests(Test.level_access_objects.filter(**filter_kwargs))
     quests = get_views_and_comments_to_quests(Quest.level_access_objects.filter(**filter_kwargs))
-    blog_list = sorted(chain(posts, surveys, tests, quests), key=attrgetter("date"), reverse=True)
+    albums = get_views_and_comments_to_albums(Album.level_access_objects.filter(**filter_kwargs))
+    blog_list = sorted(chain(posts, surveys, tests, quests, albums), key=attrgetter("date"), reverse=True)
     return blog_list
 
 def get_obj_set(obj_set, user):
@@ -123,32 +137,33 @@ def get_obj_set(obj_set, user):
     return obj_set    
     
 def get_category(filter_kwargs, request, namespace):
-    dict_categories = {
-        'posts': [Category_post, Subcategory_post],
-        'surveys': [Category_survey, Subcategory_survey],
-        'tests': [Category_test, Subcategory_test],
-        'quests': [Category_quest, Subcategory_quest],
-    }
-    
     subcategories = []
-    category_q = request.GET.get('category')
-    subcategory_q = request.GET.get("subcategory")
-    if category_q:
-        try:
-            category_q = int(category_q)
-            category = get_object_or_404(dict_categories[namespace][0], id=category_q)
-            filter_kwargs['category'] = category
-            
-            if subcategory_q:
-                subcategory_q = int(subcategory_q) if subcategory_q is not None else None
-                subcategory = get_object_or_404(dict_categories[namespace][1], id=subcategory_q)
-                filter_kwargs['subcategory'] = subcategory
+    select_subcategories_list = []
+    if request.user.is_authenticated:
+        dict_categories = {
+            'posts': [Category_post, Subcategory_post, request.user.posts_category, Usersubcategory_post],
+            'surveys': [Category_survey, Subcategory_survey, request.user.surveys_category, Usersubcategory_survey],
+            'tests': [Category_test, Subcategory_test, request.user.tests_category, Usersubcategory_test],
+            'quests': [Category_quest, Subcategory_quest, request.user.quests_category, Usersubcategory_quest],
+            'albums': [Category_album, Subcategory_album, request.user.albums_category, Usersubcategory_album],
+        }
+
+        if dict_categories[namespace][2]:
+            try:
+                category = get_object_or_404(dict_categories[namespace][0], id=dict_categories[namespace][2].pk)
+                filter_kwargs['category'] = category
                 
-            subcategories = dict_categories[namespace][1].objects.filter(category=category)
-        except ValueError:
-            subcategories = []
+                select_subcategories = dict_categories[namespace][3].objects.filter(user=request.user).only('subcategory')
+                for select_subcategory in select_subcategories:
+                    select_subcategories_list.append(select_subcategory.subcategory)
+                
+                if select_subcategories:             
+                    filter_kwargs['subcategory__in'] = select_subcategories_list
+                subcategories = dict_categories[namespace][1].objects.filter(category=category)
+            except ValueError:
+                subcategories = []
         
-    return filter_kwargs, subcategories
+    return filter_kwargs, subcategories, select_subcategories_list
 
 E_DICTS = [
         {
@@ -178,6 +193,13 @@ E_DICTS = [
             'view_day': TestDayView, 
             'view_week': TestWeekView,
             'func': get_views_and_comments_to_tests
+        },
+        {
+            'obj': 'album',
+            'model': Album,
+            'view_day': AlbumDayView,
+            'view_week': AlbumWeekView,
+            'func': get_views_and_comments_to_albums
         }
     ]
 

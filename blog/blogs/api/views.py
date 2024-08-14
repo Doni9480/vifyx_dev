@@ -22,6 +22,7 @@ from blogs.api.serializers import (
     BlogShowSerializer,
     DonateShowSerializer,
     LevelFollowSerializer,
+    AlbumSerializer
 )
 from blogs.models import Blog, LevelAccess, PaidFollow, Donate, BlogFollow
 from blog.utils import get_request_data, MyPagination
@@ -35,6 +36,8 @@ from custom_tests.models import Test
 from custom_tests.api.utils import get_views_and_comments_to_tests
 from quests.models import Quest
 from quests.api.utils import get_views_and_comments_to_quests
+from albums.api.utils import get_views_and_comments_to_albums
+from albums.models import Album
 from users.models import User, Percent
 from notifications.models import NotificationBlog
 
@@ -49,7 +52,7 @@ class BlogViewSet(
 ):
     queryset = Blog.objects.all()
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['search', 'search_tags', 'main', 'preview_popular'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['search', 'search_tags', 'main', 'preview_popular', 'show'], [AllowAny])
     parser_classes = [MultiPartParser, FormParser]
     pagination_class = MyPagination
 
@@ -153,9 +156,13 @@ class BlogViewSet(
         quests = get_views_and_comments_to_quests(
             QuestSerializer(Quest.objects.filter(**filter_kwargs), many=True).data
         )
-        blog_list = posts + surveys + tests + quests
-
-        return Response({"data": blog_list})
+        albums = get_views_and_comments_to_albums(
+            AlbumSerializer(Album.objects.filter(**filter_kwargs), many=True).data
+        )
+        blog_list = posts + surveys + tests + quests + albums
+        
+        page = self.paginate_queryset(blog_list)
+        return self.get_paginated_response(page)
 
     @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
@@ -389,8 +396,11 @@ class BlogViewSet(
         quests = get_views_and_comments_to_quests(
             QuestSerializer(Quest.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
+        albums = get_views_and_comments_to_albums(
+            AlbumSerializer(Album.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
+        )
         
-        blog_list = posts + surveys + tests + quests
+        blog_list = posts + surveys + tests + quests + albums
         return Response({"data": blog_list})
     
     @action(detail=True, methods=['get'], url_path=r"search_tags/(?P<q>[^/.]+)")

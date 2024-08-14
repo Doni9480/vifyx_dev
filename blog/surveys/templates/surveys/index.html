@@ -56,7 +56,7 @@
                                             <li><a href="{% url 'users:profile' survey.user.username %}"><i class="uil uil-user"></i> {{ survey.user.username }}</a></li>
                                             <li><a href="{% url 'surveys:show' survey.slug %}"><i class="uil uil-comments-alt"></i> {{ survey.count_comments }} Comments</a></li>
                                             <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ survey.count_views }}</span></li>
-                                            {% if request.user != survey.user %}
+                                            {% if request.user.is_authenticated and request.user != survey.user %}
                                                 <li><button type="button" id="button_hide" value="{{ survey.user.username }}" class="btn btn-dark">hide from this user</button></li>
                                             {% endif %}
                                         </ul>

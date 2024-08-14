@@ -18,6 +18,7 @@ from posts.models import Post
 from surveys.models import Survey
 from custom_tests.models import Test
 from quests.models import Quest
+from albums.models import Album
 from users.models import User
 from blog.utils import set_language_to_user
 
@@ -30,14 +31,18 @@ class CommentViewSet(viewsets.GenericViewSet):
         'show_comment_post',
         'index_comment_survey',
         'show_comment_survey',
+        'index_comment_album',
+        'show_comment_album',
         'show_answer_quest',
         'show_answer_test',
         'show_answer_post',
         'show_answer_survey',
+        'show_answer_album',
         'index_answer_post',
         'index_answer_survey',
         'index_answer_test',
-        'index_answer_quest'
+        'index_answer_quest',
+        'index_answer_album',
     ], [AllowAny])
 
     def get_serializer_class(self):
@@ -49,6 +54,8 @@ class CommentViewSet(viewsets.GenericViewSet):
             return CommentTestSerializer
         elif self.action == "create_comment_to_quest":
             return CommentQuestSerializer
+        elif self.action == "create_comment_to_album":
+            return CommentAlbumSerializer
         elif self.action in ["index_comment_post", "show_comment_post"]:
             return CommentPostShowSerializer
         elif self.action in ["index_comment_survey", "show_comment_survey"]:
@@ -57,6 +64,8 @@ class CommentViewSet(viewsets.GenericViewSet):
             return CommentTestShowSerializer
         elif self.action in ["index_comment_quest", "show_comment_quest"]:
             return CommentQuestShowSerializer
+        elif self.action in ["index_comment_album", "show_comment_album"]:
+            return CommentAlbumShowSerializer
         return CommentFullSerializer
     
     def get_permissions(self):
@@ -104,6 +113,51 @@ class CommentViewSet(viewsets.GenericViewSet):
         opening_access(post, request.user)
 
         comment = CommentPostShowSerializer(comment).data
+
+        if comment["delete_from_user"]:
+            comment["text"] = "This comment was deleted by the user."
+
+        comment["user"] = User.objects.get(id=comment["user"]).username
+
+        return Response({"data": comment})
+    
+    @action(detail=True, methods=["post"], url_path="create/album")
+    @transaction.atomic
+    def create_comment_to_album(self, request):
+        serializer = CommentAlbumSerializer(data=request.data)
+        data = func_is_valid_comment(request, serializer)
+
+        album = get_object_or_404(Album, id=request.data.get("album"))
+        opening_access(album, request.user)
+
+        return Response(data)
+    
+    @action(detail=False, methods=["get"], url_path="index/album/<pk>")
+    def index_comment_album(self, request, pk):
+        album = get_object_or_404(Album, id=pk)
+        request = set_language_to_user(request)
+        opening_access(album, request.user)
+
+        comments = get_list_or_404(Comment, album=album)
+        comments = CommentAlbumShowSerializer(comments, many=True).data
+
+        for comment in comments:
+            comment["user"] = User.objects.get(id=comment["user"]).username
+
+            if comment["delete_from_user"]:
+                comment["text"] = "This comment was deleted by the user."
+
+        return Response({"data": comments})
+    
+    @action(detail=True, methods=["get"], url_path="show/album/<pk>")
+    def show_comment_album(self, request, pk):
+        comment = get_object_or_404(Comment, id=pk)
+        album = get_object_or_404(Album, id=comment.album.pk)
+
+        request = set_language_to_user(request)
+        opening_access(album, request.user)
+
+        comment = CommentAlbumShowSerializer(comment).data
 
         if comment["delete_from_user"]:
             comment["text"] = "This comment was deleted by the user."
@@ -260,7 +314,7 @@ class CommentViewSet(viewsets.GenericViewSet):
     @transaction.atomic
     def delete_from_post(self, request, pk):
         comment = get_object_or_404(Comment, id=pk)
-        e = comment.test or comment.quest or comment.post or comment.survey
+        e = comment.test or comment.quest or comment.post or comment.survey or comment.album
         if e is not None:
             is_exp = opening_access(e, request.user)
             if (
@@ -282,7 +336,7 @@ class CommentViewSet(viewsets.GenericViewSet):
         comment = get_object_or_404(Comment, id=pk)
         if comment.delete_from_user:
             raise Http404()
-        e = comment.test or comment.quest or comment.post or comment.survey
+        e = comment.test or comment.quest or comment.post or comment.survey or comment.album
         is_exp = opening_access(e, request.user)
         if (
             comment.user != request.user
@@ -312,6 +366,8 @@ class AnswerViewSet(viewsets.GenericViewSet):
             return AnswerTestSerializer
         elif self.action == "create_answer_to_quest":
             return AnswerQuestSerializer
+        elif self.action == "create_answer_to_album":
+            return AnswerAlbumSerializer
         elif self.action in ["index_answer_post", "show_answer_post"]:
             return AnswerPostShowSerializer
         elif self.action in ["index_answer_survey", "show_answer_survey"]:
@@ -320,6 +376,8 @@ class AnswerViewSet(viewsets.GenericViewSet):
             return AnswerTestShowSerializer
         elif self.action in ["index_answer_quest", "show_answer_quest"]:
             return AnswerQuestShowSerializer
+        elif self.action in ["index_answer_album", "show_answer_album"]:
+            return AnswerAlbumShowSerializer
         else:
             return AnswerFullSerializer
 
@@ -364,6 +422,17 @@ class AnswerViewSet(viewsets.GenericViewSet):
         
         quest = get_object_or_404(Quest, id=request.data.get("quest"))
         opening_access(quest, request.user)
+
+        return Response(data)
+    
+    @action(detail=True, methods=["post"], url_path="create/album")
+    @transaction.atomic
+    def create_answer_to_album(self, request):
+        serializer = AnswerAlbumSerializer(data=request.data)
+        data = func_is_valid_answer(request, serializer)
+        
+        album = get_object_or_404(Album, id=request.data.get("album"))
+        opening_access(album, request.user)
 
         return Response(data)
 
@@ -432,6 +501,23 @@ class AnswerViewSet(viewsets.GenericViewSet):
             answer["user"] = User.objects.get(id=answer["user"]).username
 
         return Response({"data": answers})
+    
+    @action(detail=False, methods=["get"], url_path="index/<pk>/album")
+    def index_answer_album(self, request, pk):
+        comment = get_object_or_404(Comment, id=pk)
+        answers = get_list_or_404(Answer, comment=comment)
+
+        if comment.album:
+            e = get_object_or_404(Album, id=comment.album.pk)
+            answers = AnswerAlbumShowSerializer(answers, many=True).data
+
+        request = set_language_to_user(request)
+        opening_access(e, request.user)
+
+        for answer in answers:
+            answer["user"] = User.objects.get(id=answer["user"]).username
+
+        return Response({"data": answers})
 
     @action(detail=True, methods=["get"], url_path="show/<pk>/post")
     def show_answer_post(self, request, pk):
@@ -490,6 +576,21 @@ class AnswerViewSet(viewsets.GenericViewSet):
         answer["user"] = User.objects.get(id=answer["user"]).username
 
         return Response({"data": answer})
+    
+    @action(detail=True, methods=["get"], url_path="show/<pk>/album")
+    def show_answer_album(self, request, pk):
+        answer = get_object_or_404(Answer, id=pk)
+
+        if answer.album:
+            e = get_object_or_404(Album, id=answer.album.pk)
+            answer = AnswerAlbumShowSerializer(answer).data
+
+        request = set_language_to_user(request)
+        opening_access(e, request.user)
+
+        answer["user"] = User.objects.get(id=answer["user"]).username
+
+        return Response({"data": answer})
 
     @action(detail=True, methods=["delete"], url_path="delete/<pk>")
     @transaction.atomic
@@ -497,7 +598,7 @@ class AnswerViewSet(viewsets.GenericViewSet):
         if request.method == "DELETE":
             answer = get_object_or_404(Answer, pk=pk)
 
-            e = answer.comment.post or answer.comment.survey or answer.comment.test or answer.comment.quest
+            e = answer.comment.post or answer.comment.survey or answer.comment.test or answer.comment.quest or answer.comment.album
 
             is_exp = opening_access(e, request.user)
             if (

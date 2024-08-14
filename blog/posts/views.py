@@ -1,5 +1,4 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import Http404
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.paginator import Paginator
@@ -26,12 +25,12 @@ from comments.models import Comment, Answer
 
 from blogs.models import Blog, LevelAccess, BlogFollow
 
+
 from operator import attrgetter
-import re
 
 
 def index(request):
-    filter_kwargs, subcategories = get_category(get_filter_kwargs(request), request, 'posts')
+    filter_kwargs, subcategories, select_subcategories = get_category(get_filter_kwargs(request), request, 'posts')
     if filter_kwargs.get('category'):
         select_category = True
     else:
@@ -49,7 +48,11 @@ def index(request):
         'page_obj': page_obj, 
         'categories': categories,
         "subcategories": subcategories,
+        "select_subcategories": select_subcategories,
+        "more_sub": len(list(select_subcategories)) == len(list(subcategories)),
         "select_category": select_category,
+        "category_namespace": "posts",
+        "there_category": request.user.posts_category if not request.user.is_anonymous else None,
     })
 
 @login_required(login_url='/registration/login')
