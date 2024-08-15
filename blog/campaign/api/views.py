@@ -7,6 +7,7 @@ from rest_framework.response import Response
 # from transliterate import slugify
 from django.utils.text import slugify
 from campaign.models import Campaign, Task, UserTaskChecking
+from configs.models import SiteConfiguration
 from .serializers import (
     CampaignSerializer,
     NoneSerializer,
@@ -48,7 +49,8 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
     def create(self, request, **kwargs):
         count_campaigns = Campaign.objects.filter(user=request.user).count()
-        if count_campaigns >= config.LIMIT_CAMPAIGN:
+        config = SiteConfiguration.get_solo()
+        if count_campaigns >= config.limit_campaign:
             return Response(
                 {"error": "Limit of campaigns reached."},
                 status=status.HTTP_403_FORBIDDEN,

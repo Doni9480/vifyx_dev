@@ -1,12 +1,46 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
+from surveys.models import (
+    Survey,
+    SurveyTag,
+    SurveyRadio,
+    SurveyView,
+    SurveyVote,
+    Category,
+    Subcategory,
+)
 
-from surveys.models import Survey, SurveyTag, SurveyRadio, SurveyView, SurveyVote, Category, Subcategory
+
+@admin.register(Survey)
+class SurveyAdmin(ModelAdmin):
+    pass
 
 
-admin.site.register(Survey)
-admin.site.register(SurveyTag)
-admin.site.register(SurveyRadio)
-admin.site.register(SurveyView)
-admin.site.register(SurveyVote)
-admin.site.register(Category)
-admin.site.register(Subcategory)
+@admin.register(SurveyTag)
+class SurveyTagAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(SurveyRadio)
+class SurveyRadioAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(SurveyView)
+class SurveyViewAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(SurveyVote)
+class SurveyVoteAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(Category)
+class CategoryAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(Subcategory)
+class SubcategoryAdmin(ModelAdmin):
+    pass

@@ -1,14 +1,15 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import PeriodicBonuses, ReceivingPeriodicPoints
 
 
 @admin.register(PeriodicBonuses)
-class PeriodicBonusesAdmin(admin.ModelAdmin):
+class PeriodicBonusesAdmin(ModelAdmin):
     list_display = ("title", "description", "scores", "interval", "created_at")
 
 
 @admin.register(ReceivingPeriodicPoints)
-class ReceivingPeriodicPointsAdmin(admin.ModelAdmin):
+class ReceivingPeriodicPointsAdmin(ModelAdmin):
     list_display = (
         "user",
         "periodic_bonus",
