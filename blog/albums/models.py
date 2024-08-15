@@ -38,6 +38,7 @@ class Album(models.Model):
     title = models.CharField(
         verbose_name="Title", null=False, blank=False, max_length=255
     )
+    description = models.TextField(verbose_name='Description')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -114,6 +115,7 @@ class DraftAlbum(models.Model):
     title = models.CharField(
         verbose_name="Title", null=True, blank=True, max_length=255
     )
+    description = models.TextField(verbose_name='Description', null=True, blank=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
     language = models.CharField(max_length=255, verbose_name='Language', null=True, blank=True)

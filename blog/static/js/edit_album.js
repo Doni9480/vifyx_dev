@@ -9,6 +9,7 @@ async function album_edit(e) {
 
     var preview = document.querySelector('input[name="preview"');
     var title = document.querySelector('input[name="title"]');
+    var description = document.querySelector('#id_description');
     var photos = document.querySelectorAll('input[name="photo"]');
     var deleted_photos = document.querySelectorAll('input[name="deleted_photo"]');
     var category = document.querySelector('#id_category');
@@ -27,6 +28,7 @@ async function album_edit(e) {
     }
 
     form_data.append('title', title.value);
+    form_data.append('description', description.value);
     for (const photo of photos) {
         if (photo.files[0]) {
             form_data.append("photos_set", photo.files[0]);
@@ -80,6 +82,10 @@ async function album_edit(e) {
 
             if (result.title) {
                 title.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.title}</div>`);
+            }
+
+            if (result.description) {
+                description.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.description}</div>`);
             }
 
             if (result.photos_set) {

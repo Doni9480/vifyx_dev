@@ -86,6 +86,11 @@
               </div>
 
               <div class="col-12 form-group">
+                <label for="id_description">Description:</label>
+                <textarea name="description" class="form-control" id="id_description" cols="30" rows="5">{{ form.instance.description }}</textarea>
+              </div>
+
+              <div class="col-12 form-group">
                 <label for="id_photo">Photo:</label>
                 {% for photo in photos %}
                   <div id="block_img_{{ photo.id }}" class="mb-2">

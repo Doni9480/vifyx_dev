@@ -11,6 +11,7 @@ async function send_album(e) {
 
     var preview = document.querySelector('input[name="preview"');
     var title = document.querySelector('input[name="title"]');
+    var description = document.querySelector('#id_description');
     var photos = document.querySelectorAll('input[name="photo"]');
     var language = document.querySelector('#id_language');
     var level_access = document.querySelector('#id_level_access');
@@ -28,6 +29,7 @@ async function send_album(e) {
     if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);
     }
+    form_data.append('description', description.value);
     for (const photo of photos) {
         if (photo.files[0]) {
             form_data.append("photos_set", photo.files[0]);
@@ -80,6 +82,10 @@ async function send_album(e) {
                 title.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.title}</div>`);
             }
 
+            if (result.description) {
+                description.insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.description}</div>`);
+            }
+
             if (result.photos_set) {
                 photos[0].insertAdjacentHTML('beforebegin', `<div id="form-error" style="color: red;">${result.photos_set}</div>`);
             }
@@ -116,6 +122,7 @@ async function send_album(e) {
 async function send_draft_album() {
     let preview = document.querySelector('input[name="preview"]');
     let title = document.querySelector('input[name="title"]');
+    let description = document.querySelector('#id_description');
     let photos = document.querySelectorAll('input[name="photo"]');
     let deleted_photos = document.querySelectorAll('input[name="deleted_photo"]');
     let level_access = document.querySelector('#id_level_access');
@@ -132,6 +139,9 @@ async function send_draft_album() {
     }
     if (title) {
         form_data.append('title', title.value);
+    }
+    if (description) {
+        form_data.append('description', description.value);
     }
     if (photos) {
         for (const photo of photos) {

@@ -71,6 +71,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = (
             "preview",
             "title",
+            "description",
             "photos_set",
             "deleted_photos_set",
             "language",
@@ -187,6 +188,7 @@ class DraftSerializer(serializers.ModelSerializer):
         fields = (
             "preview",
             "title",
+            "description",
             "photos_set",
             "deleted_photos_set",
             "language",
