@@ -72,7 +72,6 @@ class Post(models.Model):
     amount = models.IntegerField(verbose_name="Amount", blank=True, null=True)
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE)
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
-    pit_main_page = models.CharField(verbose_name='Pin it to the main page', null=True, blank=True)
 
     date = models.DateTimeField(auto_now_add=True)
 

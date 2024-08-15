@@ -4,6 +4,9 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+{% if pit_main_page.text %}
+    <div style="z-index: 100; text-align: center; margin: 0 auto; background-color: #7cfc00;"><h1 style="text-align: center; margin: 0 auto;">{{ pit_main_page.text }}</h1></div>
+{% endif %}
 <!-- Page Title
 ============================================= -->
 <section class="page-title bg-transparent">

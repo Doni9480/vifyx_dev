@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import Http404
 
-from blogs.models import Blog, LevelAccess, PaidFollow, Donate
+from blogs.models import Blog, LevelAccess, PaidFollow, Donate, Banner
 from blogs.forms import BlogForm
 from blogs.utils import get_filter_kwargs, get_blog_list, get_views_period, get_users_period
 
@@ -50,12 +50,15 @@ def main(request):
     popular_day, popular_week = get_views_period(filter_kwargs)
     users_day, users_week = get_users_period()
     
+    pit_main_page = Banner.objects.all().first()
+    
     data = {
         "page_obj": page_obj,
         "popular_day": popular_day,
         "popular_week": popular_week,
         "users_day": users_day,
         "users_week": users_week,
+        "pit_main_page": pit_main_page,
         "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
     }
     data = dict(

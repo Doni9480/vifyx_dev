@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinLengthValidator
+from django.core.exceptions import ValidationError
 
 
 class Blog(models.Model):
@@ -60,3 +61,15 @@ class BlogFollow(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="follower"
     )
     blog = models.ForeignKey(to=Blog, on_delete=models.CASCADE, verbose_name="Blog")
+    
+def validate_only_one_instance(obj):
+    model = obj.__class__
+    if model.objects.count() > 0 and obj.id != model.objects.get().id:
+        raise ValidationError("Can only create 1 %s instance" % model.__name__)
+    
+class Banner(models.Model):
+    text = models.CharField(verbose_name='Pit it to the main page')
+
+    def clean(self):
+        validate_only_one_instance(self)
+    
