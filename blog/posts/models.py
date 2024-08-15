@@ -258,10 +258,10 @@ def validate_only_one_instance(obj):
     model = obj.__class__
     if model.objects.count() > 0 and obj.id != model.objects.get().id:
         raise ValidationError("Can only create 1 %s instance" % model.__name__)
-
+    
 class Banner(models.Model):
     text = models.CharField(verbose_name='Pit it to the main page')
-    post = models.ForeignKey(to=Post, on_delete=models.CASCADE)
+    post_slug = models.CharField(verbose_name='Post slug')
 
     def clean(self):
         validate_only_one_instance(self)
