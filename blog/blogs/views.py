@@ -4,11 +4,11 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import Http404
 
-from blogs.models import Blog, LevelAccess, PaidFollow, Donate, Banner
+from blogs.models import Blog, LevelAccess, PaidFollow, Donate
 from blogs.forms import BlogForm
 from blogs.utils import get_filter_kwargs, get_blog_list, get_views_period, get_users_period
 
-from posts.models import Post, PostTag
+from posts.models import Post, PostTag, Banner
 from posts.utils import get_views_and_comments_to_posts
 
 from surveys.models import Survey, SurveyRadio, SurveyTag

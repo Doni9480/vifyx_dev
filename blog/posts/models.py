@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_delete
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
+from django.core.exceptions import ValidationError
 
 from blogs.models import Blog, LevelAccess
 
@@ -251,4 +252,16 @@ class DraftPostRadio(models.Model):
 
     def __str__(self):
         return self.title
-    
+
+
+def validate_only_one_instance(obj):
+    model = obj.__class__
+    if model.objects.count() > 0 and obj.id != model.objects.get().id:
+        raise ValidationError("Can only create 1 %s instance" % model.__name__)
+
+class Banner(models.Model):
+    text = models.CharField(verbose_name='Pit it to the main page')
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE)
+
+    def clean(self):
+        validate_only_one_instance(self)

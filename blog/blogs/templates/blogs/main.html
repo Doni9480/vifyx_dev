@@ -5,7 +5,7 @@
 
 {% block content %}
 {% if pit_main_page.text %}
-    <div style="z-index: 100; text-align: center; margin: 0 auto; background-color: #7cfc00;"><h1 style="text-align: center; margin: 0 auto;">{{ pit_main_page.text }}</h1></div>
+    <a href="{% url 'posts:show' pit_main_page.post.slug %}" style="display: block; z-index: 100; text-align: center; margin: 0 auto; background-color: #7cfc00;"><h1 style="text-align: center; margin: 0 auto;">{{ pit_main_page.text }}</h1></a>
 {% endif %}
 <!-- Page Title
 ============================================= -->
