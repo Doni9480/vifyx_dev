@@ -417,30 +417,30 @@ UNFOLD = {
                     },
                 ]
             },
-            {
-                "title": _("Albums"),
-                "icon": "assessment",
-                "separator": True,
-                "collapsible": True,
-                "permission": lambda request: request.user.is_superuser,
-                "items": [
-                    {
-                        "title": _("Albums"),
-                        "icon": "assessment",
-                        "link": reverse_lazy("admin:custom_albums_album_changelist"),
-                    },
-                    {
-                        "title": _("Categories"),
-                        "icon": "category",
-                        "link": reverse_lazy("admin:custom_albums_category_changelist"),
-                    },
-                    {
-                        "title": _("Subcategories"),
-                        "icon": "category",
-                        "link": reverse_lazy("admin:custom_albums_subcategory_changelist"),
-                    },
-                ]
-            },
+            # {
+            #     "title": _("Albums"),
+            #     "icon": "assessment",
+            #     "separator": True,
+            #     "collapsible": True,
+            #     "permission": lambda request: request.user.is_superuser,
+            #     "items": [
+            #         {
+            #             "title": _("Albums"),
+            #             "icon": "assessment",
+            #             "link": reverse_lazy("admin:custom_albums_album_changelist"),
+            #         },
+            #         {
+            #             "title": _("Categories"),
+            #             "icon": "category",
+            #             "link": reverse_lazy("admin:custom_albums_category_changelist"),
+            #         },
+            #         {
+            #             "title": _("Subcategories"),
+            #             "icon": "category",
+            #             "link": reverse_lazy("admin:custom_albums_subcategory_changelist"),
+            #         },
+            #     ]
+            # },
             {
                 "title": _("Comments"),
                 "icon": "comment",
