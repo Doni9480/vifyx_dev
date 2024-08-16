@@ -384,6 +384,40 @@ UNFOLD = {
                 ],
             },
             {
+                "title": _("Quests"),
+                "icon": "material-symbols-outlined",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Quests"),
+                        "icon": "post",
+                        "link": reverse_lazy("admin:quests_quest_changelist"),
+                    },
+                    {
+                        "title": _("Tags"),
+                        "icon": "label",
+                        "link": reverse_lazy("admin:quests_questionquest_changelist"),
+                    },
+                    {
+                        "title": _("Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:quests_category_changelist"),
+                    },
+                    {
+                        "title": _("Subcategories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:quests_subcategory_changelist"),
+                    },
+                    {
+                        "title": _("views"),
+                        "icon": "visibility",
+                        "link": reverse_lazy("admin:quests_questview_changelist"),
+                    },
+                ],
+            },
+            {
                 "title": _("Tests"),
                 "icon": "assessment",
                 "separator": True,
@@ -512,7 +546,6 @@ UNFOLD = {
     #     },
     # ],
 }
-
 ADMIN_MENU = [
     # {
     #     "label": "Главная",
