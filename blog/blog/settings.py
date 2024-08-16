@@ -392,7 +392,7 @@ UNFOLD = {
                 "items": [
                     {
                         "title": _("Quests"),
-                        "icon": "material-symbols-outline",
+                        "icon": "post",
                         "link": reverse_lazy("admin:quests_quest_changelist"),
                     },
                     {
