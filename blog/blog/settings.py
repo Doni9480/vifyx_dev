@@ -19,7 +19,6 @@ from django.utils.translation import gettext_lazy as _
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -42,7 +41,7 @@ INSTALLED_APPS = [
     "unfold.contrib.import_export",  # optional, if django-import-export package is used
     "unfold.contrib.guardian",  # optional, if django-guardian package is used
     "unfold.contrib.simple_history",  # optional, if django-simple-history package is used
-    
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -53,13 +52,13 @@ INSTALLED_APPS = [
     'mptt',
     'drf_yasg',
     'rest_framework',
-    'django_summernote',    
+    'django_summernote',
     'django_cleanup.apps.CleanupConfig',
     'django_apscheduler',
     'storages',
     # 'corsheaders',
     'guardian',
-    
+
     'configs',
     'users',
     'surveys',
@@ -85,7 +84,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+
     # custom authentication
     'users.api.middlewares.AuthTokenMiddleware',
     # check a admin
@@ -125,7 +124,7 @@ REST_FRAMEWORK = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend', # this is default
+    'django.contrib.auth.backends.ModelBackend',  # this is default
     'guardian.backends.ObjectPermissionBackend',
 )
 
@@ -150,7 +149,6 @@ else:
         }
     }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -172,8 +170,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -185,13 +181,12 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-   BASE_DIR / 'static'
+    BASE_DIR / 'static'
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
@@ -228,15 +223,13 @@ EMAIL_USE_TLS = True
 GOOGLE_RECAPTCHA_PRIVATE_KEY = '6LfF49kpAAAAAIoI3hjKBld9lTTx2Q-UoleOQmPG'
 GOOGLE_RECAPTCHA_PUBLIC_KEY = '6LfF49kpAAAAAFiEh0fNdLdOJHvlIWa5_PyqbslK'
 
-
 SUMMERNOTE_CONFIG = {
     'attachment_upload_to': my_custom_upload_to_func,
-    
+
     'summernote': {
         'width': '100%',
     }
 }
-
 
 UNFOLD = {
     # "SITE_TITLE": None,
@@ -306,7 +299,7 @@ UNFOLD = {
         "navigation": [
             {
                 "title": _("Config"),
-                "separator": True, 
+                "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
                 "items": [
@@ -321,7 +314,7 @@ UNFOLD = {
             {
                 "title": _("Campaign"),
                 "icon": "campaign",
-                "separator": True, 
+                "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
                 "items": [
@@ -345,7 +338,7 @@ UNFOLD = {
             {
                 "title": _("Blogs"),
                 "icon": "rss_feed",
-                "separator": True, 
+                "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
                 "items": [
@@ -359,7 +352,7 @@ UNFOLD = {
             {
                 "title": _("Posts"),
                 "icon": "post",
-                "separator": True, 
+                "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
                 "items": [
@@ -374,7 +367,7 @@ UNFOLD = {
                         "link": reverse_lazy("admin:posts_category_changelist"),
                     },
                     {
-                        "title": _("Subcategorys"),
+                        "title": _("Subcategories"),
                         "icon": "category",
                         "link": reverse_lazy("admin:posts_subcategory_changelist"),
                     },
@@ -393,7 +386,7 @@ UNFOLD = {
             {
                 "title": _("Tests"),
                 "icon": "assessment",
-                "separator": True, 
+                "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
                 "items": [
@@ -418,16 +411,40 @@ UNFOLD = {
                         "link": reverse_lazy("admin:custom_tests_category_changelist"),
                     },
                     {
-                        "title": _("Subcategorys"),
+                        "title": _("Subcategories"),
                         "icon": "category",
                         "link": reverse_lazy("admin:custom_tests_subcategory_changelist"),
                     },
                 ]
             },
             {
+                "title": _("Albums"),
+                "icon": "assessment",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Albums"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:custom_albums_album_changelist"),
+                    },
+                    {
+                        "title": _("Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:custom_albums_category_changelist"),
+                    },
+                    {
+                        "title": _("Subcategories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:custom_albums_subcategory_changelist"),
+                    },
+                ]
+            },
+            {
                 "title": _("Comments"),
                 "icon": "comment",
-                "separator": True, 
+                "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
                 "items": [
@@ -446,7 +463,7 @@ UNFOLD = {
             {
                 "title": _("Authentication and Authorization"),
                 "icon": "settings",
-                "separator": True, 
+                "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
                 "items": [
