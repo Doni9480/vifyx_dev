@@ -2,13 +2,6 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 from albums.models import Album, AlbumView, Category, Subcategory
 
-# admin.site.register(Album)
-# admin.site.register(AlbumView)
-# admin.site.register(Category)
-# admin.site.register(Subcategory)
-
-
-
 @admin.register(Album)
 class AlbumAdmin(ModelAdmin):
     pass

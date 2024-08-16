@@ -427,17 +427,17 @@ UNFOLD = {
                     {
                         "title": _("Albums"),
                         "icon": "assessment",
-                        "link": reverse_lazy("admin:custom_albums_album_changelist"),
+                        "link": reverse_lazy("admin:custom_album_album_changelist"),
                     },
                     {
                         "title": _("Categories"),
                         "icon": "category",
-                        "link": reverse_lazy("admin:custom_albums_category_changelist"),
+                        "link": reverse_lazy("admin:custom_album_category_changelist"),
                     },
                     {
                         "title": _("Subcategories"),
                         "icon": "category",
-                        "link": reverse_lazy("admin:custom_albums_subcategory_changelist"),
+                        "link": reverse_lazy("admin:custom_album_subcategory_changelist"),
                     },
                 ]
             },
