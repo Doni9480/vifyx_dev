@@ -391,11 +391,6 @@ UNFOLD = {
                         "icon": "label",
                         "link": reverse_lazy("admin:posts_posttag_changelist"),
                     },
-                    {
-                        "title": _("views"),
-                        "icon": "visibility",
-                        "link": reverse_lazy("admin:posts_postview_changelist"),
-                    },
                 ],
             },
             {
@@ -424,11 +419,6 @@ UNFOLD = {
                         "title": _("Subcategories"),
                         "icon": "category",
                         "link": reverse_lazy("admin:quests_subcategory_changelist"),
-                    },
-                    {
-                        "title": _("views"),
-                        "icon": "visibility",
-                        "link": reverse_lazy("admin:quests_questview_changelist"),
                     },
                 ],
             },
@@ -468,7 +458,7 @@ UNFOLD = {
             },
             {
                 "title": _("Albums"),
-                "icon": "assessment",
+                "icon": "settings",
                 "separator": True,
                 "collapsible": True,
                 "permission": lambda request: request.user.is_superuser,
@@ -506,36 +496,6 @@ UNFOLD = {
                         "title": _("Answers"),
                         "icon": "chat",
                         "link": reverse_lazy("admin:comments_answer_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": _("Albums"),
-                "icon": "settings",
-                "separator": True,
-                "collapsible": True,
-                "permission": lambda request: request.user.is_superuser,
-                "items": [
-                    {
-                        "title": _("Albums"),
-                        "icon": "photo_library",  # Supported icon set: https://fonts.google.com/icons
-                        "link": reverse_lazy("admin:albums_album_changelist"),
-                        "permission": lambda request: request.user.is_superuser,
-                    },
-                    {
-                        "title": _("Category"),
-                        "icon": "category",
-                        "link": reverse_lazy("admin:albums_category_changelist"),
-                    },
-                    {
-                        "title": _("Subcategory"),
-                        "icon": "category",
-                        "link": reverse_lazy("admin:albums_subcategory_changelist"),
-                    },
-                    {
-                        "title": _("Views"),
-                        "icon": "visibility",
-                        "link": reverse_lazy("admin:albums_albumview_changelist"),
                     },
                 ],
             },
