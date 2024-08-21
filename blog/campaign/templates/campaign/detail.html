@@ -67,9 +67,13 @@
                     <!-- Entry Image
                     ============================================= -->
                     <div class="entry-image align-wide-xl my-3">
+                        
+                        {% if object.image %}
                         <img src="{{ object.image.url }}" width="500" height="281"
-                                allow="autoplay; fullscreen" allowfullscreen>
+                        allow="autoplay; fullscreen" allowfullscreen>
+                        {% endif %}
                         <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                        
                     </div><!-- .entry-image end -->
 
                     <div class="">

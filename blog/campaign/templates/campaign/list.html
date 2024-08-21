@@ -70,6 +70,9 @@
                                                     <div class="entry-meta">
                                                         <ul>
                                                             <li><i class="uil uil-schedule"></i> {{ blog.created_at|date:"d M Y" }}</li>
+                                                            {% if blog.user.username != 'system' %}
+                                                            <li><button class="btn btn-primary cp-cnt-point" data-set-status="disconnect" data-pk="{{blog.pk}}">Disconnect</button></li>
+                                                            {% endif %}
                                                         </ul>
                                                     </div>
                                                     <div class="entry-content">
@@ -106,7 +109,7 @@
                                                         <ul>
                                                             <li><i class="uil uil-schedule"></i> {{ blog.created_at|date:"d M Y" }}</li>
 
-                                                            <li><button class="btn btn-primary cp-task-point" data-set-status="connect" data-pk="{{blog.pk}}">Connect</button></li>
+                                                            <li><button class="btn btn-primary cp-cnt-point" data-set-status="connect" data-pk="{{blog.pk}}">Connect</button></li>
                                                             {% comment %} <li><a style="cursor: pointer;" id="{{ blog.pk }}" class="delete_campaign" value="{{ blog.pk }}">Delete</a></li> {% endcomment %}
                                                         </ul>
                                                     </div>
@@ -210,6 +213,31 @@
 {% endblock %}
 
 {% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        document.querySelectorAll('.cp-cnt-point').forEach(function (element) {
+            element.addEventListener('click', function () {
+                let status = this.getAttribute('data-set-status');
+                let pk = this.getAttribute('data-pk');
+                
+                fetch('/api/v1/companies/' + pk + '/' + status + '/', {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
 <script src="{% static 'js/functions.js' %}"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 {% endblock %}              
