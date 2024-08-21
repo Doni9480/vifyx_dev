@@ -2,6 +2,7 @@ from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
 from referrals.models import Referral
+from transactions.models import Transactions
 from .models import UserTaskChecking
 from users.models import User
 
@@ -16,34 +17,24 @@ def compare_fields(sender, instance, **kwargs):
                 referral = user_referral.first()
                 referral.tasks_completed += 1
                 referral.save()
-                
-    if instance.task.campaign.reward_source == "owner":
-        if instance.is_received and instance.received_data is None:
+
+    if hasattr(instance, "old__is_received"):
+        if instance.is_completed and not instance.old__is_received and not instance.is_received:
+            if instance.task.system_source_company_remuneration():
+                Transactions.create_translation_for_completing_tasks(
+                    from_user=Transactions.get_or_create_system_user_object(),
+                    to_user=instance.user,
+                    amount=instance.points_awarded,
+                    task_checking_obj=instance,
+                )
+            else:
+                Transactions.create_translation_for_completing_tasks(
+                    from_user=instance.task.campaign.user,
+                    to_user=instance.user,
+                    amount=instance.points_awarded,
+                    task_checking_obj=instance,
+                )
+        elif instance.is_completed and not instance.old__is_received and instance.is_received:
+            Transactions.update_translation_for_completing_tasks(task_checking_obj=instance)
             instance.received_data = now()
-            task_owner_scores = instance.task.campaign.user.scores
-            campaign_owner_scores = instance.task.campaign.prize_fund
-            if (
-                task_owner_scores >= instance.points_awarded
-                and task_owner_scores >= campaign_owner_scores
-            ):
-                instance.task.campaign.user.scores = (
-                    task_owner_scores - instance.points_awarded
-                )
-                instance.task.campaign.user.save()
-
-                instance.task.campaign.prize_fund = (
-                    campaign_owner_scores - instance.points_awarded
-                )
-                instance.task.campaign.save()
-
-                total_points = instance.user.scores
-                instance.user.scores = total_points + instance.points_awarded
-                instance.user.save()
-                instance.save()
-        if instance.task.campaign.reward_source == "endless":
-            if instance.is_received and instance.received_data is None:
-                instance.received_data = now()
-                total_points = instance.user.scores
-                instance.user.scores = total_points + instance.points_awarded
-                instance.user.save()
-                instance.save()
+            instance.save()

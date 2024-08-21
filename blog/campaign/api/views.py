@@ -275,7 +275,7 @@ class TaskCheckingViewSet(viewsets.GenericViewSet):
     )
     def receiving_an_award(self, request, pk=None):
         user_task_checking = UserTaskChecking.objects.filter(
-            task=pk, is_completed=True
+            user=request.user, task_id=pk, is_completed=True
         ).first()
         if user_task_checking:
             user_task_checking.is_received = True

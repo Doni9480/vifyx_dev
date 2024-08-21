@@ -59,6 +59,7 @@ class User(AbstractUser):
     quests_category = models.ForeignKey(to=Category_quest, on_delete=models.CASCADE, null=True, blank=True)
     tests_category = models.ForeignKey(to=Category_test, on_delete=models.CASCADE, null=True, blank=True)
     albums_category = models.ForeignKey(to=Category_album, on_delete=models.CASCADE, null=True, blank=True)
+    activity_level = models.PositiveIntegerField(default=0, verbose_name="Activity level")
 
     REQUIRED_FIELDS = ["last_name"]
 
@@ -69,6 +70,19 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    def get_subscriptions_campaigns(self):
+        subscriptions_campaigns = self.subscriptionscampaigns_set.all()
+        return subscriptions_campaigns
+    
+    def number_of_completed_tasks(self):
+        return self.usertaskchecking_set.count()
+    
+    def number_of_points_for_completed_tasks(self):
+        total_points = 0
+        for obj in self.usertaskchecking_set.filter(is_completed=True):
+            total_points += obj.task.points_reward
+        return total_points
 
     def save(self, *args, **kwargs) -> None:
         try:

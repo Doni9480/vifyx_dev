@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'referrals',
     'periodic_bonuses',
     'albums',
+    'transactions',
 ]
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -254,8 +255,8 @@ UNFOLD = {
     #         "href": lambda request: static("favicon.svg"),
     #     },
     # ],
-    # "SHOW_HISTORY": True, # show/hide "History" button, default: True
-    # "SHOW_VIEW_ON_SITE": True, # show/hide "View on site" button, default: True
+    "SHOW_HISTORY": True, # show/hide "History" button, default: True
+    "SHOW_VIEW_ON_SITE": True, # show/hide "View on site" button, default: True
     # "ENVIRONMENT": "sample_app.environment_callback",
     # "DASHBOARD_CALLBACK": "sample_app.dashboard_callback",
     # "THEME": "dark", # Force theme: "dark" or "light". Will disable theme switcher
@@ -307,6 +308,20 @@ UNFOLD = {
                         "title": _("Site Configuration"),
                         "icon": "tune",
                         "link": reverse_lazy("admin:configs_siteconfiguration_changelist"),
+                        "permission": lambda request: request.user.is_superuser,
+                    }
+                ]
+            },
+            {
+                "title": _("Transactions"),
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Transactions"),
+                        "icon": "contract",
+                        "link": reverse_lazy("admin:transactions_transactions_changelist"),
                         "permission": lambda request: request.user.is_superuser,
                     }
                 ]
@@ -491,6 +506,36 @@ UNFOLD = {
                         "title": _("Answers"),
                         "icon": "chat",
                         "link": reverse_lazy("admin:comments_answer_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Albums"),
+                "icon": "settings",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Albums"),
+                        "icon": "photo_library",  # Supported icon set: https://fonts.google.com/icons
+                        "link": reverse_lazy("admin:albums_album_changelist"),
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    {
+                        "title": _("Category"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:albums_category_changelist"),
+                    },
+                    {
+                        "title": _("Subcategory"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:albums_subcategory_changelist"),
+                    },
+                    {
+                        "title": _("Views"),
+                        "icon": "visibility",
+                        "link": reverse_lazy("admin:albums_albumview_changelist"),
                     },
                 ],
             },

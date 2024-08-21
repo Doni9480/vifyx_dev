@@ -22,4 +22,5 @@ class UserTaskCheckAdmin(ModelAdmin):
         "points_awarded",
         "start_date",
         "end_date",
+        "is_received"
     )

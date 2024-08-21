@@ -103,7 +103,7 @@
                             У компании не достаточно баллов!
                         </p>
                     {% endif %}
-                    <button class="btn btn-primary run_task" {% if object.campaign.prize_fund < object.points_reward %}style="pointer-events: none;"{% endif %} data-pk="{{object.pk}}" >Run task</button>
+                    <button class="btn btn-primary run_task" {% if object.campaign.reward_source == "owner" and object.campaign.prize_fund < object.points_reward %}style="pointer-events: none;"{% endif %} data-pk="{{object.pk}}" >Run task</button>
                 </div>
                 {% endif %}
                 {% endif %}
