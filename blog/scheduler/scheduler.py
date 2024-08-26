@@ -8,6 +8,7 @@ from blogs.utils import paid_follows, views_period_day, views_period_week
 
 from users.utils import send_scores
 from users.models import TotalScore
+from contests.utils import func_contests
 
 
 class TasksScheduler:
@@ -38,4 +39,5 @@ class TasksScheduler:
         self.scheduler.add_job(views_period_day, "interval", seconds=86400)
         # 604800 - 7 days
         self.scheduler.add_job(views_period_week, "interval", seconds=604800)
+        self.scheduler.add_job(func_contests, "interval", seconds=5)
         self.scheduler.start()

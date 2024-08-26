@@ -23,7 +23,8 @@ from notifications.api.seriailzers import (
     NotificationAlbumShowSerializer,
     NotificationDonateSerializer,
     NotificationDonateShowSerializer,
-    NotificationNoneSerializer
+    NotificationNoneSerializer,
+    NotificationContestSerializer,
 )
 
 from users.models import User
@@ -64,7 +65,7 @@ class NotificationViewSet(
 
     def list(self, request, *args, **kwargs):
         notifications = Notification.objects.filter(
-            user=request.user.id
+            user=request.user
         )
         
         data = []
@@ -93,6 +94,10 @@ class NotificationViewSet(
                 {
                     'obj': notification.donate,
                     'serializer': NotificationDonateSerializer
+                },
+                {
+                    'obj': notification.contest,
+                    'serializer': NotificationContestSerializer
                 }
             ]
             for e_dict in E_DICTS:
@@ -105,46 +110,52 @@ class NotificationViewSet(
 
     @action(detail=True, methods=["get"], url_path="show-post")
     def show_post(self, request, pk=None):
-        notification_post = get_object_or_404(Notification, post=pk)
+        notification_post = get_object_or_404(Notification, user=request.user, post=pk)
         post = NotificationPostShowSerializer(notification_post.post).data
         post["user"] = User.objects.get(id=post["user"]).username
         return Response({"data": post})
 
     @action(detail=True, methods=["get"], url_path="show-survey")
     def show_survey(self, request, pk=None):
-        notification_survey = get_object_or_404(Notification, survey=pk)
+        notification_survey = get_object_or_404(Notification, user=request.user, survey=pk)
         survey = NotificationSurveyShowSerializer(notification_survey.survey).data
         survey["user"] = User.objects.get(id=survey["user"]).username
         return Response({"data": survey})
 
     @action(detail=True, methods=["get"], url_path="show-quest")
     def show_quest(self, request, pk=None):
-        notification_quest = get_object_or_404(Notification, quest=pk)
+        notification_quest = get_object_or_404(Notification, user=request.user, quest=pk)
         quest = NotificationQuestShowSerializer(notification_quest.quest).data
         quest["user"] = User.objects.get(id=quest["user"]).username
         return Response({"data": quest})
     
     @action(detail=True, methods=["get"], url_path="show-test")
     def show_test(self, request, pk=None):
-        notification_test = get_object_or_404(Notification, test=pk)
+        notification_test = get_object_or_404(Notification, user=request.user, test=pk)
         test = NotificationTestShowSerializer(notification_test.test).data
         test["user"] = User.objects.get(id=test["user"]).username
         return Response({"data": test})
     
     @action(detail=True, methods=["get"], url_path="show-album")
     def show_album(self, request, pk=None):
-        notification_album = get_object_or_404(Notification, album=pk)
+        notification_album = get_object_or_404(Notification, user=request.user, album=pk)
         album = NotificationAlbumShowSerializer(notification_album.album).data
         album["user"] = User.objects.get(id=album["user"]).username
         return Response({"data": album})
     
     @action(detail=True, methods=["get"], url_path="show-donate")
     def show_donate(self, request, pk=None):
-        notification_donate = get_object_or_404(Notification, donate=pk)
+        notification_donate = get_object_or_404(Notification, user=request.user, donate=pk)
         donate = NotificationDonateShowSerializer(notification_donate.donate).data
         donate["user"] = User.objects.get(id=donate["user"]).username
         donate["blog"] = Blog.objects.get(id=donate["blog"]).title
         return Response({"data": donate})
+    
+    @action(detail=True, methods=["get"], url_path="show-contest")
+    def show_contest(self, request, pk=None):
+        notification_contest = get_object_or_404(Notification, user=request.user, contest=pk)
+        contest = NotificationContestSerializer(notification_contest.contest).data
+        return Response({"data": contest})
 
     @action(detail=False, methods=["post"], url_path="read-it")
     @transaction.atomic

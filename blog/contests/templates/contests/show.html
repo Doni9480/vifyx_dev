@@ -1,0 +1,317 @@
+{% extends "layouts/basic.html" %}
+{% load tz %}
+{% load static %}
+
+{% block title %}Contest{% endblock %}
+
+{% block head %}
+<style>
+    .progress-bar-1 {
+        background-color: #e7e8e6;
+        padding: 10px 0;
+        border-radius: 10px;
+    }
+
+    .progress-bar-2 {
+        position: relative;
+        top: -20px;
+        background-color: #7cfc00;
+        padding: 10px 0;
+        border-radius: 10px;
+    }
+    
+    .progress-bar-3 {
+        position: relative;
+        top: -20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Content
+============================================= -->
+{% if post.pit_main_page %}
+    <div style="z-index: 100; text-align: center; margin: 0 auto; background-color: #7cfc00;"><h1 style="text-align: center; margin: 0 auto;">{{ post.pit_main_page }}</h1></div>
+{% endif %}
+<section id="content">
+    <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+    <div class="content-wrap" style="background-color: #EEE">
+        <div class="container">
+            <div class="single-post mb-0 mw-md mx-auto bg-light p-4 p-sm-5 rounded-1">
+                <!-- Single Post============================================= -->
+                <div class="entry">
+                    <!-- Entry Title============================================= -->
+                    <div class="entry-title">
+                        <h2>{{ contest.title }}</h2>
+                    </div><!-- .entry-title end -->
+                    <div class="row align-items-center mt-2">
+                        <div class="col-md-3">
+                            <!-- Entry Meta ============================================= -->
+                            <div>
+                                <ul class="d-flex flex-column entry-meta no-separator">
+                                    <li class="me-0"><i class="uil uil-schedule"></i>Start date: {{ contest.start_date|date:"d M Y" }}</li>
+                                    <li class="me-0"><i class="uil uil-schedule"></i>End date: {{ contest.end_date|date:"d M Y" }}</li>
+                                    <li class="me-0"><i class="uil uil-schedule"></i>Type of contest: {{ contest.item_type }}</li>
+                                    <li class="me-0"><i class="uil uil-schedule"></i>Criteries: {{ contest.criteries }}</li>
+                                    <li class="me-0"><i class="uil uil-schedule"></i>Count participants: {{ count_participants }}</li>
+                                </ul>
+                            </div><!-- .entry-meta end -->
+                        </div>
+                        {% if contest.description %}
+                            <div class="col-md-9">
+                                <p class="text-larger text-muted mt-3">{{ contest.description }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="clear"></div>
+
+                    {% if prize %}
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                {% if prize.one_place %}
+                                    <tr>
+                                        <td>
+                                            <span>1</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.one_place.namespace }}/show/{{ prize.one_place.slug }}/">{{ prize.one_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.one_place.user.username %}">{{ prize.one_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.two_place %}
+                                    <tr>
+                                        <td>
+                                            <span>2</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.two_place.namespace }}/show/{{ prize.two_place.slug }}/">{{ prize.two_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.two_place.user.username %}">{{ prize.two_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.three_place %}
+                                    <tr>
+                                        <td>
+                                            <span>3</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.three_place.namespace }}/show/{{ prize.three_place.slug }}/">{{ prize.three_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.three_place.user.username %}">{{ prize.three_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.four_place %}
+                                    <tr>
+                                        <td>
+                                            <span>4</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.four_place.namespace }}/show/{{ prize.four_place.slug }}/">{{ prize.four_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.four_place.user.username %}">{{ prize.four_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.five_place %}
+                                    <tr>
+                                        <td>
+                                            <span>5</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.five_place.namespace }}/show/{{ prize.five_place.slug }}/">{{ prize.five_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.five_place.user.username %}">{{ prize.five_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.six_place %}
+                                    <tr>
+                                        <td>
+                                            <span>6</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.six_place.namespace }}/show/{{ prize.six_place.slug }}/">{{ prize.six_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.six_place.user.username %}">{{ prize.six_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.seven_place %}
+                                    <tr>
+                                        <td>
+                                            <span>7</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.seven_place.namespace }}/show/{{ prize.seven_place.slug }}/">{{ prize.seven_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.seven_place.user.username %}">{{ prize.seven_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.eight_place %}
+                                    <tr>
+                                        <td>
+                                            <span>8</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.eight_place.namespace }}/show/{{ prize.eight_place.slug }}/">{{ prize.eight_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.eight_place.user.username %}">{{ prize.eight_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.nine_place %}
+                                    <tr>
+                                        <td>
+                                            <span>9</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.nine_place.namespace }}/show/{{ prize.nine_place.slug }}/">{{ prize.nine_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.nine_place.user.username %}">{{ prize.nine_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if prize.ten_place %}
+                                    <tr>
+                                        <td>
+                                            <span>10</span>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <a href="/{{ prize.ten_place.namespace }}/show/{{ prize.ten_place.slug }}/">{{ prize.ten_place.title }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:profile' prize.ten_place.user.username %}">{{ prize.ten_place.user.username }}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+
+                    <!-- Entry Image
+                    ============================================= -->
+                    <div class="entry-image align-wide-xl my-3">
+                        {% if contest.preview %}
+                            <img src="{{ contest.preview.url }}" width="500" height="281"
+                                    allow="autoplay; fullscreen" allowfullscreen>
+                            <figcaption class="text-center mt-2 text-muted text-smaller">Image Caption Text</figcaption>
+                        {% endif %}
+                    </div><!-- .entry-image end -->
+
+                    <div class="clear"></div>
+
+                    {% if button_show %}
+                        <form class="row mb-0" id="form_element" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="contest" value="{{ contest.pk }}">
+                        <div class="col-12 form-group">
+                            <label for="id_element">{{ contest.item_type|title }}:</label>
+                            <select id="id_element" class="form-select">
+                            <option disabled selected>Select a {{ contest.item_type }}</option>
+                            {% for select in selects %}
+                                <option value="{{ select.pk }}">{{ select.title }}</option>
+                            {% endfor %}
+                            </select>
+                        </div>
+            
+                        <div class="col-12 form-group">
+                            <input type="hidden" id="g_recaptcha_response" name="g_recaptcha_response">
+                            <div class="d-flex justify-content-between">
+                            <button id="id_add" type="submit" class="button button-3d button-black m-0">Add</button>
+                            </div>
+                        </div>
+                        </form>
+                    {% endif %}
+
+                    <!-- Entry Content
+                    ============================================= -->
+                    <div class="entry-content mt-3">
+                        {% for element in elements %}
+                            <div class="entry col-12" id="element">
+                                <div class="grid-inner">
+                                    {% if element.preview %}
+                                        <div class="entry-image">
+                                            <a href="{{ element.preview.url }}" data-lightbox="image"><img src="{{ element.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                        </div>
+                                    {% endif %}
+                                    <div class="entry-title">
+                                        <h2><a href="/{{ element.namespace }}/show/{{ element.slug }}/">{{ element.title }}</a></h2>
+                                    </div>
+                                    <div class="entry-meta">
+                                        <ul>
+                                            <li><i class="uil uil-schedule"></i> {{ element.date|date:"d M Y" }}</li>
+                                            <li><a href="{% url 'users:profile' element.user.username %}"><i class="uil uil-user"></i> {{ element.user.username }}</a></li>
+                                            <li><a href="/{{ element.namespace }}/show/{{ element.slug }}/"><i class="uil uil-comments-alt"></i> {{ element.count_comments }} Comments</a></li>
+                                            <li><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"><span style="margin-left: 8px;">{{ element.count_views }}</span></li>
+                                        </ul>
+                                    </div>
+                                    <div class="entry-content">
+                                        {% if element.namespace == 'posts' %}
+                                            <p>{{ element.content|striptags|truncatechars:100 }}</p>
+                                        {% else %}
+                                            <p>{{ element.description }}</p>
+                                        {% endif %}
+                                        <a href="/{{ element.namespace }}/show/{{ element.slug }}/" class="more-link">Read More</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div><!-- .entry end -->
+            </div>
+            <!-- Pager
+            ============================================= -->
+            {% if elements.paginator.num_pages > 1 %}
+                <ul class="pagination" style="overflow: auto;">
+                    {% if elements.has_previous %}
+                        <li class="page-item"><a class="page-link" href="{% url 'contests:show' contest.slug %}?page={{ elements.previous_page_number }}" tabindex="-1" aria-disabled="true">Previous</a></li>
+                    {% endif %}
+
+                    {% for p in elements.paginator.page_range %}
+                        {% if p == elements.number %}
+                            <li class="page-item active"><a class="page-link" href="{% url 'contests:show' contest.slug %}?page={{ p }}">{{ p }}</a></li> 
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="{% url 'contests:show' contest.slug %}?page={{ p }}">{{ p }}</a></li>
+                        {% endif %}                  
+                    {% endfor %}
+
+                    {% if elements.has_next %}
+                        <li class="page-item"><a class="page-link" href="{% url 'contests:show' contest.slug %}?page={{ elements.next_page_number }}">Next</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            <!-- .pager end -->
+        </div>
+    </div>
+</section><!-- #content end -->
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/functions.js' %}"></script>
+    <script src="{% static 'js/send_element_to_contest.js' %}"></script>
+{% endblock %}

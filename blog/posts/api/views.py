@@ -30,7 +30,9 @@ from posts.models import (
     Subcategory,
     PostDayView,
     PostWeekView,
+    PostLike,
 )
+from posts.api.utils import get_more_to_posts
 
 from comments.models import Comment
 
@@ -48,12 +50,10 @@ from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 from operator import attrgetter
 
-import re
-
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['list', 'show', 'get_test'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['list', 'retrieve', 'get_test', 'add_view'], [AllowAny])
     queryset = Post.objects.all()
     pagination_class = MyPagination
     # parser_classes = [MultiPartParser, FormParser]
@@ -141,18 +141,12 @@ class PostViewSet(viewsets.ModelViewSet):
         obj_set = get_obj_set(Post.level_access_objects.filter(**filter_kwargs).order_by('-date'), request.user)
         obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)
             
-        posts = PostIndexSerializer(
+        posts = get_more_to_posts(PostIndexSerializer(
             obj_set, many=True
-        ).data
-        for post in posts:
-            post['user'] = User.objects.get(id=post['user']).username
-            post['count_views'] = PostView.objects.filter(post_id=post['id']).count()
-            post['count_comments'] = Comment.objects.filter(post_id=post['id']).count()
-            
-            if post['language'] == "2":
-                post['language'] = "Russian"
-            else:
-                post['language'] = "English"
+        ).data)
+        for post in posts:            
+            if post['language'] == "2": post['language'] = "Russian"
+            else: post['language'] = "English"
                 
         page = self.paginate_queryset(posts)
         return self.get_paginated_response(page) 
@@ -162,8 +156,7 @@ class PostViewSet(viewsets.ModelViewSet):
         # request_body=PostShowSerializer,
         responses={200: PostShowSerializer},
     )
-    @action(detail=True, methods=["get"], url_path="show/<pk>")
-    def show(self, request, pk=None):
+    def retrieve(self, request, pk=None):
         request = set_language_to_user(request)
         post_model = self.get_object()
         opening_access(post_model, request.user, is_show=True)
@@ -195,12 +188,13 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="<pk>/view/add")
     def add_view(self, request, pk=None):
-        post = self.get_object()
-        opening_access(post, request.user)
-        views = [PostView, PostWeekView, PostDayView]
-        for view in views:
-            if not view.objects.filter(post=post).filter(user=request.user.id).first():
-                view.objects.create(post=post, user=request.user)
+        if request.user.is_authenticated:
+            post = self.get_object()
+            opening_access(post, request.user)
+            views = [PostView, PostWeekView, PostDayView]
+            for view in views:
+                if not view.objects.filter(post=post).filter(user=request.user.id).first():
+                    view.objects.create(post=post, user=request.user)
         return Response({"success": "ok."})
 
     @swagger_auto_schema(
@@ -434,6 +428,27 @@ class PostViewSet(viewsets.ModelViewSet):
             subcategories_set, many=True
         ).data
         return Response({"subcategories": subcategories})
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/send_like")
+    def send_like(self, request, pk=None):
+        instance = self.get_object()
+        opening_access(instance, request.user)
+        if instance.user == request.user:
+            raise Http404()
+        
+        data = {}
+        
+        post_filter = PostLike.objects.filter(post=instance, user=request.user)
+        if not post_filter:
+            data['add'] = True
+            PostLike.objects.create(post=instance, user=request.user)
+        else:
+            data['add'] = False
+            post_filter.first().delete()
+        
+        data["success"] = "ok."
+        
+        return Response(data)
     
 
 # draft_post

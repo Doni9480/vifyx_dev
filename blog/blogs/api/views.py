@@ -28,15 +28,15 @@ from blogs.models import Blog, LevelAccess, PaidFollow, Donate, BlogFollow
 from blog.utils import get_request_data, MyPagination
 from blogs.utils import get_filter_kwargs, get_blog_list
 from blogs.api.utils import get_blog_list, get_views_period, get_users_period
-from posts.api.utils import get_views_and_comments_to_posts
+from posts.api.utils import get_more_to_posts
 from posts.models import Post, PostTag
-from surveys.api.utils import get_views_and_comments_to_surveys
+from surveys.api.utils import get_more_to_surveys
 from surveys.models import Survey, SurveyRadio, SurveyTag
 from custom_tests.models import Test
-from custom_tests.api.utils import get_views_and_comments_to_tests
+from custom_tests.api.utils import get_more_to_tests
 from quests.models import Quest
-from quests.api.utils import get_views_and_comments_to_quests
-from albums.api.utils import get_views_and_comments_to_albums
+from quests.api.utils import get_more_to_quests
+from albums.api.utils import get_more_to_albums
 from albums.models import Album
 from users.models import User, Percent
 from notifications.models import NotificationBlog
@@ -144,19 +144,19 @@ class BlogViewSet(
         filter_kwargs = get_filter_kwargs(request)
         filter_kwargs['blog'] = blog
             
-        posts = get_views_and_comments_to_posts(
+        posts = get_more_to_posts(
             PostSerializer(Post.objects.filter(**filter_kwargs), many=True).data
         )
-        surveys = get_views_and_comments_to_surveys(
+        surveys = get_more_to_surveys(
             SurveySerializer(Survey.objects.filter(**filter_kwargs), many=True).data
         )
-        tests = get_views_and_comments_to_tests(
+        tests = get_more_to_tests(
             TestSerializer(Test.objects_show.filter(**filter_kwargs), many=True).data
         )
-        quests = get_views_and_comments_to_quests(
+        quests = get_more_to_quests(
             QuestSerializer(Quest.objects.filter(**filter_kwargs), many=True).data
         )
-        albums = get_views_and_comments_to_albums(
+        albums = get_more_to_albums(
             AlbumSerializer(Album.objects.filter(**filter_kwargs), many=True).data
         )
         blog_list = posts + surveys + tests + quests + albums
@@ -384,19 +384,19 @@ class BlogViewSet(
         request = set_language_to_user(request)
         filter_kwargs = get_filter_kwargs(request)
             
-        posts = get_views_and_comments_to_posts(
+        posts = get_more_to_posts(
             PostSerializer(Post.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
-        surveys = get_views_and_comments_to_surveys(
+        surveys = get_more_to_surveys(
             SurveySerializer(Survey.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
-        tests = get_views_and_comments_to_tests(
+        tests = get_more_to_tests(
             TestSerializer(Test.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
-        quests = get_views_and_comments_to_quests(
+        quests = get_more_to_quests(
             QuestSerializer(Quest.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
-        albums = get_views_and_comments_to_albums(
+        albums = get_more_to_albums(
             AlbumSerializer(Album.level_access_objects.filter(title__icontains=q, **filter_kwargs), many=True).data
         )
         
@@ -428,10 +428,10 @@ class BlogViewSet(
             except Http404 as e:
                 pass
             
-        posts = get_views_and_comments_to_posts(
+        posts = get_more_to_posts(
             PostSerializer(posts, many=True).data
         )
-        surveys = get_views_and_comments_to_surveys(
+        surveys = get_more_to_surveys(
             SurveySerializer(surveys, many=True).data
         )
         

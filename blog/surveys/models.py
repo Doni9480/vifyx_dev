@@ -81,6 +81,11 @@ class SurveyTag(models.Model):
         return self.title
     
 
+class SurveyLike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_survey_like')
+    survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey', null=True, related_name='survey_like')
+    
+
 class SurveyWeekView(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_survey_week')
     survey = models.ForeignKey(to=Survey, on_delete=models.CASCADE, verbose_name='Survey', null=True, related_name='survey_week')

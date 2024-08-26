@@ -80,6 +80,11 @@ class Album(models.Model):
         super(Album, self).save()
         
 
+class AlbumLike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_album_like')
+    album = models.ForeignKey(to=Album, on_delete=models.CASCADE, verbose_name='Album', null=True, related_name='album_like')
+        
+
 class AlbumPhoto(models.Model):
     album = models.ForeignKey(to=Album, on_delete=models.CASCADE, verbose_name='Album')
     photo = models.ImageField(verbose_name="Preview", upload_to="album_photos/")
@@ -106,6 +111,21 @@ class AlbumView(models.Model):
     class Meta:
         verbose_name = "View"
         verbose_name_plural = "Views"
+        
+
+class AlbumTag(models.Model):
+    title = models.CharField(
+        verbose_name="Title", max_length=255, blank=False, null=False
+    )
+    album = models.ForeignKey(to=Album, on_delete=models.CASCADE, verbose_name="Album")
+
+    class Meta:
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+
+    def __str__(self):
+        return self.title
+
         
 @cleanup.ignore
 class DraftAlbum(models.Model):
@@ -137,6 +157,23 @@ class DraftAlbum(models.Model):
             self.level_access = 0
 
         super(DraftAlbum, self).save()
+        
+
+class DraftAlbumTag(models.Model):
+    title = models.CharField(
+        verbose_name="Title", max_length=255, blank=False, null=False
+    )
+    draft = models.ForeignKey(
+        to=DraftAlbum, on_delete=models.CASCADE, verbose_name="Draft"
+    )
+
+    class Meta:
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+
+    def __str__(self):
+        return self.title
+
         
 class DraftAlbumPhoto(models.Model):
     draft_album = models.ForeignKey(to=DraftAlbum, on_delete=models.CASCADE, verbose_name='Draft album')

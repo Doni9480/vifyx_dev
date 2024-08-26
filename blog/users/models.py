@@ -30,7 +30,7 @@ def gen_referral_code():
             return str(code)
 
 class User(AbstractUser):
-    email = models.EmailField(verbose_name="email address", unique=True)
+    email = models.EmailField(verbose_name="email address", null=True, unique=True)
     first_name = models.CharField(
         max_length=255, verbose_name="First name", blank=False, null=False
     )

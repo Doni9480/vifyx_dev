@@ -14,9 +14,17 @@ async function album_edit(e) {
     var deleted_photos = document.querySelectorAll('input[name="deleted_photo"]');
     var category = document.querySelector('#id_category');
     var subcategory = document.querySelector('#id_subcategory');
+    var tags = document.querySelectorAll('input[name="tags"]');
     var level_access = document.querySelector('#id_level_access');
     var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     var g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
+
+    tags_list = [];
+    let is_empty_tags = true;
+    tags.forEach(tag => {
+        is_empty_tags = false;
+        tags_list.push(tag.value);
+    });
 
     var form_data = new FormData();
     if (preview.files[0]) {
@@ -48,6 +56,9 @@ async function album_edit(e) {
     }
     if (subcategory && ! isNaN(Number(subcategory.value))) {
         form_data.append('subcategory', subcategory.value);
+    }
+    if (! is_empty_tags) {
+        form_data.append('tags', tags_list);
     }
     form_data.append('g_recaptcha_response', g_recaptcha_response.value);
 

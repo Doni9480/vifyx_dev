@@ -15,16 +15,15 @@ from posts.models import (
     DraftPostRadio,
     PostVote,
     Category,
-    Subcategory
+    Subcategory,
+    PostLike,
 )
 from users.utils import opening_access
-from posts.utils import get_views_and_comments_to_posts
+from posts.utils import get_more_to_posts
 from blogs.utils import get_filter_kwargs, get_obj_set, get_category, slice_content
-
 from comments.models import Comment, Answer
-
 from blogs.models import Blog, LevelAccess, BlogFollow
-
+from contests.models import PostElement
 
 from operator import attrgetter
 
@@ -43,7 +42,7 @@ def index(request):
 
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
-    page_obj = get_views_and_comments_to_posts(paginator.get_page(page_number))
+    page_obj = get_more_to_posts(paginator.get_page(page_number))
     return render(request, 'posts/index.html', {
         'page_obj': page_obj, 
         'categories': categories,
@@ -87,7 +86,9 @@ def show(request, slug):
     comments = Comment.objects.filter(post=post)
         
     answers = Answer.objects.filter(post=post)
-    count_comments = comments.count() + answers.count()    
+    count_comments = comments.count() + answers.count()
+    
+    count_likes = PostLike.objects.filter(post=post).count()
 
     tags = PostTag.objects.filter(post=post)
     
@@ -116,6 +117,9 @@ def show(request, slug):
     questions = []
     if post.test:
         questions = post.test.questions.all()
+        
+    post_element = PostElement.objects.filter(post=post).first()
+    contest = post_element.contest if post_element else None
     
     data = {
         'post': post,
@@ -130,6 +134,9 @@ def show(request, slug):
         'options': options,
         'vote': vote,
         'questions': questions,
+        'count_likes': count_likes,
+        'is_like': bool(PostLike.objects.filter(post=post, user=request.user.id)),
+        'contest': contest,
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY
     }
     

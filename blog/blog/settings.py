@@ -12,10 +12,12 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 from blog.utils import my_custom_upload_to_func
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -32,6 +34,14 @@ APPEND_SLASH = True
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",  # before django.contrib.admin
+    "unfold.contrib.filters",  # optional, if special filters are needed
+    "unfold.contrib.forms",  # optional, if special form elements are needed
+    "unfold.contrib.inlines",  # optional, if special inlines are needed
+    "unfold.contrib.import_export",  # optional, if django-import-export package is used
+    "unfold.contrib.guardian",  # optional, if django-guardian package is used
+    "unfold.contrib.simple_history",  # optional, if django-simple-history package is used
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,14 +52,14 @@ INSTALLED_APPS = [
     'mptt',
     'drf_yasg',
     'rest_framework',
-    'django_summernote',    
+    'django_summernote',
     'django_cleanup.apps.CleanupConfig',
     'django_apscheduler',
     'storages',
     # 'corsheaders',
-    'constance',
-    'constance.backends.database',
-    
+    'guardian',
+
+    'configs',
     'users',
     'surveys',
     'posts',
@@ -62,16 +72,8 @@ INSTALLED_APPS = [
     'referrals',
     'periodic_bonuses',
     'albums',
+    'contests',
 ]
-
-CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
-CONSTANCE_CONFIG = {
-    'LIMIT_CAMPAIGN': (10, 'Лимит компаний для одного пользователя'),
-    'PERIODIC_SCORES': (100, 'Количество баллов периодического бонуса'),
-    'TWITTER_CONNECT_SCORES': (150, 'Баллы за подключения Twitter аккаунта'),
-    'TELEGRAM_WALLET_CONNECT_SCORES': (200, 'Баллы за подключение кошелька Telegram'),
-    'POINT_INVITATION_BY_REFERRAL_LINK': (500, 'Награда (в баллах) за каждого приглашенного пользователя по реферальной ссылке'),
-}
 
 MPTT_ADMIN_LEVEL_INDENT = 20
 
@@ -83,7 +85,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+
     # custom authentication
     'users.api.middlewares.AuthTokenMiddleware',
     # check a admin
@@ -122,6 +124,11 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 5
 }
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',  # this is default
+    'guardian.backends.ObjectPermissionBackend',
+)
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 if DEV_DB:
@@ -142,7 +149,6 @@ else:
             'PORT': '5432',
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -165,8 +171,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -178,15 +182,14 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-   BASE_DIR / 'static'
+    BASE_DIR / 'static'
 ]
-# STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
+STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -221,14 +224,385 @@ EMAIL_USE_TLS = True
 GOOGLE_RECAPTCHA_PRIVATE_KEY = '6LfF49kpAAAAAIoI3hjKBld9lTTx2Q-UoleOQmPG'
 GOOGLE_RECAPTCHA_PUBLIC_KEY = '6LfF49kpAAAAAFiEh0fNdLdOJHvlIWa5_PyqbslK'
 
-
 SUMMERNOTE_CONFIG = {
     'attachment_upload_to': my_custom_upload_to_func,
-    
+
     'summernote': {
         'width': '100%',
     }
 }
+
+UNFOLD = {
+    # "SITE_TITLE": None,
+    # "SITE_HEADER": None,
+    # "SITE_URL": "/",
+    # # "SITE_ICON": lambda request: static("icon.svg"),  # both modes, optimise for 32px height
+    # "SITE_ICON": {
+    #     "light": lambda request: static("icon-light.svg"),  # light mode
+    #     "dark": lambda request: static("icon-dark.svg"),  # dark mode
+    # },
+    # # "SITE_LOGO": lambda request: static("logo.svg"),  # both modes, optimise for 32px height
+    # "SITE_LOGO": {
+    #     "light": lambda request: static("logo-light.svg"),  # light mode
+    #     "dark": lambda request: static("logo-dark.svg"),  # dark mode
+    # },
+    # "SITE_SYMBOL": "speed",  # symbol from icon set
+    # "SITE_FAVICONS": [
+    #     {
+    #         "rel": "icon",
+    #         "sizes": "32x32",
+    #         "type": "image/svg+xml",
+    #         "href": lambda request: static("favicon.svg"),
+    #     },
+    # ],
+    # "SHOW_HISTORY": True, # show/hide "History" button, default: True
+    # "SHOW_VIEW_ON_SITE": True, # show/hide "View on site" button, default: True
+    # "ENVIRONMENT": "sample_app.environment_callback",
+    # "DASHBOARD_CALLBACK": "sample_app.dashboard_callback",
+    # "THEME": "dark", # Force theme: "dark" or "light". Will disable theme switcher
+    # "LOGIN": {
+    #     "image": lambda request: static("sample/login-bg.jpg"),
+    #     "redirect_after": lambda request: reverse_lazy("admin:APP_MODEL_changelist"),
+    # },
+    # "STYLES": [
+    #     lambda request: static("css/style.css"),
+    # ],
+    # "SCRIPTS": [
+    #     lambda request: static("js/script.js"),
+    # ],
+    # "COLORS": {
+    #     "primary": {
+    #         "50": "250 245 255",
+    #         "100": "243 232 255",
+    #         "200": "233 213 255",
+    #         "300": "216 180 254",
+    #         "400": "192 132 252",
+    #         "500": "168 85 247",
+    #         "600": "147 51 234",
+    #         "700": "126 34 206",
+    #         "800": "107 33 168",
+    #         "900": "88 28 135",
+    #         "950": "59 7 100",
+    #     },
+    # },
+    # "EXTENSIONS": {
+    #     "modeltranslation": {
+    #         "flags": {
+    #             "en": "🇬🇧",
+    #             "fr": "🇫🇷",
+    #             "nl": "🇧🇪",
+    #         },
+    #     },
+    # },
+    "SIDEBAR": {
+        "show_search": False,  # Search in applications and models names
+        "show_all_applications": True,  # Dropdown with all applications and models
+        "navigation": [
+            {
+                "title": _("Config"),
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Site Configuration"),
+                        "icon": "tune",
+                        "link": reverse_lazy("admin:configs_siteconfiguration_changelist"),
+                        "permission": lambda request: request.user.is_superuser,
+                    }
+                ]
+            },
+            {
+                "title": _("Campaign"),
+                "icon": "campaign",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Campaigns"),
+                        "icon": "campaign",
+                        "link": reverse_lazy("admin:campaign_campaign_changelist"),
+                    },
+                    {
+                        "title": _("Tasks"),
+                        "icon": "task",
+                        "link": reverse_lazy("admin:campaign_task_changelist"),
+                    },
+                    {
+                        "title": _("User task checkings"),
+                        "icon": "check",
+                        "link": reverse_lazy("admin:campaign_usertaskchecking_changelist"),
+                    }
+                ]
+            },
+            {
+                "title": _("Blogs"),
+                "icon": "rss_feed",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Blogs"),
+                        "icon": "rss_feed",
+                        "link": reverse_lazy("admin:blogs_blog_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Posts"),
+                "icon": "post",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Posts"),
+                        "icon": "post",
+                        "link": reverse_lazy("admin:posts_post_changelist"),
+                    },
+                    {
+                        "title": _("Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:posts_category_changelist"),
+                    },
+                    {
+                        "title": _("Subcategories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:posts_subcategory_changelist"),
+                    },
+                    {
+                        "title": _("Tags"),
+                        "icon": "label",
+                        "link": reverse_lazy("admin:posts_posttag_changelist"),
+                    },
+                    {
+                        "title": _("views"),
+                        "icon": "visibility",
+                        "link": reverse_lazy("admin:posts_postview_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Quests"),
+                "icon": "material-symbols-outlined",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Quests"),
+                        "icon": "post",
+                        "link": reverse_lazy("admin:quests_quest_changelist"),
+                    },
+                    {
+                        "title": _("Questions"),
+                        "icon": "label",
+                        "link": reverse_lazy("admin:quests_questionquest_changelist"),
+                    },
+                    {
+                        "title": _("Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:quests_category_changelist"),
+                    },
+                    {
+                        "title": _("Subcategories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:quests_subcategory_changelist"),
+                    },
+                    {
+                        "title": _("views"),
+                        "icon": "visibility",
+                        "link": reverse_lazy("admin:quests_questview_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Tests"),
+                "icon": "assessment",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Tests"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:custom_tests_test_changelist"),
+                    },
+                    {
+                        "title": _("Questions"),
+                        "icon": "question_answer",
+                        "link": reverse_lazy("admin:custom_tests_question_changelist"),
+                    },
+                    {
+                        "title": _("Question answers"),
+                        "icon": "chat",
+                        "link": reverse_lazy("admin:custom_tests_questionanswer_changelist"),
+                    },
+                    {
+                        "title": _("Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:custom_tests_category_changelist"),
+                    },
+                    {
+                        "title": _("Subcategories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:custom_tests_subcategory_changelist"),
+                    },
+                ]
+            },
+            {
+                "title": _("Albums"),
+                "icon": "assessment",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Albums"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:albums_album_changelist"),
+                    },
+                    {
+                        "title": _("Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:albums_category_changelist"),
+                    },
+                    {
+                        "title": _("Subcategories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:albums_subcategory_changelist"),
+                    },
+                ]
+            },
+            {
+                "title": _("Comments"),
+                "icon": "comment",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Comments"),
+                        "icon": "comment",
+                        "link": reverse_lazy("admin:comments_comment_changelist"),
+                    },
+                    {
+                        "title": _("Answers"),
+                        "icon": "chat",
+                        "link": reverse_lazy("admin:comments_answer_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Authentication and Authorization"),
+                "icon": "settings",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Groups"),
+                        "icon": "group",  # Supported icon set: https://fonts.google.com/icons
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    {
+                        "title": _("Users"),
+                        "icon": "account_circle",
+                        "link": reverse_lazy("admin:users_user_changelist"),
+                    },
+                    {
+                        "title": _("Percents"),
+                        "icon": "percent",
+                        "link": reverse_lazy("admin:users_percent_changelist"),
+                    },
+                    {
+                        "title": _("Tokens"),
+                        "icon": "lock",
+                        "link": reverse_lazy("admin:users_token_changelist"),
+                    },
+                    {
+                        "title": _("Total scores"),
+                        "icon": "paid",
+                        "link": reverse_lazy("admin:users_totalscore_changelist"),
+                    },
+                ],
+            },
+                        {
+                "title": _("Contests"),
+                "icon": "assessment",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Contests"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:contests_contest_changelist"),
+                    },
+                    {
+                        "title": _("Album prize"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:contests_prizealbumelement_changelist"),
+                    },
+                    {
+                        "title": _("Quest prize"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:contests_prizequestelement_changelist"),
+                    },
+                    {
+                        "title": _("Post prize"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:contests_prizepostelement_changelist"),
+                    },
+                ]
+            },
+        ],
+    },
+    # "TABS": [
+    #     {
+    #         "models": [
+    #             "app_label.model_name_in_lowercase",
+    #         ],
+    #         "items": [
+    #             {
+    #                 "title": _("Your custom title"),
+    #                 "link": reverse_lazy("admin:app_label_model_name_changelist"),
+    #                 "permission": "sample_app.permission_callback",
+    #             },
+    #         ],
+    #     },
+    # ],
+}
+ADMIN_MENU = [
+    # {
+    #     "label": "Главная",
+    #     "icon": "home",  # Вы можете указать иконку для раздела
+    #     "models": [
+    #         "app_name.ModelName1",
+    #         "app_name.ModelName2",
+    #     ]
+    # },
+    {
+        "label": "Пользователи",
+        "icon": "users",
+        "models": [
+            "auth.User",
+            "auth.Group",
+            "app_name.ModelName3",
+        ]
+    },
+    # {
+    #     "label": "Настройки",
+    #     "icon": "settings",
+    #     "models": [
+    #         "app_name.ModelName4",
+    #         "app_name.ModelName5",
+    #     ]
+    # },
+]
 
 # CORS_ALLOWED_ORIGINS = ["http://localhost:8080", "http://127.0.0.1:8080", "https://d991-185-138-186-34.ngrok-free.app"]
 

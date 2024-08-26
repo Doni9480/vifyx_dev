@@ -100,8 +100,14 @@ def change_password(request, uidb64, token):
 @login_required(login_url="/registration/login")
 def my_profile(request):
     bonuses_list = PeriodicBonuses.objects.all()
-    periudic_bonuses = list(PeriodicBonusesSerializer(instance=bonuses_list, many=True, context={"request": request}).data)
-    completed_tasks = UserTaskChecking.objects.filter(user=request.user, is_completed=True, is_received=False)
+    periudic_bonuses = list(
+        PeriodicBonusesSerializer(
+            instance=bonuses_list, many=True, context={"request": request}
+        ).data
+    )
+    completed_tasks = UserTaskChecking.objects.filter(
+        user=request.user, is_completed=True, is_received=False
+    )
     blogs = Blog.objects.filter(user=request.user)
     follows = BlogFollow.objects.filter(follower=request.user)
     companies = Campaign.objects.filter(user=request.user)
@@ -144,8 +150,10 @@ def profile(request, username):
 
     return render(request, "profile.html", data)
 
+
 def edit_profile(request):
     return render(request, "edit_profile.html")
+
 
 def edit_password(request):
     return render(request, "edit_password.html")

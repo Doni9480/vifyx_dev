@@ -121,6 +121,25 @@ class Quest(models.Model):
 
         super(Quest, self).save()
         
+
+class QuestTag(models.Model):
+    title = models.CharField(
+        verbose_name="Title", max_length=255, blank=False, null=False
+    )
+    quest = models.ForeignKey(to=Quest, on_delete=models.CASCADE, verbose_name="Quest")
+
+    class Meta:
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+
+    def __str__(self):
+        return self.title
+        
+        
+class QuestLike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_quest_like')
+    quest = models.ForeignKey(to=Quest, on_delete=models.CASCADE, verbose_name='Quest', null=True, related_name='quest_like')
+        
         
 class QuestWeekView(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_quest_week')

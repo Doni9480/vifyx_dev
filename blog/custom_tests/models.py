@@ -133,6 +133,11 @@ class Test(models.Model):
         super(Test, self).save()
         
 
+class TestLike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_test_like')
+    test = models.ForeignKey(to=Test, on_delete=models.CASCADE, verbose_name='Test', null=True, related_name='test_like')
+        
+
 class TestWeekView(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_test_week')
     test = models.ForeignKey(to=Test, on_delete=models.CASCADE, verbose_name='Test', null=True, related_name='test_week')

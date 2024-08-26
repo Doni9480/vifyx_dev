@@ -9,19 +9,19 @@ from blogs.forms import BlogForm
 from blogs.utils import get_filter_kwargs, get_blog_list, get_views_period, get_users_period
 
 from posts.models import Post, PostTag, Banner
-from posts.utils import get_views_and_comments_to_posts
+from posts.utils import get_more_to_posts
 
 from surveys.models import Survey, SurveyRadio, SurveyTag
-from surveys.utils import get_views_and_comments_to_surveys
+from surveys.utils import get_more_to_surveys
 
 from custom_tests.models import Test
-from custom_tests.utils import get_views_and_comments_to_tests
+from custom_tests.utils import get_more_to_tests
 
 from quests.models import Quest
-from quests.utils import get_views_and_comments_to_quests
+from quests.utils import get_more_to_quests
 
 from albums.models import Album
-from albums.utils import get_views_and_comments_to_albums
+from albums.utils import get_more_to_albums
 
 from notifications.models import NotificationBlog
 
@@ -111,11 +111,11 @@ def show(request, slug):
     filter_kwargs = get_filter_kwargs(request)
     filter_kwargs['blog'] = blog
 
-    posts = get_views_and_comments_to_posts(Post.objects.filter(**filter_kwargs))
-    surveys = get_views_and_comments_to_surveys(Survey.objects.filter(**filter_kwargs))
-    tests = get_views_and_comments_to_tests(Test.objects_show.filter(**filter_kwargs))
-    quests = get_views_and_comments_to_quests(Quest.objects.filter(**filter_kwargs))
-    albums = get_views_and_comments_to_albums(Album.objects.filter(**filter_kwargs))
+    posts = get_more_to_posts(Post.objects.filter(**filter_kwargs))
+    surveys = get_more_to_surveys(Survey.objects.filter(**filter_kwargs))
+    tests = get_more_to_tests(Test.objects_show.filter(**filter_kwargs))
+    quests = get_more_to_quests(Quest.objects.filter(**filter_kwargs))
+    albums = get_more_to_albums(Album.objects.filter(**filter_kwargs))
     blog_list = sorted(chain(posts, surveys, tests, quests, albums), key=attrgetter("date"), reverse=True)
 
     paid_follow = PaidFollow.objects.filter(follower=request.user.id, blog=blog)
@@ -208,11 +208,11 @@ def create_level_follow(request, slug):
 def search(request, q):
     filter_kwargs = get_filter_kwargs(request)
     
-    posts = get_views_and_comments_to_posts(Post.level_access_objects.filter(title__icontains=q, **filter_kwargs))
-    surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(title__icontains=q, **filter_kwargs))
-    tests = get_views_and_comments_to_tests(Test.level_access_objects.filter(title__icontains=q, **filter_kwargs))
-    quests = get_views_and_comments_to_quests(Quest.level_access_objects.filter(title__icontains=q, **filter_kwargs))
-    albums = get_views_and_comments_to_albums(Album.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    posts = get_more_to_posts(Post.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    surveys = get_more_to_surveys(Survey.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    tests = get_more_to_tests(Test.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    quests = get_more_to_quests(Quest.level_access_objects.filter(title__icontains=q, **filter_kwargs))
+    albums = get_more_to_albums(Album.level_access_objects.filter(title__icontains=q, **filter_kwargs))
     
     blog_list = sorted(chain(posts, surveys, tests, quests, albums), key=attrgetter("date"), reverse=True)
     

@@ -18,9 +18,10 @@ from surveys.models import (
     Category, 
     Subcategory,
     SurveyDayView,
-    SurveyWeekView
+    SurveyWeekView,
+    SurveyLike,
 )
-from surveys.api.utils import get_views_and_comments_to_surveys
+from surveys.api.utils import get_more_to_surveys
 from users.utils import opening_access
 from users.models import User, Percent
 from blog.decorators import recaptcha_checking
@@ -35,7 +36,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
     queryset = Survey.objects.all()
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['list', 'retrieve'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['list', 'retrieve', 'add_view'], [AllowAny])
     pagination_class = MyPagination
     # parser_classes = [MultiPartParser, FormParser, JSONParser]
 
@@ -121,7 +122,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
             many=True,
         ).data
 
-        surveys = get_views_and_comments_to_surveys(surveys)
+        surveys = get_more_to_surveys(surveys)
         page = self.paginate_queryset(surveys)
         return self.get_paginated_response(page) 
 
@@ -208,12 +209,13 @@ class SurveyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="<pk>/view/add")
     def add_view(self, request, pk=None):
-        survey = self.get_object()
-        opening_access(survey, request.user)
-        views = [SurveyView, SurveyDayView, SurveyWeekView]
-        for view in views:
-            if not view.objects.filter(survey=survey).filter(user=request.user.id).first():
-                view.objects.create(survey=survey, user=request.user)
+        if request.user.is_authenticated:
+            survey = self.get_object()
+            opening_access(survey, request.user)
+            views = [SurveyView, SurveyDayView, SurveyWeekView]
+            for view in views:
+                if not view.objects.filter(survey=survey).filter(user=request.user.id).first():
+                    view.objects.create(survey=survey, user=request.user)
         return Response({"success": "ok."})
 
     @action(detail=True, methods=["post"], url_path="send_scores_to_option/<pk>")
@@ -315,6 +317,27 @@ class SurveyViewSet(viewsets.ModelViewSet):
             subcategories_set, many=True
         ).data
         return Response({"subcategories": subcategories})
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/send_like")
+    def send_like(self, request, pk=None):
+        instance = self.get_object()
+        opening_access(instance, request.user)
+        if instance.user == request.user:
+            raise Http404()
+        
+        data = {}
+        
+        survey_filter = SurveyLike.objects.filter(survey=instance, user=request.user)
+        if not survey_filter:
+            data['add'] = True
+            SurveyLike.objects.create(survey=instance, user=request.user)
+        else:
+            data['add'] = False
+            survey_filter.first().delete()
+        
+        data["success"] = "ok."
+        
+        return Response(data)
 
 
 class DraftSurveyViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):

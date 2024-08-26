@@ -3,13 +3,24 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import Http404
 from django.contrib.auth.decorators import login_required
 from comments.models import Comment, Answer
-from .models import Quest, QuestionQuest, QuestionQuestAnswer, QuestView, Category, Subcategory
+from .models import (
+    Quest, 
+    QuestionQuest,
+    QuestionQuestAnswer, 
+    QuestView, 
+    Category, 
+    Subcategory, 
+    QuestLike,
+    QuestTag
+)
+from quests.utils import get_more_to_quests
 from users.utils import opening_access
 from django.core.paginator import Paginator
 from django.conf import settings
 from .forms import QuestForm, QuestionForm, QuestionAnswerForm
 from blogs.models import Blog, LevelAccess, BlogFollow
 from blogs.utils import get_obj_set, get_filter_kwargs, get_category
+from contests.models import QuestElement
 
 from operator import attrgetter
 
@@ -26,18 +37,9 @@ def list_quests(request):
     
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_more_to_quests(paginator.get_page(page_number))
     
     categories = Category.objects.all()
-
-    for quest_obj in page_obj.object_list:
-        count_comments = Comment.objects.filter(quest=quest_obj).count()
-        count_answers = Answer.objects.filter(quest=quest_obj).count()
-        count_comments = count_comments + count_answers
-        quest_obj.count_comments = count_comments
-        
-        count_views = QuestView.objects.filter(quest=quest_obj).count()
-        quest_obj.count_views = count_views
         
     return render(
         request, "quests/quests_list.html", {
@@ -66,6 +68,13 @@ def detail_quest(request, slug):
     count_comments = comment.count() + comment_answers.count()
     
     count_views = QuestView.objects.filter(quest=quest_obj).count()
+    
+    count_likes = QuestLike.objects.filter(quest=quest_obj).count()
+    
+    tags = QuestTag.objects.filter(quest=quest_obj)
+    
+    quest_element = QuestElement.objects.filter(quest=quest_obj).first()
+    contest = quest_element.contest if quest_element else None
 
     data = {
         "quest": quest_obj,
@@ -76,6 +85,10 @@ def detail_quest(request, slug):
         "answers": comment_answers,
         "count_comments": count_comments,
         "count_views": count_views,
+        "count_likes": count_likes,
+        "tags": tags,
+        "is_like": bool(QuestLike.objects.filter(quest=quest_obj, user=request.user.id)),
+        "contest": contest,
         # 'options': options,
         # 'vote': vote,
         "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
@@ -110,6 +123,10 @@ def quest_edit(request, slug):
     level_follows = LevelAccess.objects.filter(blog=blog)
     categories = Category.objects.all()
     subcategories = Subcategory.objects.filter(category=instance.category)
+    tags = QuestTag.objects.filter(quest=instance)
+    for tag in tags:
+        tag.replaced = tag.title.replace(' ', '_')
+        
     if instance.user != request.user:
         raise Http404
     if request.method == "GET":
@@ -123,6 +140,7 @@ def quest_edit(request, slug):
                 "categories": categories,
                 "subcategories": subcategories,
                 "level_follows": level_follows,
+                "tags": tags,
                 "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
             },
         )

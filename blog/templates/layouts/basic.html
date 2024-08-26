@@ -183,6 +183,11 @@
 												</a>
 											</li>
 											<li class="menu-item">
+												<a href="{% url 'contests:index' %}" class="menu-link">
+													<div style="font-size: 14px;">Contests</div>
+												</a>
+											</li>
+											<li class="menu-item">
 												<a href="{% url 'albums:index' %}" class="menu-link">
 													<div style="font-size: 14px;">Albums</div>
 												</a>
@@ -253,7 +258,7 @@
 																			<div>
 																				<div style="font-weight: bold; font-size: 13px;">A new post has been created</div>
 																				<div>{{ notification.post.title }}</div>
-																				<div>{{ notification.post.date|date:"d M Y H:i" }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
 																			</div>
 																			{% if notification.post.preview %}
 																				<div>
@@ -268,7 +273,7 @@
 																			<div>
 																				<div style="font-weight: bold; font-size: 13px;">A new survey has been created</div>
 																				<div>{{ notification.survey.title }}</div>
-																				<div>{{ notification.survey.date|date:"d M Y H:i" }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
 																			</div>
 																			{% if notification.survey.preview %}
 																				<div>
@@ -283,7 +288,7 @@
 																			<div>
 																				<div style="font-weight: bold; font-size: 13px;">A donation was sent to you</div>
 																				<div>{{ notification.donate.message|truncatechars:20 }}</div>
-																				<div>{{ notification.donate.date|date:"d M Y H:i" }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
 																			</div>
 																			<div>
 																				<div><img width="100" src="{% static 'images/donate.png' %}"></div>
@@ -296,7 +301,7 @@
 																			<div>
 																				<div style="font-weight: bold; font-size: 13px;">A new test has been created</div>
 																				<div>{{ notification.test.title }}</div>
-																				<div>{{ notification.test.date|date:"d M Y H:i" }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
 																			</div>
 																			{% if notification.test.preview %}
 																				<div>
@@ -311,7 +316,7 @@
 																			<div>
 																				<div style="font-weight: bold; font-size: 13px;">A new quest has been created</div>
 																				<div>{{ notification.quest.title }}</div>
-																				<div>{{ notification.quest.date|date:"d M Y H:i" }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
 																			</div>
 																			{% if notification.quest.preview %}
 																				<div>
@@ -326,11 +331,26 @@
 																			<div>
 																				<div style="font-weight: bold; font-size: 13px;">A new album has been created</div>
 																				<div>{{ notification.album.title }}</div>
-																				<div>{{ notification.album.date|date:"d M Y H:i" }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
 																			</div>
 																			{% if notification.album.preview %}
 																				<div>
 																					<div><img width="100" src="{{ notification.album.preview.url }}"></div>
+																				</div>
+																			{% endif %}
+																		</div>
+																	</a>
+																{% elif notification.contest %}
+																	<a class="fix_text fix_color" href="{% url 'contests:show' notification.contest.slug %}">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">{{ notification.text }}</div>
+																				<div>{{ notification.contest.title }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
+																			</div>
+																			{% if notification.contest.preview %}
+																				<div>
+																					<div><img width="100" src="{{ notification.contest.preview.url }}"></div>
 																				</div>
 																			{% endif %}
 																		</div>

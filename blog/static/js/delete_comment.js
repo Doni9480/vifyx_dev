@@ -1,4 +1,4 @@
-let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
 
 async function delete_forever(id) {
     url = window.location.protocol + '//' + window.location.host + '/api/v1/comments/delete/' + id + '/';

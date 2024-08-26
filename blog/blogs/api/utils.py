@@ -1,16 +1,16 @@
 from posts.models import Post, PostDayView, PostWeekView
 from posts.api.serializers import PostShowSerializer
-from posts.api.utils import get_views_and_comments_to_posts
+from posts.api.utils import get_more_to_posts
 from surveys.models import Survey, SurveyDayView, SurveyWeekView
 from surveys.api.serializers import SurveyShowSerializer
-from surveys.api.utils import get_views_and_comments_to_surveys
+from surveys.api.utils import get_more_to_surveys
 from custom_tests.models import Test, TestDayView, TestWeekView
-from custom_tests.api.utils import get_views_and_comments_to_tests
+from custom_tests.api.utils import get_more_to_tests
 from custom_tests.api.serializers import TestSerializer
 from quests.models import Quest, QuestDayView, QuestWeekView
 from quests.api.serializers import QuestSerializer
-from quests.api.utils import get_views_and_comments_to_quests
-from albums.api.utils import get_views_and_comments_to_albums
+from quests.api.utils import get_more_to_quests
+from albums.api.utils import get_more_to_albums
 from albums.api.serializers import AlbumShowSerializer
 from albums.models import Album, AlbumDayView, AlbumWeekView
 from users.models import User
@@ -18,22 +18,16 @@ from blogs.api.serializers import PopularUserSerializer
 
 
 def get_blog_list(filter_kwargs):
-    posts = get_views_and_comments_to_posts(
+    posts = get_more_to_posts(
         PostShowSerializer(Post.level_access_objects.filter(**filter_kwargs), many=True).data
     )
-    surveys = get_views_and_comments_to_surveys(
-        SurveyShowSerializer(Survey.level_access_objects.filter(**filter_kwargs), many=True).data
-    )
-    tests = get_views_and_comments_to_tests(
-        TestSerializer(Test.level_access_objects.filter(**filter_kwargs), many=True).data
-    )
-    quests = get_views_and_comments_to_quests(
+    quests = get_more_to_quests(
         QuestSerializer(Quest.level_access_objects.filter(**filter_kwargs), many=True).data
     )
-    albums = get_views_and_comments_to_albums(
-        AlbumShowSerializer(Album.level_access_objects.filter(**filter_kwargs, many=True)).data
+    albums = get_more_to_albums(
+        AlbumShowSerializer(Album.level_access_objects.filter(**filter_kwargs), many=True).data
     )
-    blog_list = posts + surveys + tests + quests
+    blog_list = posts + quests + albums
     return blog_list
 
 E_DICTS = [
@@ -43,7 +37,7 @@ E_DICTS = [
         'view_day': PostDayView, 
         'view_week': PostWeekView, 
         'serializer': PostShowSerializer,
-        'func': get_views_and_comments_to_posts
+        'func': get_more_to_posts
     }, 
     {
         'obj': 'survey', 
@@ -51,7 +45,7 @@ E_DICTS = [
         'view_day': SurveyDayView, 
         'view_week': SurveyWeekView, 
         'serializer': SurveyShowSerializer,
-        'func': get_views_and_comments_to_surveys
+        'func': get_more_to_surveys
     },
     {
         'obj': 'quest', 
@@ -59,7 +53,7 @@ E_DICTS = [
         'view_day': QuestDayView, 
         'view_week': QuestWeekView, 
         'serializer': QuestSerializer,
-        'func': get_views_and_comments_to_quests
+        'func': get_more_to_quests
     },
     {
         'obj': 'test', 
@@ -67,7 +61,7 @@ E_DICTS = [
         'view_day': TestDayView, 
         'view_week': TestWeekView, 
         'serializer': TestSerializer,
-        'func': get_views_and_comments_to_tests
+        'func': get_more_to_tests
     },
     {
         'obj': 'album',
@@ -75,7 +69,7 @@ E_DICTS = [
         'view_day': AlbumDayView,
         'view_week': AlbumWeekView,
         'serializer': AlbumShowSerializer,
-        'func': get_views_and_comments_to_albums
+        'func': get_more_to_albums
     }
 ]
 

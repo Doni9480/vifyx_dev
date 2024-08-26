@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from quests.models import Quest, QuestionQuest, QuestionQuestAnswer, Subcategory
+from quests.models import Quest, QuestionQuest, QuestionQuestAnswer, Subcategory, QuestTag
 from blog.validators import check_language
 from blogs.models import LevelAccess
 from notifications.models import Notification, NotificationBlog
@@ -134,6 +134,7 @@ class QuestSerializer(serializers.ModelSerializer):
     )
     preview = serializers.FileField()
     language = serializers.CharField(validators=[check_language])
+    tags = serializers.CharField(required=False, write_only=True)
 
     class Meta:
         model = Quest
@@ -149,6 +150,7 @@ class QuestSerializer(serializers.ModelSerializer):
             "category",
             "subcategory",
             "level_access",
+            "tags",
             "timer",
         )
         
@@ -167,6 +169,14 @@ class QuestSerializer(serializers.ModelSerializer):
                 raise Exception()
         except Exception:
             raise serializers.ValidationError({"subcategory": "Invalid subcategory."})
+        
+        tags = attrs.get("tags")
+        self.tags = []
+        if tags:
+            del attrs["tags"]
+            self.tags = tags.split(",")
+            # if '' in tags
+            self.tags = [value for value in self.tags if value]
         
         level_access = attrs.get('level_access')
         if level_access:
@@ -189,6 +199,16 @@ class QuestSerializer(serializers.ModelSerializer):
     
     def save(self):
         quest = super(QuestSerializer, self).save()
+        
+        # if this edit to quest
+        old_tags = QuestTag.objects.filter(quest=quest)
+        for old_tag in old_tags:
+            if not old_tag in self.tags:
+                old_tag.delete()
+
+        if self.tags:
+            for tag in self.tags:
+                QuestTag.objects.create(quest=quest, title=tag)
         
         if (
             not self.instance and not quest.level_access

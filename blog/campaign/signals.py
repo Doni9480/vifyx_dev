@@ -1,10 +1,8 @@
-from django.db import models
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
 from referrals.models import Referral
 from .models import UserTaskChecking
-from constance import config
 from users.models import User
 
 

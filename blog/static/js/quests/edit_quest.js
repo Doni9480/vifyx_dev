@@ -13,10 +13,17 @@ async function post_edit(e) {
     let content = document.querySelector('#id_content');
     let category = document.querySelector('#id_category');
     let subcategory = document.querySelector('#id_subcategory');
+    let tags = document.querySelectorAll('input[name="tags"]');
     let level_access = document.querySelector('#id_level_access');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"').value;
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
 
+    tags_list = [];
+    let is_empty_tags = true;
+    tags.forEach(tag => {
+        is_empty_tags = false;
+        tags_list.push(tag.value);
+    });
 
     let form_data = new FormData();
     if (preview.files[0]) {
@@ -30,6 +37,9 @@ async function post_edit(e) {
     }
     if (subcategory && ! isNaN(Number(subcategory.value))) {
         form_data.append('subcategory', subcategory.value);
+    }
+    if (! is_empty_tags) {
+        form_data.append('tags', tags_list);
     }
     if (level_access && !isNaN(Number(level_access.value))) {
         form_data.append('level_access', level_access.value);

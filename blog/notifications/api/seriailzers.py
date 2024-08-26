@@ -5,6 +5,7 @@ from surveys.models import Survey
 from quests.models import Quest
 from albums.models import Album
 from custom_tests.models import Test
+from contests.models import Contest
 from blogs.models import Donate
 
 
@@ -70,6 +71,19 @@ class NotificationAlbumSerializer(serializers.ModelSerializer):
             'slug',
             'date',
             'namespace'
+        )
+        
+
+class NotificationContestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contest
+        fields = (
+            'id',
+            'preview',
+            'title',
+            'slug',
+            'start_date',
+            'end_date',
         )
 
 

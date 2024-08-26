@@ -28,6 +28,10 @@ class Blog(models.Model):
     def __str__(self):
         return self.title
     
+    def save(self, *args, **kwargs):
+        self.slug = "_".join(self.slug.split())
+        return super(Blog, self).save()
+    
 
 class Donate(models.Model):
     message = models.CharField(verbose_name='Message', max_length=200)

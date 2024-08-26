@@ -3,7 +3,7 @@ from django.http import Http404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, parser_classes
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -19,12 +19,14 @@ from quests.models import (
     Category, 
     Subcategory,
     QuestDayView,
-    QuestWeekView
+    QuestWeekView,
+    QuestLike,
+    QuestTag
 )
 from users.utils import opening_access
 from blogs.models import Blog
 from blogs.utils import get_filter_kwargs, get_obj_set, get_category
-from quests.api.utils import get_views_and_comments_to_quests
+from quests.api.utils import get_more_to_quests
 from .serializers import (
     QuestSerializer,
     QuestVisibilitySerializer,
@@ -44,6 +46,7 @@ class QuestViewSet(viewsets.ModelViewSet):
     queryset = Quest.objects.all()
     serializer_class = QuestSerializer
     permission_classes = [IsAuthenticated]
+    permission_classes_by_action = dict.fromkeys(['list', 'retrieve', 'get_test', 'add_view'], [AllowAny])
     parser_classes = [MultiPartParser, FormParser]
     pagination_class = MyPagination
     
@@ -51,6 +54,14 @@ class QuestViewSet(viewsets.ModelViewSet):
         if self.action == 'get_subcategory':
             return Category.objects.all()
         return super().get_queryset()
+    
+    def get_permissions(self):
+        try:
+            # return permission_classes depending on `action`
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            # action is not set return default permission_classes
+            return [permission() for permission in self.permission_classes]
     
     def list(self, request, *args, **kwargs):
         request = set_language_to_user(request)
@@ -63,7 +74,7 @@ class QuestViewSet(viewsets.ModelViewSet):
             many=True,
         ).data
 
-        quests = get_views_and_comments_to_quests(quests)
+        quests = get_more_to_quests(quests)
         page = self.paginate_queryset(quests)
         return self.get_paginated_response(page) 
 
@@ -111,10 +122,14 @@ class QuestViewSet(viewsets.ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         response_data = {}
-        instance = self.get_object()
-        opening_access(instance, request.user, is_show=True)
-        serializer_data = QuestDetailSerializer(instance).data
-        if instance.is_not_subscribed:
+        quest = self.get_object()
+        opening_access(quest, request.user, is_show=True)
+        serializer_data = QuestDetailSerializer(quest).data
+        tags = QuestTag.objects.filter(quest_id=serializer_data['id'])
+        serializer_data['tags'] = []   
+        for tag in tags:
+            serializer_data['tags'].append(tag.title)
+        if quest.is_not_subscribed:
             serializer_data['is_not_subscribed'] = True
         response_data["data"] = serializer_data
         return Response(response_data)
@@ -219,12 +234,13 @@ class QuestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="views/add/<pk>")
     @transaction.atomic
     def add_view(self, request, pk=None):
-        quest = self.get_object()
-        opening_access(quest, request.user)
-        views = [QuestView, QuestDayView, QuestWeekView]
-        for view in views:
-            if not view.objects.filter(quest=quest).filter(user=request.user.id).first():
-                view.objects.create(quest=quest, user=request.user)
+        if request.user.is_authenticated:
+            quest = self.get_object()
+            opening_access(quest, request.user)
+            views = [QuestView, QuestDayView, QuestWeekView]
+            for view in views:
+                if not view.objects.filter(quest=quest).filter(user=request.user.id).first():
+                    view.objects.create(quest=quest, user=request.user)
         return Response({"success": "ok."})
     
     @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")
@@ -323,6 +339,27 @@ class QuestionQuestViewSet(viewsets.ModelViewSet):
             raise Http404()
         question_obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/send_like")
+    def send_like(self, request, pk=None):
+        instance = self.get_object()
+        opening_access(instance, request.user)
+        if instance.user == request.user:
+            raise Http404()
+        
+        data = {}
+        
+        quest_filter = QuestLike.objects.filter(quest=instance, user=request.user)
+        if not quest_filter:
+            data['add'] = True
+            QuestLike.objects.create(quest=instance, user=request.user)
+        else:
+            data['add'] = False
+            quest_filter.first().delete()
+        
+        data["success"] = "ok."
+        
+        return Response(data)
 
 
 # from rest_framework.views import APIView

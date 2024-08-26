@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from albums.models import Album, AlbumPhoto, Subcategory, DraftAlbum, DraftAlbumPhoto
+from albums.models import Album, AlbumPhoto, Subcategory, DraftAlbum, DraftAlbumPhoto, AlbumTag, DraftAlbumTag
 from notifications.models import Notification, NotificationBlog
 from blog.validators import check_language
 from blogs.models import LevelAccess, BlogFollow
@@ -62,6 +62,7 @@ class AlbumShowSerializer(serializers.ModelSerializer):
         
 
 class AlbumSerializer(serializers.ModelSerializer):
+    tags = serializers.CharField(required=False, write_only=True)
     photos_set = AlbumPhotoSerializer(source="photos", many=True, required=True)
     deleted_photos_set = AlbumDeletedPhotoSerializer(source="deleted_photos", many=True, required=False)
     language = serializers.CharField(required=False, validators=[check_language])
@@ -75,6 +76,7 @@ class AlbumSerializer(serializers.ModelSerializer):
             "photos_set",
             "deleted_photos_set",
             "language",
+            "tags",
             "category",
             "subcategory",
             "blog",
@@ -97,6 +99,15 @@ class AlbumSerializer(serializers.ModelSerializer):
                 raise Exception()
         except Exception:
             raise serializers.ValidationError({"subcategory": "Invalid subcategory."})
+        
+        tags = attrs.get("tags")
+
+        self.tags = []
+        if tags:
+            del attrs["tags"]
+            self.tags = tags.split(",")
+            # if '' in tags
+            self.tags = [value for value in self.tags if value]
         
         if attrs.get("blog") and self._instance:
             del attrs["blog"]
@@ -154,6 +165,16 @@ class AlbumSerializer(serializers.ModelSerializer):
     def save(self):
         album = super(AlbumSerializer, self).save()
         
+        # if this edit to album
+        old_tags = AlbumTag.objects.filter(album=album)
+        for old_tag in old_tags:
+            if not old_tag in self.tags:
+                old_tag.delete()
+
+        if self.tags:
+            for tag in self.tags:
+                AlbumTag.objects.create(album=album, title=tag)
+        
         if (
             not self._instance and not album.level_access
         ):  # if this not edit to survey and album is free
@@ -182,6 +203,7 @@ class DraftSerializer(serializers.ModelSerializer):
     photos_set = DraftAlbumPhotoSerializer(source="photos", many=True, required=False)
     deleted_photos_set = AlbumDeletedPhotoSerializer(source="deleted_photos", many=True, required=False)
     language = serializers.CharField(required=False, validators=[check_language])
+    tags = serializers.CharField(required=False, write_only=True)
     
     class Meta:
         model = DraftAlbum
@@ -195,6 +217,7 @@ class DraftSerializer(serializers.ModelSerializer):
             "category",
             "subcategory",
             "blog",
+            "tags",
             "level_access",
         )
         
@@ -202,6 +225,16 @@ class DraftSerializer(serializers.ModelSerializer):
         self.user = kwargs.pop("user", 1)
         self._instance = kwargs.get("instance", None)
         super().__init__(*args, **kwargs)
+        
+    def validate(self, attrs):
+        tags = attrs.get("tags")
+        self.tags = []
+        if tags:
+            del attrs["tags"]
+            self.tags = tags.split(",")
+            # if '' in tags
+            self.tags = [value for value in self.tags if value]
+        return attrs
         
     def create(self, validated_data):
         photos_data = validated_data.get("photos", [])
@@ -241,6 +274,18 @@ class DraftSerializer(serializers.ModelSerializer):
             DraftAlbumPhoto.objects.create(**photo_data)
             
         return draft_album
+    
+    def save(self, **kwargs):
+        draft = super(DraftSerializer, self).save()
+        # if this edit to draft
+        old_tags = DraftAlbumTag.objects.filter(draft=draft)
+        for old_tag in old_tags:
+            if not old_tag in self.tags:
+                old_tag.delete()
+
+        for tag in self.tags:
+            DraftAlbumTag.objects.create(draft=draft, title=tag)
+        return draft
         
 
 class AlbumIndexSerializer(serializers.ModelSerializer):

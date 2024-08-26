@@ -17,9 +17,17 @@ async function send_album(e) {
     var level_access = document.querySelector('#id_level_access');
     var category = document.querySelector('#id_category');
     var subcategory = document.querySelector('#id_subcategory');
+    var tags = document.querySelectorAll('input[name="tags"]');
     var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     var g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
     var blog = document.querySelector('input[name="blog"]');
+
+    tags_list = [];
+    let is_empty_tags = true;
+    tags.forEach(tag => {
+        is_empty_tags = false;
+        tags_list.push(tag.value);
+    });
 
     var form_data = new FormData();
     if (preview.files[0]) {
@@ -34,6 +42,9 @@ async function send_album(e) {
         if (photo.files[0]) {
             form_data.append("photos_set", photo.files[0]);
         }
+    }
+    if (! is_empty_tags) {
+        form_data.append('tags', tags_list);
     }
     form_data.append('blog', blog.value);
     form_data.append('language', language.value);
@@ -124,6 +135,7 @@ async function send_draft_album() {
     let title = document.querySelector('input[name="title"]');
     let description = document.querySelector('#id_description');
     let photos = document.querySelectorAll('input[name="photo"]');
+    let tags = document.querySelectorAll('input[name="tags"]');
     let deleted_photos = document.querySelectorAll('input[name="deleted_photo"]');
     let level_access = document.querySelector('#id_level_access');
     let language = document.querySelector('#id_language');
@@ -132,6 +144,13 @@ async function send_draft_album() {
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
     let blog = document.querySelector('input[name="blog"]');  
     let g_recaptcha_response = document.querySelector('input[name="g_recaptcha_response"]');
+
+    tags_list = [];
+    let is_empty_tags = true;
+    tags.forEach(tag => {
+        is_empty_tags = false;
+        tags_list.push(tag.value);
+    });
 
     let form_data = new FormData();
     if (preview.files[0]) {
@@ -158,6 +177,9 @@ async function send_draft_album() {
     }
     if (! is_empty_deleted_photos) {
         form_data.append('deleted_photos_set', JSON.stringify(deleted_photos_list));
+    }
+    if (! is_empty_tags) {
+        form_data.append('tags', tags_list);
     }
     if (language.value == 'russian' || language.value == 'english') {
         form_data.append('language', language.value);   

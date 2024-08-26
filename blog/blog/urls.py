@@ -53,6 +53,7 @@ urlpatterns = [
     path('quests/', include('quests.urls')),
     path('companies/', include('campaign.urls')),
     path('periodic_bonuses/', include('periodic_bonuses.urls')),
+    path('contests/', include(('contests.urls', 'contests'), namespace="contests")),
 
     path('summernote/', include('django_summernote.urls')),
     path('api/v1/blogs/', include('blogs.api.urls')),
@@ -68,6 +69,7 @@ urlpatterns = [
     path('api/v1/companies/', include('campaign.api.urls')),
     path('api/v1/periodic_bonuses/', include('periodic_bonuses.api.urls')),
     path('api/v1/albums/', include('albums.api.urls')),
+    path('api/v1/contests/', include('contests.api.urls')),
     
     # path('language/<str:language>/', language, name="language"),
 
@@ -81,6 +83,6 @@ try:
 except Exception as e:
     print(f"Scheduler error: {e}")
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# if settings.DEBUG:
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

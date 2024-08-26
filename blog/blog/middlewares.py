@@ -57,11 +57,10 @@ class NotificationsMiddleware:
         self._get_response = get_response
 
     def __call__(self, request):
-        if request.user.is_authenticated:            
+        if request.user.is_authenticated:
             request.notifications = Notification.objects.filter(
                 user=request.user, is_read=False,
             ).order_by('-date')[:5]
-
         response = self._get_response(request)
         return response
 

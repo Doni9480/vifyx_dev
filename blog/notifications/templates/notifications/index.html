@@ -54,12 +54,14 @@
                                             </div>
                                             <div class="entry-meta">
                                                 <ul>
-                                                    <li><i class="uil uil-schedule"></i> {{ notification.post.date|date:"d M Y H:i" }}</li>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.date|date:"d M Y H:i" }}</li>
                                                     <li><a href="{% url 'users:profile' notification.post.user.username %}"><i class="uil uil-user"></i> {{ notification.post.user.username }}</a></li>
                                                 </ul>
                                             </div>
                                             <div class="entry-content">
-                                                <p>{{ notification.post.description }}</p>
+                                                {% if notification.post.content %}
+                                                    <p>{{ notification.post.content|striptags|truncatechars:100 }}</p>
+                                                {% endif %}
                                                 <a href="{% url 'posts:show' notification.post.slug %}" class="more-link">Read More</a>
                                             </div>
                                         </div>
@@ -77,12 +79,14 @@
                                             </div>
                                             <div class="entry-meta">
                                                 <ul>
-                                                    <li><i class="uil uil-schedule"></i> {{ notification.survey.date|date:"d M Y H:i" }}</li>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.date|date:"d M Y H:i" }}</li>
                                                     <li><a href="{% url 'users:profile' notification.survey.user.username %}"><i class="uil uil-user"></i> {{ notification.survey.user.username }}</a></li>
                                                 </ul>
                                             </div>
                                             <div class="entry-content">
-                                                <p>{{ notification.survey.description }}</p>
+                                                {% if notification.survey.description %}
+                                                    <p>{{ notification.survey.description }}</p>
+                                                {% endif %}
                                                 <a href="{% url 'surveys:show' notification.survey.slug %}" class="more-link">Read More</a>
                                             </div>
                                         </div>
@@ -98,7 +102,7 @@
                                             </div>
                                             <div class="entry-meta">
                                                 <ul>
-                                                    <li><i class="uil uil-schedule"></i> {{ notification.donate.date|date:"d M Y H:i" }}</li>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.date|date:"d M Y H:i" }}</li>
                                                     <li><a href="{% url 'users:profile' notification.donate.user.username %}"><i class="uil uil-user"></i> {{ notification.donate.user.username }}</a></li>
                                                 </ul>
                                             </div>
@@ -121,12 +125,14 @@
                                             </div>
                                             <div class="entry-meta">
                                                 <ul>
-                                                    <li><i class="uil uil-schedule"></i> {{ notification.test.date|date:"d M Y H:i" }}</li>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.date|date:"d M Y H:i" }}</li>
                                                     <li><a href="{% url 'users:profile' notification.test.user.username %}"><i class="uil uil-user"></i> {{ notification.test.user.username }}</a></li>
                                                 </ul>
                                             </div>
                                             <div class="entry-content">
-                                                <p>{{ notification.test.description }}</p>
+                                                {% if notification.test.description %}
+                                                    <p>{{ notification.test.description }}</p>
+                                                {% endif %}
                                                 <a href="{% url 'detail_test' notification.test.slug %}" class="more-link">Read More</a>
                                             </div>
                                         </div>
@@ -144,12 +150,14 @@
                                             </div>
                                             <div class="entry-meta">
                                                 <ul>
-                                                    <li><i class="uil uil-schedule"></i> {{ notification.quest.date|date:"d M Y H:i" }}</li>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.date|date:"d M Y H:i" }}</li>
                                                     <li><a href="{% url 'users:profile' notification.quest.user.username %}"><i class="uil uil-user"></i> {{ notification.quest.user.username }}</a></li>
                                                 </ul>
                                             </div>
                                             <div class="entry-content">
-                                                <p>{{ notification.quest.description }}</p>
+                                                {% if notification.quest.description %}
+                                                    <p>{{ notification.quest.description }}</p>
+                                                {% endif %}
                                                 <a href="{% url 'detail_quest' notification.quest.slug %}" class="more-link">Read More</a>
                                             </div>
                                         </div>
@@ -167,13 +175,39 @@
                                             </div>
                                             <div class="entry-meta">
                                                 <ul>
-                                                    <li><i class="uil uil-schedule"></i> {{ notification.album.date|date:"d M Y H:i" }}</li>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.date|date:"d M Y H:i" }}</li>
                                                     <li><a href="{% url 'users:profile' notification.album.user.username %}"><i class="uil uil-user"></i> {{ notification.album.user.username }}</a></li>
                                                 </ul>
                                             </div>
                                             <div class="entry-content">
-                                                <p>{{ notification.album.description }}</p>
+                                                {% if notification.album.description %}
+                                                    <p>{{ notification.album.description }}</p>
+                                                {% endif %}
                                                 <a href="{% url 'albums:show' notification.album.slug %}" class="more-link">Read More</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% elif notification.contest %}
+                                    <div class="entry col-12" id="element">
+                                        <div class="grid-inner">
+                                            <div class="entry-image">
+                                                {% if notification.contest.preview %}
+                                                <a href="{{ notification.contest.preview.url }}" data-lightbox="image"><img src="{{ notification.contest.preview.url }}" alt="Standard Post with Image" width="960" style="object-fit: cover; max-width: 100%; height: 445px;"></a>
+                                            {% endif %}
+                                            </div>
+                                            <div class="entry-title">
+                                                <h2><a href="{% url 'contests:show' notification.contest.slug %}">{{ notification.contest.title }}</a></h2>
+                                            </div>
+                                            <div class="entry-meta">
+                                                <ul>
+                                                    <li><i class="uil uil-schedule"></i> {{ notification.date|date:"d M Y H:i" }}</li>
+                                                </ul>
+                                            </div>
+                                            <div class="entry-content">
+                                                {% if notification.contest.description %}
+                                                    <p>{{ notification.contest.description }}</p>
+                                                {% endif %}
+                                                <a href="{% url 'contests:show' notification.contest.slug %}" class="more-link">Read More</a>
                                             </div>
                                         </div>
                                     </div>

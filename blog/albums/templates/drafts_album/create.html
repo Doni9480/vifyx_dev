@@ -169,6 +169,31 @@
                 </div>
               {% endif %}
 
+              <div class="col-12 form-group">
+                <label>Tags:</label>
+
+                <div id="selected_tags">
+                  {% if tags %}
+                    {% for tag in tags %}
+                      <div class="tag" id="div_{{ tag.replaced }}" style="margin-bottom: 5px;">
+                        <span class="tag-text" id="tags.value">{{ tag }}</span>
+                        <img class="img-delete" onclick="delete_tag('{{ tag }}')" src="{% static 'images/cross-svgrepo-com.svg' %}" width="10" height="10" style="margin-top: -1px; cursor: pointer;">
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+                <div class="d-flex" id="block_tags">
+                  {% if tags %}
+                    {% for tag in tags %}
+                      <input name="tags" type="hidden" id="input_{{ tag.replaced }}" value="{{ tag }}">
+                    {% endfor %}
+                  {% endif %}
+                  <input type="text" id="tags" class="form-control" />
+                  <button type="button" class="btn btn-primary btn_input">Add</button>
+                </div>
+              </div>
+
+
               {% if level_follows %}
                 <div class="col-12 form-group">
                   <label for="id_level_access">This is private blog. Select the access level:</label>
@@ -205,6 +230,7 @@
   <script src="{% static 'js/functions.js' %}"></script>
   <script src="{% static 'js/send_album.js' %}"></script>
   <script src="{% static 'js/get_subcategories.js' %}"></script>
+  <script src="{% static 'js/tags.js' %}"></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script>
     function readURL(input) {

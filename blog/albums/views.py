@@ -4,12 +4,24 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from blogs.utils import get_filter_kwargs, get_category, get_obj_set
 from blogs.models import Blog, LevelAccess
-from albums.utils import get_views_and_comments_to_albums
-from albums.models import Album, Category, AlbumView, Subcategory, AlbumPhoto, DraftAlbum, DraftAlbumPhoto
+from albums.utils import get_more_to_albums
+from albums.models import (
+    Album, 
+    Category, 
+    AlbumView, 
+    Subcategory, 
+    AlbumPhoto, 
+    DraftAlbum, 
+    DraftAlbumPhoto, 
+    AlbumLike, 
+    AlbumTag,
+    DraftAlbumTag
+)
 from albums.forms import AlbumForm, DraftAlbumForm
 from users.utils import opening_access
 from blogs.models import BlogFollow
 from comments.models import Answer, Comment
+from contests.models import AlbumElement
 from operator import attrgetter
 
 
@@ -27,7 +39,7 @@ def index(request):
 
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
-    page_obj = get_views_and_comments_to_albums(paginator.get_page(page_number))
+    page_obj = get_more_to_albums(paginator.get_page(page_number))
     return render(request, 'albums/index.html', {
         'page_obj': page_obj, 
         'categories': categories,
@@ -67,8 +79,14 @@ def show(request, slug):
     count_comments = comments.count() + answers.count()    
     
     count_views = AlbumView.objects.filter(album=album).count()
+    count_likes = AlbumLike.objects.filter(album=album).count()
+    
+    tags = AlbumTag.objects.filter(album=album)
     
     photos = AlbumPhoto.objects.filter(album=album)
+    
+    album_element = AlbumElement.objects.filter(album=album).first()
+    contest = album_element.contest if album_element else None
     
     data = {
         'album': album,
@@ -79,6 +97,10 @@ def show(request, slug):
         'photos': photos,
         'count_comments': count_comments,
         'count_views': count_views,
+        'count_likes': count_likes,
+        'tags': tags,
+        'contest': contest,
+        'is_like': bool(AlbumLike.objects.filter(album=album, user=request.user.id)),
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY
     }
     
@@ -94,6 +116,10 @@ def edit(request, slug):
     subcategories = Subcategory.objects.filter(category=instance.category)
     photos = AlbumPhoto.objects.filter(album=instance)
     
+    tags = AlbumTag.objects.filter(album=instance)
+    for tag in tags:
+        tag.replaced = tag.title.replace(' ', '_')
+    
     data = {
         "level_follows": level_follows,
         "form": form,
@@ -101,6 +127,7 @@ def edit(request, slug):
         "categories": categories,
         "subcategories": subcategories,
         "photos": photos,
+        "tags": tags,
         "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY
     }
     
@@ -112,6 +139,9 @@ def draft_album_create(request, slug):
     draft = get_object_or_404(DraftAlbum, user=request.user, blog=blog)
     
     form = DraftAlbumForm(instance=draft)
+    tags = DraftAlbumTag.objects.filter(draft=draft)
+    for tag in tags:
+        tag.replaced = tag.title.replace(' ', '_')
         
     level_follows = LevelAccess.objects.filter(blog=blog)
     categories = Category.objects.all()
@@ -125,6 +155,7 @@ def draft_album_create(request, slug):
         'categories': categories,
         'subcategories': subcategories,
         'photos': photos,
+        'tags': tags,
         'level_follows': level_follows,
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
     }

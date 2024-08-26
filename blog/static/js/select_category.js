@@ -2,7 +2,7 @@ var select_category = document.querySelector('#select_category');
 var select_subcategories = document.querySelectorAll('#select_subcategory');
 var reset_category = document.querySelector('#reset_category');
 var namespace = document.querySelector('input[name="category_namespace"]')?.value;
-var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
 
 if (select_category) {
     select_category.addEventListener('change', send_select_category);
@@ -44,8 +44,6 @@ async function send_select_subcategory(e) {
     if (! deleted_select_subcategory) {
         deleted_select_subcategory = 0;
     }
-
-    console.log(deleted_select_subcategory);
 
     if (e.target && ! isNaN(Number(e.target.value))) {
         url = window.location.protocol + '//' + window.location.host + `/api/v1/users/select_subcategory_${namespace}/` + e.target.value + '/' + deleted_select_subcategory + '/';

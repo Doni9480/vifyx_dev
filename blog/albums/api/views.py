@@ -13,7 +13,9 @@ from albums.models import (
     AlbumView,
     AlbumWeekView,
     AlbumPhoto,
-    DraftAlbum
+    DraftAlbum,
+    AlbumLike,
+    AlbumTag
 )
 from albums.api.serializers import (
     AlbumNoneSerializer,
@@ -24,7 +26,7 @@ from albums.api.serializers import (
     AlbumPhotoShowSerializer,
     DraftSerializer
 )
-from albums.api.utils import get_views_and_comments_to_albums
+from albums.api.utils import get_more_to_albums
 from blogs.models import Blog
 from blogs.utils import get_filter_kwargs, get_obj_set, get_category
 from users.utils import opening_access
@@ -34,7 +36,7 @@ from operator import attrgetter
 
 class AlbumViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['list', 'retrieve'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['list', 'retrieve', 'add_view'], [AllowAny])
     queryset = Album.objects.all()
     pagination_class = MyPagination
     
@@ -84,16 +86,20 @@ class AlbumViewSet(viewsets.ModelViewSet):
             obj_set,
             many=True,
         ).data
-        albums = get_views_and_comments_to_albums(albums)
+        albums = get_more_to_albums(albums)
         page = self.paginate_queryset(albums)
         return self.get_paginated_response(page)
     
     def retrieve(self, request, pk=None, *args, **kwargs):
-        instance = self.get_object()
-        opening_access(instance, request.user, is_show=True)
-        serializer_data = self.get_serializer(instance).data
-        serializer_data['photos_set'] = AlbumPhotoShowSerializer(AlbumPhoto.objects.filter(album=instance), many=True).data
-        if instance.is_not_subscribed:
+        album = self.get_object()
+        opening_access(album, request.user, is_show=True)
+        serializer_data = self.get_serializer(album).data
+        serializer_data['photos_set'] = AlbumPhotoShowSerializer(AlbumPhoto.objects.filter(album=album), many=True).data
+        tags = AlbumTag.objects.filter(album_id=serializer_data['id'])
+        serializer_data['tags'] = []   
+        for tag in tags:
+            serializer_data['tags'].append(tag.title)
+        if album.is_not_subscribed:
             serializer_data['is_not_subscribed'] = True            
         return Response({"data": serializer_data})
     
@@ -124,7 +130,6 @@ class AlbumViewSet(viewsets.ModelViewSet):
                 data = serializer.errors
         else:
             data['ban'] = 'You can\'t publish albums.'
-        print(data)
         return Response(data)
     
     @transaction.atomic
@@ -135,7 +140,6 @@ class AlbumViewSet(viewsets.ModelViewSet):
         
         # language a not edit
         _data = set_files_data(set_deleted_photos(get_request_data(request.data)), request.FILES)
-        print(_data)
         if _data.get('language', False):
             del _data['language']
                                 
@@ -149,17 +153,17 @@ class AlbumViewSet(viewsets.ModelViewSet):
         else:
             data = serializer.errors
             
-        print(data)
         return Response(data)
     
     @action(detail=True, methods=["post"], url_path="<pk>/view/add")
     def add_view(self, request, pk=None):
-        album = self.get_object()
-        opening_access(album, request.user)
-        views = [AlbumView, AlbumWeekView, AlbumDayView]
-        for view in views:
-            if not view.objects.filter(album=album).filter(user=request.user.id).first():
-                view.objects.create(album=album, user=request.user)
+        if request.user.is_authenticated:
+            album = self.get_object()
+            opening_access(album, request.user)
+            views = [AlbumView, AlbumWeekView, AlbumDayView]
+            for view in views:
+                if not view.objects.filter(album=album).filter(user=request.user.id).first():
+                    view.objects.create(album=album, user=request.user)
         return Response({"success": "ok."})
     
     @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")
@@ -229,6 +233,27 @@ class AlbumViewSet(viewsets.ModelViewSet):
             data["success"] = "Successful deleted a survey."
 
             return Response(data)
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/send_like")
+    def send_like(self, request, pk=None):
+        instance = self.get_object()
+        opening_access(instance, request.user)
+        if instance.user == request.user:
+            raise Http404()
+        
+        data = {}
+        
+        album_filter = AlbumLike.objects.filter(album=instance, user=request.user)
+        if not album_filter:
+            data['add'] = True
+            AlbumLike.objects.create(album=instance, user=request.user)
+        else:
+            data['add'] = False
+            album_filter.first().delete()
+        
+        data["success"] = "ok."
+        
+        return Response(data)
         
 
 class DraftAlbumViewSet(viewsets.ModelViewSet):
@@ -261,5 +286,4 @@ class DraftAlbumViewSet(viewsets.ModelViewSet):
         if not data:
             data["success"] = "ok."
 
-        print(data)
         return Response(data)

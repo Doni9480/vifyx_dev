@@ -12,7 +12,7 @@ from posts.models import (
     PostDayView,
     PostWeekView
 )
-from posts.utils import get_views_and_comments_to_posts
+from posts.utils import get_more_to_posts
 from surveys.models import (
     Survey, 
     Category as Category_survey, 
@@ -20,7 +20,7 @@ from surveys.models import (
     SurveyDayView,
     SurveyWeekView
 )
-from surveys.utils import get_views_and_comments_to_surveys
+from surveys.utils import get_more_to_surveys
 from custom_tests.models import (
     Test, 
     Category as Category_test, 
@@ -28,7 +28,7 @@ from custom_tests.models import (
     TestWeekView,
     TestDayView
 )
-from custom_tests.utils import get_views_and_comments_to_tests
+from custom_tests.utils import get_more_to_tests
 from quests.models import (
     Quest, 
     Category as Category_quest, 
@@ -48,8 +48,8 @@ from users.models import Subcategory_survey as Usersubcategory_survey
 from users.models import Subcategory_test as Usersubcategory_test
 from users.models import Subcategory_quest as Usersubcategory_quest
 from users.models import Subcategory_album as Usersubcategory_album
-from albums.utils import get_views_and_comments_to_albums
-from quests.utils import get_views_and_comments_to_quests
+from albums.utils import get_more_to_albums
+from quests.utils import get_more_to_quests
 from itertools import chain
 from operator import attrgetter
 import re
@@ -110,12 +110,10 @@ def get_filter_kwargs(request):
     return filter_kwargs
 
 def get_blog_list(filter_kwargs):
-    posts = get_views_and_comments_to_posts(Post.level_access_objects.filter(**filter_kwargs))
-    surveys = get_views_and_comments_to_surveys(Survey.level_access_objects.filter(**filter_kwargs))
-    tests = get_views_and_comments_to_tests(Test.level_access_objects.filter(**filter_kwargs))
-    quests = get_views_and_comments_to_quests(Quest.level_access_objects.filter(**filter_kwargs))
-    albums = get_views_and_comments_to_albums(Album.level_access_objects.filter(**filter_kwargs))
-    blog_list = sorted(chain(posts, surveys, tests, quests, albums), key=attrgetter("date"), reverse=True)
+    posts = get_more_to_posts(Post.level_access_objects.filter(**filter_kwargs))
+    quests = get_more_to_quests(Quest.level_access_objects.filter(**filter_kwargs))
+    albums = get_more_to_albums(Album.level_access_objects.filter(**filter_kwargs))
+    blog_list = sorted(chain(posts, quests, albums), key=attrgetter("date"), reverse=True)
     return blog_list
 
 def get_obj_set(obj_set, user):
@@ -171,35 +169,35 @@ E_DICTS = [
             'model': Post, 
             'view_day': PostDayView, 
             'view_week': PostWeekView,
-            'func': get_views_and_comments_to_posts
+            'func': get_more_to_posts
         }, 
         {
             'obj': 'survey', 
             'model': Survey, 
             'view_day': SurveyDayView, 
             'view_week': SurveyWeekView,
-            'func': get_views_and_comments_to_surveys
+            'func': get_more_to_surveys
         },
         {
             'obj': 'quest', 
             'model': Quest, 
             'view_day': QuestDayView, 
             'view_week': QuestWeekView,
-            'func': get_views_and_comments_to_quests
+            'func': get_more_to_quests
         },
         {
             'obj': 'test', 
             'model': Test, 
             'view_day': TestDayView, 
             'view_week': TestWeekView,
-            'func': get_views_and_comments_to_tests
+            'func': get_more_to_tests
         },
         {
             'obj': 'album',
             'model': Album,
             'view_day': AlbumDayView,
             'view_week': AlbumWeekView,
-            'func': get_views_and_comments_to_albums
+            'func': get_more_to_albums
         }
     ]
 

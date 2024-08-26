@@ -13,7 +13,8 @@ from custom_tests.models import (
     Category, 
     Subcategory,
     TestDayView,
-    TestWeekView
+    TestWeekView,
+    TestLike,
 )
 from users.utils import opening_access
 from .serializers import (
@@ -33,7 +34,7 @@ from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from blog.utils import set_language_to_user, MyPagination
 from blogs.utils import get_filter_kwargs, get_obj_set, get_category
-from custom_tests.api.utils import get_views_and_comments_to_tests
+from custom_tests.api.utils import get_more_to_tests
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -43,7 +44,7 @@ from operator import attrgetter
 class TestViewSet(viewsets.ModelViewSet):
     queryset = Test.objects_show.all()
     permission_classes = [IsAuthenticated]
-    permission_classes_by_action = dict.fromkeys(['list', 'retrieve'], [AllowAny])
+    permission_classes_by_action = dict.fromkeys(['list', 'retrieve', 'add_view'], [AllowAny])
     pagination_class = MyPagination
     # parser_classes = [MultiPartParser]
 
@@ -145,7 +146,7 @@ class TestViewSet(viewsets.ModelViewSet):
             obj_set,
             many=True,
         ).data
-        tests = get_views_and_comments_to_tests(tests)
+        tests = get_more_to_tests(tests)
         page = self.paginate_queryset(tests)
         return self.get_paginated_response(page)
     
@@ -290,12 +291,13 @@ class TestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="views/add/<pk>")
     @transaction.atomic
     def add_view(self, request, pk=None):
-        test = self.get_object()
-        opening_access(test, request.user)
-        views = [TestView, TestWeekView, TestDayView]
-        for view in views:
-            if not view.objects.filter(test=test).filter(user=request.user.id).first():
-                view.objects.create(test=test, user=request.user)
+        if request.user.is_authenticated:
+            test = self.get_object()
+            opening_access(test, request.user)
+            views = [TestView, TestWeekView, TestDayView]
+            for view in views:
+                if not view.objects.filter(test=test).filter(user=request.user.id).first():
+                    view.objects.create(test=test, user=request.user)
         return Response({"success": "ok."})
     
     @action(detail=True, methods=["post"], url_path="<pk>/get_subcategory")
@@ -306,3 +308,24 @@ class TestViewSet(viewsets.ModelViewSet):
             subcategories_set, many=True
         ).data
         return Response({"subcategories": subcategories})
+    
+    @action(detail=True, methods=["post"], url_path="<pk>/send_like")
+    def send_like(self, request, pk=None):
+        instance = self.get_object()
+        opening_access(instance, request.user)
+        if instance.user == request.user:
+            raise Http404()
+        
+        data = {}
+        
+        test_filter = TestLike.objects.filter(test=instance, user=request.user)
+        if not test_filter:
+            data['add'] = True
+            TestLike.objects.create(test=instance, user=request.user)
+        else:
+            data['add'] = False
+            test_filter.first().delete()
+        
+        data["success"] = "ok."
+        
+        return Response(data)

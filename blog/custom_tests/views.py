@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import Http404
 from django.contrib.auth.decorators import login_required
 from comments.models import Comment, Answer
-from .models import Test, Question, QuestionAnswer, TestView, Category, Subcategory
+from .models import Test, Question, QuestionAnswer, TestView, Category, Subcategory, TestLike
+from custom_tests.utils import get_more_to_tests
 from django.core.paginator import Paginator
 from django.conf import settings
 from posts.models import Post
@@ -70,16 +71,7 @@ def list_tests(request):
     
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    for test_obj in page_obj.object_list:
-        count_comments = Comment.objects.filter(test=test_obj).count()
-        count_answers = Answer.objects.filter(test=test_obj).count()
-        count_comments = count_comments + count_answers
-        test_obj.count_comments = count_comments
-        
-        count_views = TestView.objects.filter(test=test_obj).count()
-        test_obj.count_views = count_views
+    page_obj = get_more_to_tests(paginator.get_page(page_number))
         
     categories = Category.objects.all()
         
@@ -106,6 +98,7 @@ def detail_test(request, slug):
     comment_for_test_answers = Answer.objects.filter(test=test_obj)
     count_comments = comment_for_test.count() + comment_for_test_answers.count()
     count_views = TestView.objects.filter(test=test_obj).count()
+    count_likes = TestLike.objects.filter(test=test_obj).count()
 
     data = {
         "test": test_obj,
@@ -118,6 +111,8 @@ def detail_test(request, slug):
         'count_views': count_views,
         # 'options': options,
         # 'vote': vote,
+        'count_likes': count_likes,
+        'is_like': bool(TestLike.objects.filter(test=test_obj, user=request.user.id)),
         "recaptcha_site_key": settings.GOOGLE_RECAPTCHA_PUBLIC_KEY,
     }
 

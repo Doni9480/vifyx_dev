@@ -54,6 +54,17 @@
                                         <li class="me-0"><a href="{% url 'users:profile' album.user.username  %}"><i class="uil uil-user"></i> {{ album.user.username }}</a></li>
                                         <li class="me-0"><i class="uil uil-comments-alt"></i> {{ count_comments }} Comments</li>
                                         <li class="me-0"><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"> <span style="margin-left: 5.5px;">{{ count_views }}</span></li>
+                                        
+                                        {% if request.user != album.user %}
+                                            {% if is_like %}
+                                                <li class="me-0"><span id="count_likes" style="cursor: pointer;"><img width="16" height="16" src="{% static 'images/heart-like.svg' %}"> <span style="margin-left: 5.5px;">{{ count_likes }}</span></span></li>
+                                            {% else %}
+                                                <li class="me-0"><span id="count_likes" style="cursor: pointer;"><img width="16" height="16" style="opacity: 0.5;" src="{% static 'images/heart-like.svg' %}"> <span style="margin-left: 5.5px;">{{ count_likes }}</span></span></li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="me-0"><span><img width="16" height="16" style="opacity: 0.5;" src="{% static 'images/heart-like.svg' %}"> <span style="margin-left: 5.5px;">{{ count_likes }}</span></span></li>
+                                        {% endif %}
+
                                         {% if follow_exists and request.user.is_authenticated %}
                                             {% if follow %}
                                                 <li class="me-0"><button type="button" class="btn btn-dark" id="follow">Follow</button></li>
@@ -75,6 +86,12 @@
 
                         <input type="hidden" name="album_id" value="{{ album.id }}">
 
+                        {% if contest %}
+                            <div>
+                                <a href="{% url 'contests:show' contest.slug %}">This album is participating in the contest.</a>
+                            </div>
+                        {% endif %}
+
                         {% if album.preview %}
                             <!-- Entry Image
                             ============================================= -->
@@ -94,6 +111,14 @@
                         {% endfor %}
 
                         <div class="clear"></div>
+
+                        <!-- Tag Cloud
+                        ============================================= -->
+                        <div class="tagcloud mb-5 mt-2">
+                            {% for tag in tags %}
+                                <a style="cursor: pointer;">{{ tag.title }}</a>
+                            {% endfor %}
+                        </div><!-- .tagcloud end -->
 
                         {% if request.user == album.user %}
                             <div class="d-flex justify-content-between align-items-start">
@@ -339,6 +364,7 @@
                                         <li class="me-0"><a href="{% url 'users:profile' album.user.username %}"><i class="uil uil-user"></i> <span id="username">{{ album.user.username }}</span></a></li>
                                         <li class="me-0"><i class="uil uil-comments-alt"></i> {{ count_comments }} Comments</li>
                                         <li class="me-0"><img width="16" height="16" style="margin-top: -2px; opacity: 0.5;" src="{% static 'images/icon_eye.png' %}"> <span style="margin-left: 5.5px;">{{ count_views }}</span></li>
+                                        <li class="me-0"><span><img width="16" height="16" style="opacity: 0.5;" src="{% static 'images/heart-like.svg' %}"> <span style="margin-left: 5.5px;">{{ count_likes }}</span></span></li>
                                         {% if follow_exists and request.user.is_authenticated %}
                                             {% if follow %}
                                                 <li class="me-0"><button type="button" class="btn btn-dark" id="follow">Follow</button></li>
@@ -464,11 +490,11 @@
     <script src="{% static 'js/delete_question.js' %}"></script>
     <script>
         async function add_view_to_album() {
-            let album = document.querySelector('input[name="album_id"]').value;
-            let url = window.location.protocol + '//' + window.location.host + '/api/v1/albums/' + album + '/view/add/';
-            let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            var album = document.querySelector('input[name="album_id"]').value;
+            var url = window.location.protocol + '//' + window.location.host + '/api/v1/albums/' + album + '/view/add/';
+            var csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
     
-            let response = await fetch(url, {
+            var response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrftoken,
@@ -477,6 +503,39 @@
         }
 
         add_view_to_album();
+    </script>
+    <script>
+        var count_likes = document.querySelector('#count_likes');
+        if (count_likes) {
+            count_likes.addEventListener('click', send_like);
+        }
+
+        async function send_like(e) {
+            e.preventDefault();
+
+            album = document.querySelector('input[name="album_id"]').value;
+            url = window.location.protocol + '//' + window.location.host + '/api/v1/albums/' + album + '/send_like/';
+
+            response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                },
+            });
+
+            if (response.ok) {
+                result = await response.json();
+                if (result.success) {
+                    if (result.add) {
+                        count_likes.querySelector('img').style.opacity = 1;
+                        count_likes.querySelector('span').innerHTML = Number(count_likes.querySelector('span').innerHTML) + 1;
+                    } else {
+                        count_likes.querySelector('img').style.opacity = 0.5;
+                        count_likes.querySelector('span').innerHTML = Number(count_likes.querySelector('span').innerHTML) - 1;
+                    }
+                }
+            }
+        }
     </script>
     <script>
         function get_g_token() {

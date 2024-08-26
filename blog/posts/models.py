@@ -98,6 +98,11 @@ class Post(models.Model):
         super(Post, self).save()
         
 
+class PostLike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_post_like')
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, verbose_name='Post', null=True, related_name='post_like')
+        
+
 class PostRadio(models.Model):
     post = models.ForeignKey(to=Post, on_delete=models.CASCADE, verbose_name='Post')
     scores = models.IntegerField(verbose_name='scores', default=0)

@@ -4,9 +4,9 @@ from django.http import Http404
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 
-from surveys.models import Survey, SurveyTag, SurveyRadio, SurveyView, SurveyVote, DraftSurvey, DraftSurveyTag, DraftSurveyRadio, Category, Subcategory
+from surveys.models import Survey, SurveyTag, SurveyRadio, SurveyView, SurveyVote, DraftSurvey, DraftSurveyTag, DraftSurveyRadio, Category, Subcategory, SurveyLike
 from surveys.forms import SurveyForm, DraftSurveyForm
-from surveys.utils import get_views_and_comments_to_surveys
+from surveys.utils import get_more_to_surveys
 from comments.models import Comment, Answer
 
 from blogs.models import LevelAccess, Blog, BlogFollow
@@ -28,7 +28,7 @@ def index(request):
 
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")
-    page_obj = get_views_and_comments_to_surveys(paginator.get_page(page_number))
+    page_obj = get_more_to_surveys(paginator.get_page(page_number))
     
     categories = Category.objects.all()
 
@@ -103,6 +103,8 @@ def show(request, slug):
     tags = SurveyTag.objects.filter(survey=survey)
     
     count_views = SurveyView.objects.filter(survey=survey).count()
+    
+    count_likes = SurveyLike.objects.filter(survey=survey).count()
 
     vote = False
     votes_user = SurveyVote.objects.filter(user=request.user.id, survey=survey)
@@ -133,6 +135,8 @@ def show(request, slug):
         'count_views': count_views,
         'options': options,
         'vote': vote,
+        'count_likes': count_likes,
+        'is_like': bool(SurveyLike.objects.filter(survey=survey, user=request.user.id)),
         'recaptcha_site_key': settings.GOOGLE_RECAPTCHA_PUBLIC_KEY
     }
     
