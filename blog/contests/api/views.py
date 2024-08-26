@@ -13,7 +13,7 @@ from django.utils import timezone
 from blog.utils import MyPagination, set_language_to_user
 from operator import attrgetter
 
-
+# contests
 class ContestViewSet(viewsets.ModelViewSet):
     queryset = Contest.objects.all()
     permission_classes = [IsAuthenticated]
