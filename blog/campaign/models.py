@@ -7,7 +7,6 @@ from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from django.core.exceptions import ValidationError
 from users.models import User
-from referrals.models import Referral
 
 
 class Campaign(models.Model):
@@ -30,6 +29,12 @@ class Campaign(models.Model):
         verbose_name="Источник награды кампании",
     )
 
+    def __str__(self):
+        return self.name
+
+    def system_source_of_reward(self):
+        return self.reward_source == "endless"
+
     def save(self, *args, **kwargs):
         if not self.slug:
             slug_name = default_slugify(self.name)
@@ -37,6 +42,24 @@ class Campaign(models.Model):
                 slug_name = slugify(self.name)
             self.slug = slug_name
         super(Campaign, self).save(*args, **kwargs)
+
+
+class SubscriptionsCampaign(models.Model):
+    user = models.OneToOneField(
+        User, related_name="subscriptions_campaigns", on_delete=models.CASCADE
+    )
+    campaigns = models.ManyToManyField(
+        Campaign,
+        verbose_name="Campaign",
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - Subscriptions Campaigns"
+
+    class Meta:
+        verbose_name = "Subscriptions Campaigns"
+        verbose_name_plural = "Subscriptions Campaigns"
+        
 
 
 class Task(models.Model):
@@ -72,6 +95,12 @@ class Task(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="is active")
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
+    def system_source_company_remuneration(self):
+        return self.campaign.system_source_of_reward()
+
 
 class UserTaskChecking(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, verbose_name="Task")
@@ -87,6 +116,9 @@ class UserTaskChecking(models.Model):
         null=True, blank=True, verbose_name="Received data"
     )
 
+    def __str__(self):
+        return f"{self.user.username} - {self.task.name}"
+
     @staticmethod
     def getting_statistics(campaign_id):
         campaign_obj = Campaign.objects.get(id=campaign_id)
@@ -97,7 +129,6 @@ class UserTaskChecking(models.Model):
             .filter(completed_tasks_count__gt=0)
             .order_by("completed_tasks_count")[:10]
         )
-        print(lids)
         statistics = {
             "lids": lids,
             "number_of_participants": queryset.distinct("user").count(),
@@ -112,46 +143,7 @@ class UserTaskChecking(models.Model):
         if self.pk:
             old_instance = UserTaskChecking.objects.get(pk=self.pk)
             self.old__is_completed = old_instance.is_completed
+            self.old__is_received = old_instance.is_received
             self.old__end_date = old_instance.end_date
-            
-        
-        # print('++++++++++++++++++++++++++++++++')
-        # print(self.is_completed, self.end_date)
-        # if self.is_completed and self.end_date is None:
-        #     self.end_date = now()
-        #     print(self.user, self.user.pk)
-        #     user_referral = Referral.objects.filter(referral_user=self.user.pk)
-        #     print(user_referral)
-        #     if len(user_referral):
-        #         referral = user_referral.first()
-        #         referral.tasks_completed += 1
-        #         referral.save()
-        # if self.task.campaign.reward_source == "owner":
-        #     if self.is_received and self.received_data is None:
-        #         self.received_data = now()
-        #         task_owner_scores = self.task.campaign.user.scores
-        #         campaign_owner_scores = self.task.campaign.prize_fund
-        #         if (
-        #             task_owner_scores >= self.points_awarded
-        #             and task_owner_scores >= campaign_owner_scores
-        #         ):
-        #             self.task.campaign.user.scores = (
-        #                 task_owner_scores - self.points_awarded
-        #             )
-        #             self.task.campaign.user.save()
 
-        #             self.task.campaign.prize_fund = (
-        #                 campaign_owner_scores - self.points_awarded
-        #             )
-        #             self.task.campaign.save()
-
-        #             total_points = self.user.scores
-        #             self.user.scores = total_points + self.points_awarded
-        #             self.user.save()
-        # if self.task.campaign.reward_source == "endless":
-        #     if self.is_received and self.received_data is None:
-        #         self.received_data = now()
-        #         total_points = self.user.scores
-        #         self.user.scores = total_points + self.points_awarded
-        #         self.user.save()
         return super().save(*args, **kwargs)

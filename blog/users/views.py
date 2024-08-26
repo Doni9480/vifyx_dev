@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-
+from rest_framework.response import Response
 from campaign.models import Campaign, Task, UserTaskChecking
 from users.forms import ChangeEmailForm, PasswordChangeForm
 from users.models import User, TotalScore, Hide
@@ -18,6 +18,8 @@ from blogs.models import Blog, PaidFollow, BlogFollow
 from blog.utils import check_recaptcha
 from periodic_bonuses.models import PeriodicBonuses
 from periodic_bonuses.api.serializers import PeriodicBonusesSerializer
+
+# from unfold.admin import AdminView
 
 
 def login_register(request):
@@ -157,3 +159,26 @@ def edit_profile(request):
 
 def edit_password(request):
     return render(request, "edit_password.html")
+
+
+# class MyCustomPage(AdminView):
+#     template_name = "admin/custom/index.html"
+#     page_title = "Моя кастомная страница"
+#     page_description = "Описание моей кастомной страницы"
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context["extra_data"] = "Дополнительные данные для отображения"
+#         return context
+
+def change_user_status(request, pk):
+    if request.user.is_superuser:
+        user = get_object_or_404(User, pk=pk)
+        if user.is_active:
+            user.is_active = False
+            user.save()
+        else:
+            user.is_active = True
+            user.save()
+        return Response({'success': True}, status=200)
+    return Response({'success': False}, status=403)

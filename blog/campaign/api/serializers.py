@@ -1,6 +1,6 @@
 import argparse
 from rest_framework import serializers
-from campaign.models import Campaign, Task, UserTaskChecking
+from campaign.models import Campaign, Task, UserTaskChecking, SubscriptionsCampaign
 
 
 class CampaignSerializer(serializers.ModelSerializer):
@@ -30,6 +30,14 @@ class CampaignStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
         fields = ("is_active",)
+
+
+class SubscriptionsCampaignSerializer(serializers.ModelSerializer):
+    campaigns = CampaignSerializer(many=True)
+
+    class Meta:
+        model = SubscriptionsCampaign
+        fields = ("user", "campaigns")
 
 
 class TaskSerializer(serializers.ModelSerializer):

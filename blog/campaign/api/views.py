@@ -6,11 +6,10 @@ from rest_framework.response import Response
 
 # from transliterate import slugify
 from django.utils.text import slugify
-from campaign.models import Campaign, Task, UserTaskChecking
+from campaign.models import Campaign, Task, UserTaskChecking, SubscriptionsCampaign
 from configs.models import SiteConfiguration
 from .serializers import (
     CampaignSerializer,
-    NoneSerializer,
     TaskSerializer,
     UserTaskCheckingSerializer,
 )
@@ -126,6 +125,76 @@ class CampaignViewSet(viewsets.ModelViewSet):
         return Response({"data": {"is_active": campaign.is_active}, "success": "ok."})
 
 
+class SubscriptionsCampaignViewSet(viewsets.GenericViewSet):
+    queryset = Campaign.objects.all()
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    serializer_class = CampaignSerializer
+
+    # def get_serializer(self, *args, **kwargs):
+    #     return CampaignSerializer
+
+    def get_queryset(self):
+        if self.action == "list":
+            obj, created = SubscriptionsCampaign.objects.get_or_create(
+                user=self.request.user
+            )
+            if created or obj.campaigns.count() == 0:
+                sys_campaign = Campaign.objects.filter(user__username="system") or []
+                if sys_campaign:
+                    obj.campaigns.add(*sys_campaign)
+                    obj.save()
+            return obj.campaigns.all()
+        queryset = super().get_queryset()
+        return queryset
+
+    @action(detail=True, methods=["patch"], url_path=r"<pk>/connect")
+    def connect_to_campaign(self, request, pk=None):
+        campaign = self.get_object()
+
+        obj, created = SubscriptionsCampaign.objects.get_or_create(user=request.user)
+        if created or obj.campaigns.count() == 0:
+            sys_campaign = Campaign.objects.filter(user__username="system") or []
+            if sys_campaign:
+                obj.campaigns.add(sys_campaign)
+        if campaign not in obj.campaigns.all():
+            obj.campaigns.add(campaign)
+        obj.save()
+        return Response(
+            {"success": True, "data": "Campaign connected successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["get"], url_path=r"connect/list")
+    def list_campaign(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["patch"], url_path=r"<pk>/disconnect")
+    def disconnect_campaign(self, request, pk=None):
+        campaign = self.get_object()
+
+        obj, created = SubscriptionsCampaign.objects.get_or_create(user=request.user)
+        if created or obj.campaigns.count() == 0:
+            sys_campaign = Campaign.objects.filter(user__username="system") or []
+            if sys_campaign:
+                obj.campaigns.add(sys_campaign)
+        if campaign.user.username != "system" and campaign in obj.campaigns.all():
+            obj.campaigns.remove(campaign)
+        obj.save()
+        return Response(
+            {"success": True, "data": "Campaign disconnected successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+
 class TaskTypesViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -148,7 +217,7 @@ class TaskTypesViewSet(
     def get_serializer_class(self):
         if self.action in ["create", "list", "retrieve", "partial_update"]:
             return TaskSerializer
-        return NoneSerializer
+        return TaskSerializer
 
     # def perform_create(self, serializer):
     #     serializer.save()
@@ -275,7 +344,7 @@ class TaskCheckingViewSet(viewsets.GenericViewSet):
     )
     def receiving_an_award(self, request, pk=None):
         user_task_checking = UserTaskChecking.objects.filter(
-            task=pk, is_completed=True
+            user=request.user, task_id=pk, is_completed=True
         ).first()
         if user_task_checking:
             user_task_checking.is_received = True

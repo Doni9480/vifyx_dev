@@ -5,7 +5,7 @@ from posts.models import Post, PostTag, PostView, Category, Subcategory, Banner
 
 @admin.register(Post)
 class PostAdmin(ModelAdmin):
-    pass
+    list_filter = ("user",)
 
 
 @admin.register(PostTag)

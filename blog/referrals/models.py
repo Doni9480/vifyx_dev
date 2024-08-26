@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import User
+from campaign.models import Task
 
 
 class Referral(models.Model):
@@ -16,6 +17,15 @@ class Referral(models.Model):
     class Meta:
         verbose_name = "Referral"
         verbose_name_plural = "Referrals"
+
+    def first_task_user(self) -> Task | None:
+        first_completed_task = self.referral_user.usertaskchecking_set
+        user_task = (
+            first_completed_task.first().task
+            if first_completed_task.count() == 1
+            else None
+        )
+        return user_task
 
     def save(self, *args, **kwargs):
         if self.pk:
