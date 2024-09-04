@@ -55,9 +55,9 @@ class Notification(models.Model):
     contest = models.ForeignKey(to=Contest, on_delete=models.CASCADE, null=True)
     text = models.CharField(verbose_name='Text', null=True)
     
-    # system_text = models.ForeignKey(to=SystemText, on_delete=models.CASCADE, null=True)
+    system_text = models.ForeignKey(to=SystemText, on_delete=models.CASCADE, null=True)
     
-    ban = models.ForeignKey(to=Ban, on_delete=models.CASCADE, verbose_name='Ban', null=True)
+    # ban = models.ForeignKey(to=Ban, on_delete=models.CASCADE, verbose_name='Ban', null=True)
     unban = models.ForeignKey(to=Unban, on_delete=models.CASCADE, verbose_name='Unban', null=True)
     
     expiring_follow = models.ForeignKey(to=ExpiringFollow, on_delete=models.CASCADE, verbose_name='Expiring follow', null=True)
