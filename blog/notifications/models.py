@@ -57,7 +57,7 @@ class Notification(models.Model):
     
     system_text = models.ForeignKey(to=SystemText, on_delete=models.CASCADE, null=True)
     
-    # ban = models.ForeignKey(to=Ban, on_delete=models.CASCADE, verbose_name='Ban', null=True)
+    ban = models.ForeignKey(to=Ban, on_delete=models.CASCADE, verbose_name='Ban', null=True)
     unban = models.ForeignKey(to=Unban, on_delete=models.CASCADE, verbose_name='Unban', null=True)
     
     expiring_follow = models.ForeignKey(to=ExpiringFollow, on_delete=models.CASCADE, verbose_name='Expiring follow', null=True)
