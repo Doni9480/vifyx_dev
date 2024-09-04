@@ -1,9 +1,18 @@
 import datetime
 import pytz
-
 from blogs.models import PaidFollow
 from django.http import Http404
+from notifications.models import Notification, AnswerNotification, NotificationBlog
 
+
+def set_notification(answer):
+    e = answer.post or answer.survey or answer.test or answer.quest or answer.album
+    if answer.comment.user != answer.user:
+        if NotificationBlog.objects.filter(
+            follower=answer.comment.user, blog=e.blog, user=e.user, get_notifications_blog=True, get_notifications_answer=True
+        ):
+            answer_notification = AnswerNotification.objects.create(answer=answer, namespace=e.namespace, slug=e.slug)
+            Notification.objects.create(user=answer.comment.user, answer_notification=answer_notification)
 
 def func_is_valid_comment(request, serializer):
     data = {}
@@ -43,6 +52,8 @@ def func_is_valid_answer(request, serializer):
             answer = serializer.save()
             answer.user = request.user
             answer.save()
+
+            set_notification(answer)
 
             try:
                 tzname = request.data.get("timezone", False)

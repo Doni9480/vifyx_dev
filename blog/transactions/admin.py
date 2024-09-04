@@ -11,6 +11,6 @@ class TransactionsAdmin(ModelAdmin):
     search_fields = ("from_user__username", "to_user__username")
     
     def custom_info(self, obj):
-        return f"Type: {obj.info["translation"]["type"]}\n\
-                Title: {obj.info["translation"]["title"]}"
+        return f'Type: {obj.info["translation"]["type"]}\n\
+                Title: {obj.info["translation"]["title"]}'
     custom_info.short_description = "Info"

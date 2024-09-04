@@ -60,6 +60,7 @@ class User(AbstractUser):
     tests_category = models.ForeignKey(to=Category_test, on_delete=models.CASCADE, null=True, blank=True)
     albums_category = models.ForeignKey(to=Category_album, on_delete=models.CASCADE, null=True, blank=True)
     activity_level = models.PositiveIntegerField(default=0, verbose_name="Activity level")
+    is_banned = models.BooleanField(verbose_name='Is banned', default=False)
 
     REQUIRED_FIELDS = ["last_name"]
 

@@ -15,18 +15,10 @@ from users.api.serializers import *
 from users.api.utils import delete_token
 from users.models import User, Percent, Hide
 from blogs.models import Blog, PaidFollow, BlogFollow
-from posts.models import Category as Category_post, Subcategory as Subcategory_post
-from surveys.models import Category as Category_survey, Subcategory as Subcategory_survey
-from custom_tests.models import Category as Category_test, Subcategory as Subcategory_test
-from quests.models import Category as Category_quest, Subcategory as Subcategory_quest
-from albums.models import Category as Category_album, Subcategory as Subcategory_album
 from users.api.serializers import BlogFollowSerializer, HideSerializer, EditProfileSerializer, EditPasswordSerializer
+from notifications.models import Notification, Ban, Unban
+from users.api.utils import N_DICT
 from referrals.api.utils import ReferralHandler
-from users.models import Subcategory_post as Usersubcategory_post
-from users.models import Subcategory_survey as Usersubcategory_survey
-from users.models import Subcategory_test as Usersubcategory_test
-from users.models import Subcategory_quest as Usersubcategory_quest
-from users.models import Subcategory_album as Usersubcategory_album
 
 
 class RegisterViewSet(viewsets.GenericViewSet):
@@ -163,11 +155,8 @@ class UserViewSet(viewsets.ViewSet):
     @action(detail=True, methods=["post"], url_path=r"forbid_to_post/(?P<id>\d+)")
     @transaction.atomic
     def forbid_to_post(self, request, id=None):
-        try:
-            user = get_object_or_404(User, id=id)
-            if not request.user.is_staff:
-                raise Exception()
-        except Exception:
+        user = get_object_or_404(User, id=id)
+        if not request.user.is_staff:
             raise Http404()
 
         data = {}
@@ -182,11 +171,8 @@ class UserViewSet(viewsets.ViewSet):
     @action(detail=True, methods=["post"], url_path=r"forbid_to_comment/(?P<id>\d+)")
     @transaction.atomic
     def forbid_to_comment(self, request, id=None):
-        try:
-            user = get_object_or_404(User, id=id)
-            if not request.user.is_staff:
-                raise Exception()
-        except Exception:
+        user = get_object_or_404(User, id=id)
+        if not request.user.is_staff:
             raise Http404()
         data = {}
         user.is_published_comment = False
@@ -197,11 +183,8 @@ class UserViewSet(viewsets.ViewSet):
     @action(detail=True, methods=["post"], url_path=r"allow_to_post/(?P<id>\d+)")
     @transaction.atomic
     def allow_to_post(self, request, id=None):
-        try:
-            user = get_object_or_404(User, id=id)
-            if not request.user.is_staff:
-                raise Exception()
-        except Exception:
+        user = get_object_or_404(User, id=id)
+        if not request.user.is_staff:
             raise Http404()
 
         data = {}
@@ -216,11 +199,8 @@ class UserViewSet(viewsets.ViewSet):
     @action(detail=True, methods=["post"], url_path=r"allow_to_comment/(?P<id>\d+)")
     @transaction.atomic
     def allow_to_comment(self, request, id=None):
-        try:
-            user = get_object_or_404(User, id=id)
-            if not request.user.is_staff:
-                raise Exception()
-        except Exception:
+        user = get_object_or_404(User, id=id)
+        if not request.user.is_staff:
             raise Http404()
 
         if request.method == "POST":
@@ -277,158 +257,38 @@ class UserViewSet(viewsets.ViewSet):
             status=status.HTTP_400_BAD_REQUEST,
         )
         
-    @action(detail=True, methods=["post"], url_path=r"select_category_posts/(?P<id>\d+)")
+    @action(detail=True, methods=["post"], url_path=r"select_category/(?P<namespace>[^/.]+)/(?P<id>\d+)")
     @transaction.atomic
-    def select_category_posts(self, request, id=None):
-        category_post = get_object_or_404(Category_post, id=id)
-        request.user.posts_category = category_post
+    def select_category(self, request, namespace=None, id=None):        
+        if namespace not in N_DICT: raise Http404()
+        
+        category_model = get_object_or_404(N_DICT[namespace]['model'], id=id)
+        setattr(request.user, N_DICT[namespace]['user_category'], category_model)
         request.user.save()
-        subcategories = Usersubcategory_post.objects.filter(user=request.user)
+        subcategories = N_DICT[namespace]['user_subcategory'].objects.filter(user=request.user)
         for deleted_subcategory in subcategories:
             deleted_subcategory.delete()
         return Response({'success': 'ok.'})
     
-    @action(detail=True, methods=["post"], url_path=r"select_subcategory_posts/(?P<id>\d+)/(?P<id_delete>\d+)")
+    @action(detail=True, methods=["post"], url_path=r"select_subcategory/(?P<namespace>[^/.]+)/(?P<id>\d+)/(?P<id_delete>\d+)")
     @transaction.atomic
-    def select_subcategory_posts(self, request, id=None, id_delete=None):
+    def select_subcategory(self, request, namespace=None, id=None, id_delete=None):
+        if namespace not in N_DICT: raise Http404()
+        
         if int(id_delete) > 0:
-            get_object_or_404(Usersubcategory_post, id=id_delete, user=request.user).delete()
-        subcategory_post = get_object_or_404(Subcategory_post, id=id)
-        if not Usersubcategory_post.objects.filter(subcategory=subcategory_post, user=request.user):
-            Usersubcategory_post.objects.create(subcategory=subcategory_post, user=request.user)
+            get_object_or_404(N_DICT[namespace]['user_subcategory'], id=id_delete, user=request.user).delete()
+        subcategory = get_object_or_404(N_DICT[namespace]['subcategory'], id=id)
+        if not N_DICT[namespace]['user_subcategory'].objects.filter(subcategory=subcategory, user=request.user):
+            N_DICT[namespace]['user_subcategory'].objects.create(subcategory=subcategory, user=request.user)
         return Response({'success': 'ok.'})
     
-    @action(detail=True, methods=["post"], url_path=r"select_category_surveys/(?P<id>\d+)")
+    @action(detail=False, methods=["post"], url_path=r"destroy_category/(?P<namespace>[^/.]+)")
     @transaction.atomic
-    def select_category_surveys(self, request, id=None):
-        category_survey = get_object_or_404(Category_survey, id=id)
-        request.user.surveys_category = category_survey
-        request.user.save()
-        subcategories = Usersubcategory_survey.objects.filter(user=request.user)
-        for deleted_subcategory in subcategories:
-            deleted_subcategory.delete()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=True, methods=["post"], url_path=r"select_subcategory_surveys/(?P<id>\d+)/(?P<id_delete>\d+)")
-    @transaction.atomic
-    def select_subcategory_surveys(self, request, id=None, id_delete=None):
-        if int(id_delete) > 0:
-            get_object_or_404(Usersubcategory_survey, id=id_delete, user=request.user).delete()
-        subcategory_survey = get_object_or_404(Subcategory_survey, id=id)
-        if not Usersubcategory_survey.objects.filter(subcategory=subcategory_survey, user=request.user):
-            Usersubcategory_survey.objects.create(subcategory=subcategory_survey, user=request.user)
-        return Response({'success': 'ok.'})
-    
-    @action(detail=True, methods=["post"], url_path=r"select_category_tests/(?P<id>\d+)")
-    @transaction.atomic
-    def select_category_tests(self, request, id=None):
-        category_test = get_object_or_404(Category_test, id=id)
-        request.user.tests_category = category_test
-        request.user.save()
-        subcategories = Usersubcategory_test.objects.filter(user=request.user)
-        for deleted_subcategory in subcategories:
-            deleted_subcategory.delete()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=True, methods=["post"], url_path=r"select_subcategory_tests/(?P<id>\d+)/(?P<id_delete>\d+)")
-    @transaction.atomic
-    def select_subcategory_tests(self, request, id=None, id_delete=None):
-        if int(id_delete) > 0:
-            get_object_or_404(Usersubcategory_test, subcategory=id_delete, user=request.user).delete()
-        subcategory_test = get_object_or_404(Subcategory_test, id=id)
-        if not Usersubcategory_test.objects.filter(subcategory=subcategory_test, user=request.user):
-            Usersubcategory_test.objects.create(subcategory=subcategory_test, user=request.user)
-        return Response({'success': 'ok.'})
-    
-    @action(detail=True, methods=["post"], url_path=r"select_category_albums/(?P<id>\d+)")
-    @transaction.atomic
-    def select_category_albums(self, request, id=None):
-        category_album = get_object_or_404(Category_album, id=id)
-        request.user.albums_category = category_album
-        request.user.save()
-        subcategories = Usersubcategory_album.objects.filter(user=request.user)
-        for deleted_subcategory in subcategories:
-            deleted_subcategory.delete()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=True, methods=["post"], url_path=r"select_subcategory_albums/(?P<id>\d+)/(?P<id_delete>\d+)")
-    @transaction.atomic
-    def select_subcategory_albums(self, request, id=None, id_delete=None):
-        if int(id_delete) > 0:
-            get_object_or_404(Usersubcategory_album, subcategory=id_delete, user=request.user).delete()
-        subcategory_album = get_object_or_404(Subcategory_album, id=id)
-        if not Usersubcategory_album.objects.filter(subcategory=subcategory_album, user=request.user):
-            Usersubcategory_album.objects.create(subcategory=subcategory_album, user=request.user)
-        return Response({'success': 'ok.'})
-    
-    @action(detail=True, methods=["post"], url_path=r"select_category_quests/(?P<id>\d+)")
-    @transaction.atomic
-    def select_category_quests(self, request, id=None):
-        category_quest = get_object_or_404(Category_quest, id=id)
-        request.user.quests_category = category_quest
-        request.user.save()
-        subcategories = Usersubcategory_quest.objects.filter(user=request.user)
-        for deleted_subcategory in subcategories:
-            deleted_subcategory.delete()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=True, methods=["post"], url_path=r"select_subcategory_quests/(?P<id>\d+)/(?P<id_delete>\d+)")
-    @transaction.atomic
-    def select_subcategory_quests(self, request, id=None, id_delete=None):
-        if int(id_delete) > 0:
-            get_object_or_404(Usersubcategory_quest, subcategory=id_delete, user=request.user).delete()
-        subcategory_quest = get_object_or_404(Subcategory_quest, id=id)
-        if not Usersubcategory_quest.objects.filter(subcategory=subcategory_quest, user=request.user):
-            Usersubcategory_quest.objects.create(subcategory=subcategory_quest, user=request.user)
-        return Response({'success': 'ok.'})
-    
-    @action(detail=False, methods=["post"], url_path="destroy_category_posts")
-    @transaction.atomic
-    def destroy_category_posts(self, request, *args, **kwargs):
-        deleted_subcategories = Usersubcategory_post.objects.filter(user=request.user)
+    def destroy_category(self, request, namespace=None, *args, **kwargs):
+        deleted_subcategories = N_DICT[namespace]['user_subcategory'].objects.filter(user=request.user)
         for deleted_subcategory in deleted_subcategories:
             deleted_subcategory.delete()
-        request.user.posts_category = None
-        request.user.save()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=False, methods=["post"], url_path="destroy_category_surveys")
-    @transaction.atomic
-    def destroy_category_surveys(self, request, *args, **kwargs):
-        deleted_subcategories = Usersubcategory_survey.objects.filter(user=request.user)
-        for deleted_subcategory in deleted_subcategories:
-            deleted_subcategory.delete()
-        request.user.surveys_category = None
-        request.user.save()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=False, methods=["post"], url_path="destroy_category_tests")
-    @transaction.atomic
-    def destroy_category_tests(self, request, *args, **kwargs):
-        deleted_subcategories = Usersubcategory_test.objects.filter(user=request.user)
-        for deleted_subcategory in deleted_subcategories:
-            deleted_subcategory.delete()
-        request.user.tests_category = None
-        request.user.save()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=False, methods=["post"], url_path="destroy_category_albums")
-    @transaction.atomic
-    def destroy_category_albums(self, request, *args, **kwargs):
-        deleted_subcategories = Usersubcategory_album.objects.filter(user=request.user)
-        for deleted_subcategory in deleted_subcategories:
-            deleted_subcategory.delete()
-        request.user.albums_category = None
-        request.user.save()
-        return Response({'success': 'ok.'})
-    
-    @action(detail=False, methods=["post"], url_path="destroy_category_quests")
-    @transaction.atomic
-    def destroy_category_quests(self, request, *args, **kwargs):
-        deleted_subcategories = Usersubcategory_quest.objects.filter(user=request.user)
-        for deleted_subcategory in deleted_subcategories:
-            deleted_subcategory.delete()
-        request.user.quests_category = None
+        setattr(request.user, N_DICT[namespace]['user_category'], None)
         request.user.save()
         return Response({'success': 'ok.'})
 
@@ -595,3 +455,34 @@ class ProfileViewSet(viewsets.ViewSet):
         else:
             data = serializer.errors
         return Response(data)
+    
+    @action(detail=True, methods=["post"], url_path=r"banning/(?P<id>\d+)")
+    @transaction.atomic
+    def banning(self, request, id=None):
+        user = get_object_or_404(User, id=id)
+        if not request.user.is_staff:
+            raise Http404()
+        data = {}
+        user.is_banned = True
+        user.save()
+        ban = Ban.objects.create()
+        Notification.objects.create(ban=ban, user=user)
+        
+        data["success"] = "ok."
+        return Response(data)
+
+    @action(detail=True, methods=["post"], url_path=r"unbanning/(?P<id>\d+)")
+    @transaction.atomic
+    def unbanning(self, request, id=None):
+        user = get_object_or_404(User, id=id)
+        if not request.user.is_staff:
+            raise Http404()
+        data = {}
+        user.is_banned = False
+        user.save()
+        unban = Unban.objects.create()
+        Notification.objects.create(unban=unban, user=user)
+        
+        data["success"] = "ok."
+        return Response(data)
+    

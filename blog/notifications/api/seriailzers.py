@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from notifications.models import Notification
+from notifications.models import Notification, Ban, Unban, ExpiringFollow, SystemText, AnswerNotification
 from posts.models import Post
 from surveys.models import Survey
 from quests.models import Quest
@@ -7,6 +7,7 @@ from albums.models import Album
 from custom_tests.models import Test
 from contests.models import Contest
 from blogs.models import Donate
+from comments.models import Answer
 
 
 class NotificationPostSerializer(serializers.ModelSerializer):
@@ -17,7 +18,6 @@ class NotificationPostSerializer(serializers.ModelSerializer):
             'preview',
             'title',
             'slug',
-            'date',
             'namespace'
         )
 
@@ -30,7 +30,6 @@ class NotificationSurveySerializer(serializers.ModelSerializer):
             'preview',
             'title',
             'slug',
-            'date',
             'namespace'
         )
         
@@ -43,7 +42,6 @@ class NotificationTestSerializer(serializers.ModelSerializer):
             'preview',
             'title',
             'slug',
-            'date',
             'namespace'
         )
         
@@ -56,7 +54,6 @@ class NotificationQuestSerializer(serializers.ModelSerializer):
             'preview',
             'title',
             'slug',
-            'date',
             'namespace'
         )
         
@@ -69,7 +66,6 @@ class NotificationAlbumSerializer(serializers.ModelSerializer):
             'preview',
             'title',
             'slug',
-            'date',
             'namespace'
         )
         
@@ -85,6 +81,33 @@ class NotificationContestSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
         )
+        
+
+class NotificationBanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ban
+        fields = (
+            'id',
+            'text',
+        )
+        
+
+class NotificationUnbanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Unban
+        fields = (
+            'id',
+            'text',
+        )
+        
+
+class NotificationExpiringFollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExpiringFollow
+        fields = (
+            'id',
+            'text',
+        )
 
 
 class NotificationDonateSerializer(serializers.ModelSerializer):
@@ -93,85 +116,29 @@ class NotificationDonateSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'message',
-            'date',
-        )
-        
-
-class NotificationPostShowSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Post
-        fields = (
-            'id',
-            'preview',
-            'title',
-            'slug',
-            'date',
-            'user'
-        )
-
-
-class NotificationSurveyShowSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Survey
-        fields = (
-            'id',
-            'preview',
-            'title',
-            'slug',
-            'date',
-            'user'
-        )
-        
-
-class NotificationTestShowSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Test
-        fields = (
-            'id',
-            'preview',
-            'title',
-            'slug',
-            'date',
-            'user'
         )
         
         
-class NotificationQuestShowSerializer(serializers.ModelSerializer):
+class NotificationSystemTextSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Quest
+        model = SystemText
         fields = (
             'id',
-            'preview',
-            'title',
-            'slug',
-            'date',
-            'user'
+            'english',
+            'russian',
+            'title_rus',
+            'title_eng',
+            'text_rus',
+            'text_eng',
         )
         
         
-class NotificationAlbumShowSerializer(serializers.ModelSerializer):
+class NotificationAnswerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Album
+        model = AnswerNotification
         fields = (
-            'id',
-            'preview',
-            'title',
-            'slug',
-            'date',
-            'user'
-        )
-        
-
-class NotificationDonateShowSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Donate
-        fields = (
-            'id',
-            'amount',
-            'blog',
-            'message',
-            'user',
-            'date',
+            'answer',
+            'namespace',
         )
         
 

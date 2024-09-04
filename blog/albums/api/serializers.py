@@ -182,7 +182,7 @@ class AlbumSerializer(serializers.ModelSerializer):
             for follow in follows:
                 if follow.follower.is_notificated:
                     if NotificationBlog.objects.filter(
-                        follower=follow.follower, blog=album.blog, user=album.user, get_notifications_blog=True
+                        follower=follow.follower, blog=album.blog, user=album.user, get_notifications_blog=True, get_notifications_album=True
                     ):
                         Notification.objects.create(album=album, user=follow.follower)
         return album

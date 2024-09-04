@@ -152,6 +152,42 @@
                             {% endif %}
                             <label for="checkbox-10" class="checkbox-style-3-label">Get notifications</label>
                         </div>
+
+                        <div>
+                            {% if get_notifications_blog.get_notifications_post %}
+                                <input id="checkbox-11" class="checkbox-style" name="get_notifications_post" type="checkbox" checked>
+                            {% else %}
+                                <input id="checkbox-11" class="checkbox-style" name="get_notifications_post" type="checkbox">
+                            {% endif %}
+                            <label for="checkbox-11" class="checkbox-style-3-label">Get notifications post</label>
+                        </div>
+
+                        <div>
+                            {% if get_notifications_blog.get_notifications_quest %}
+                                <input id="checkbox-12" class="checkbox-style" name="get_notifications_quest" type="checkbox" checked>
+                            {% else %}
+                                <input id="checkbox-12" class="checkbox-style" name="get_notifications_quest" type="checkbox">
+                            {% endif %}
+                            <label for="checkbox-12" class="checkbox-style-3-label">Get notifications quest</label>
+                        </div>
+
+                        <div>
+                            {% if get_notifications_blog.get_notifications_album %}
+                                <input id="checkbox-13" class="checkbox-style" name="get_notifications_album" type="checkbox" checked>
+                            {% else %}
+                                <input id="checkbox-13" class="checkbox-style" name="get_notifications_album" type="checkbox">
+                            {% endif %}
+                            <label for="checkbox-13" class="checkbox-style-3-label">Get notifications album</label>
+                        </div>
+
+                        <div>
+                            {% if get_notifications_blog.get_notifications_answer %}
+                                <input id="checkbox-14" class="checkbox-style" name="get_notifications_answer" type="checkbox" checked>
+                            {% else %}
+                                <input id="checkbox-14" class="checkbox-style" name="get_notifications_answer" type="checkbox">
+                            {% endif %}
+                            <label for="checkbox-14" class="checkbox-style-3-label">Get notifications answer</label>
+                        </div>
                     {% endif %}
 
                     {% if request.user == blog.user and blog.is_private %}

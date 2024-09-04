@@ -22,7 +22,7 @@ async function send_select_category(e) {
     e.preventDefault();
 
     if (select_category && ! isNaN(Number(select_category.value))) {
-        url = window.location.protocol + '//' + window.location.host + `/api/v1/users/select_category_${namespace}/` + select_category.value + '/';
+        url = window.location.protocol + '//' + window.location.host + `/api/v1/users/select_category/${namespace}/` + select_category.value + '/';
 
         var response = await fetch(url, {
             method: 'POST',
@@ -46,7 +46,7 @@ async function send_select_subcategory(e) {
     }
 
     if (e.target && ! isNaN(Number(e.target.value))) {
-        url = window.location.protocol + '//' + window.location.host + `/api/v1/users/select_subcategory_${namespace}/` + e.target.value + '/' + deleted_select_subcategory + '/';
+        url = window.location.protocol + '//' + window.location.host + `/api/v1/users/select_subcategory/${namespace}/` + e.target.value + '/' + deleted_select_subcategory + '/';
 
         var response = await fetch(url, {
             method: 'POST',
@@ -64,7 +64,7 @@ async function send_select_subcategory(e) {
 async function send_reset_category(e) {
     e.preventDefault();
 
-    url = window.location.protocol + '//' + window.location.host + `/api/v1/users/destroy_category_${namespace}/`
+    url = window.location.protocol + '//' + window.location.host + `/api/v1/users/destroy_category/${namespace}/`
 
     var response = await fetch(url, {
         method: 'POST',

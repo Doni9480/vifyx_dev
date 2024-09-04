@@ -61,6 +61,19 @@ class NotificationsMiddleware:
             request.notifications = Notification.objects.filter(
                 user=request.user, is_read=False,
             ).order_by('-date')[:5]
+            
+            count = 0
+            notifications_dict = {}
+            for notification in request.notifications:
+                notifications_dict[count] = notification
+                count += 1
+            for key, value in notifications_dict.copy().items():
+                if value.system_text:
+                    if not (request.user.language == 'russian' and value.system_text.russian) and \
+                    not (value.system_text.english and request.user.language != 'russian'):
+                        del notifications_dict[key]
+            request.notifications = list(notifications_dict.values())
+                    
         response = self._get_response(request)
         return response
 

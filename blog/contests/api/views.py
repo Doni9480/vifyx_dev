@@ -68,6 +68,8 @@ class ContestViewSet(viewsets.ModelViewSet):
                 data['id'] = 'Contest is end.'
             elif E_DICT[contest.item_type].objects.filter(user=request.user):
                 data['id'] = 'You have already added a job.'
+            elif request.user.is_banned:
+                data['id'] = 'You cannot participate in the contest.'
             else:
                 if contest.item_type == 'post':
                     kwargs = {'id': int(request.data['id']), 'user': request.user, 'level_access': None, 'is_paid': False, 'date__gte': contest.start_date}

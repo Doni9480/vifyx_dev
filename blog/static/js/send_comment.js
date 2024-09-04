@@ -103,6 +103,7 @@ async function send_comment(e) {
 }
 
 async function send_answer(form_answer) {
+    console.log('ok');
     let answer_text = form_answer.querySelector('#id_answer');
     let comment_id = form_answer.querySelector('input[name="comment_id"]');
     let csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;

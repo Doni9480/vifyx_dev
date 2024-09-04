@@ -355,6 +355,65 @@
 																			{% endif %}
 																		</div>
 																	</a>
+																{% elif notification.ban %}
+																	<span>
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">{{ notification.ban.text }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
+																			</div>
+																		</div>
+																	</span>
+																{% elif notification.unban %}
+																	<span>
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">{{ notification.unban.text }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
+																			</div>
+																		</div>
+																	</span>
+																{% elif notification.expiring_follow %}
+																	<span>
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">{{ notification.expiring_follow.text }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
+																			</div>
+																		</div>
+																	</span>
+																{% elif notification.system_text %}
+																	{% if notification.system_text.english %}
+																		<span>
+																			<div class="d-flex justify-content-between mb-2">
+																				<div>
+																					<div>{{ notification.system_text.title_eng }}</div>
+																					<div style="font-weight: bold; font-size: 13px;">{{ notification.system_text.text_eng }}</div>
+																					<div>{{ notification.date|date:"d M Y H:i" }}</div>
+																				</div>
+																			</div>
+																		</span>
+																	{% elif notification.system_text.russian %}
+																		<span>
+																			<div class="d-flex justify-content-between mb-2">
+																				<div>
+																					<div>{{ notification.system_text.title_rus }}</div>
+																					<div style="font-weight: bold; font-size: 13px;">{{ notification.system_text.text_rus }}</div>
+																					<div>{{ notification.date|date:"d M Y H:i" }}</div>
+																				</div>
+																			</div>
+																		</span>
+																	{% endif %}
+																{% elif notification.answer_notification %}
+																	<a class="fix_text fix_color" href="/{{ notification.answer_notification.namespace }}/show/{{ notification.answer_notification.slug }}/">
+																		<div class="d-flex justify-content-between mb-2">
+																			<div>
+																				<div style="font-weight: bold; font-size: 13px;">{{ notification.answer_notification.answer.text }}</div>
+																				<div>Username: {{ notification.answer_notification.answer.user.username }}</div>
+																				<div>{{ notification.date|date:"d M Y H:i" }}</div>
+																			</div>
+																		</div>
+																	</a>
 																{% endif %}
 															{% endfor %}
 														</div>

@@ -51,7 +51,13 @@
                                 <p><a class="moderator-class" id="prohibit_post">Prohibit a user from publishing posts</a></p>
                             {% else %}
                                 <p><a class="moderator-class" id="allow_post">Allow a user from publishing posts</a></p>
-                            {% endif %}    
+                            {% endif %}
+
+                            {% if user.is_banned %}
+                                <p><a class="moderator-class" id="unban">Unban</a></p>
+                            {% else %}
+                                <p><a class="moderator-class" id="ban">Ban</a></p>
+                            {% endif %}
                         {% endif %}
                     </div>
 
@@ -150,6 +156,61 @@
 <script src="{% static 'js/functions.js' %}"></script>
 <script src="{% static 'js/send_scores_to_user.js' %}"></script>
 <script src="{% static 'js/prohibit.js' %}"></script>
+<script>
+    var _user_id = document.querySelector('input[name="user_id"]').value;
+    var _csrftoke = document.querySelector('input[name="csrfmiddlewaretoken"').value;
+
+    document.querySelector('#unban')?.addEventListener('click', send_unban);
+    document.querySelector('#ban')?.addEventListener('click', send_ban);
+
+    async function send_ban(e) {
+        e.preventDefault();
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/users/banning/' + document.querySelector('input[name="user_id"]').value + '/';
+
+        var response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            }
+        });
+
+        if (response.ok) {
+            let result = await response.json();
+    
+            if (result.success) {
+                window.location.reload();
+            }
+        } else {
+            alert('Backend error');
+        }
+    }
+
+    async function send_unban(e) {
+        e.preventDefault();
+        url = window.location.protocol + '//' + window.location.host + '/api/v1/users/unbanning/' + document.querySelector('input[name="user_id"]').value + '/';
+
+        var response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            }
+        });
+
+        if (response.ok) {
+            let result = await response.json();
+    
+            if (result.success) {
+                window.location.reload();
+            }
+        } else {
+            alert('Backend error');
+        }
+    }
+</script>
 <script>
     function get_g_token() {
         //global grecaptcha

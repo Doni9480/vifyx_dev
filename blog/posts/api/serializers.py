@@ -347,7 +347,7 @@ class PostSerializer(serializers.ModelSerializer):
             for follow in follows:
                 if follow.follower.is_notificated:
                     if NotificationBlog.objects.filter(
-                        follower=follow.follower, blog=post.blog, user=post.user, get_notifications_blog=True
+                        follower=follow.follower, blog=post.blog, user=post.user, get_notifications_blog=True, get_notifications_post=True,
                     ):
                         Notification.objects.create(post=post, user=follow.follower)
         # creating test for post

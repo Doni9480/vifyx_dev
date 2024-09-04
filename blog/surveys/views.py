@@ -24,7 +24,7 @@ def index(request):
         select_category = False
 
     obj_set = get_obj_set(Survey.level_access_objects.filter(**filter_kwargs), request.user)
-    obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)       
+    obj_set = sorted(obj_set, key=attrgetter('date'), reverse=True)  
 
     paginator = Paginator(obj_set, 5)
     page_number = request.GET.get("page")

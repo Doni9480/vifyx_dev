@@ -34,7 +34,8 @@ class TasksScheduler:
 
         # 2592000 - 30 days
         self.scheduler.add_job(popular_blogs, "interval", seconds=2592000)
-        self.scheduler.add_job(paid_follows, "cron", hour=0, minute=0)
+        # self.scheduler.add_job(paid_follows, "cron", hour=0, minute=0)
+        self.scheduler.add_job(paid_follows, "interval", seconds=5)
         # 86400 - 1 day
         self.scheduler.add_job(views_period_day, "interval", seconds=86400)
         # 604800 - 7 days

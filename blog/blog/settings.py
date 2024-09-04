@@ -93,10 +93,10 @@ MIDDLEWARE = [
     'blog.middlewares.AdminCheckMiddleware',
     # local timezone
     'blog.middlewares.TimezoneMiddleware',
-    # notifications
-    'blog.middlewares.NotificationsMiddleware',
     # for no authentication users
     'blog.middlewares.LanguageMiddleware',
+    # notifications
+    'blog.middlewares.NotificationsMiddleware',
     # 'corsheaders.middleware.CorsMiddleware',
 ]
 
@@ -541,7 +541,7 @@ UNFOLD = {
                     },
                 ],
             },
-                        {
+            {
                 "title": _("Contests"),
                 "icon": "assessment",
                 "separator": True,
@@ -570,6 +570,25 @@ UNFOLD = {
                     },
                 ]
             },
+            {
+                "title": _("Notifications"),
+                "icon": "assessment",
+                "separator": True,
+                "collapsible": True,
+                "permission": lambda request: request.user.is_superuser,
+                "items": [
+                    {
+                        "title": _("Notifications"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:notifications_notification_changelist"),
+                    },
+                    {
+                        "title": _("System texts"),
+                        "icon": "assessment",
+                        "link": reverse_lazy("admin:notifications_systemtext_changelist"),
+                    },
+                ]
+            }
         ],
     },
     # "TABS": [

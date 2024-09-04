@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from blog.utils import add_months
 from blogs.models import PaidFollow
 from users.models import User, Percent, Hide, Percent_for_content
+from notifications.models import Notification, ExpiringFollow
 from posts.models import (
     Post, 
     Category as Category_post, 
@@ -88,6 +89,9 @@ def paid_follows():
                     paid_follow.save()
             else:
                 paid_follow.delete()
+        elif (paid_follow.date - present).days == 3:
+            expiring_follow = ExpiringFollow.objects.create()
+            Notification.objects.create(expiring_follow=expiring_follow, user=paid_follow.follower)
                 
 def views_period_day():
     views = [TestDayView, QuestDayView, PostDayView, SurveyDayView]
