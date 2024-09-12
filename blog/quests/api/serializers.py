@@ -220,7 +220,6 @@ class QuestSerializer(serializers.ModelSerializer):
                         follower=follow.follower, blog=quest.blog, user=quest.user, get_notifications_blog=True, get_notifications_quest=True,
                     ):
                         Notification.objects.create(quest=quest, user=follow.follower)
-                        
         return quest
 
 

@@ -5,6 +5,8 @@ from blogs.models import Blog, LevelAccess
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from django_cleanup import cleanup
+from blog.utils import upload_to, change_size
+from django.utils import timezone
 import time
 
 
@@ -33,8 +35,9 @@ class Album(models.Model):
         verbose_name="URL", max_length=255, unique=True, db_index=True
     )
     preview = models.ImageField(
-        verbose_name="Preview", upload_to="uploads/", null=True, blank=True
+        verbose_name="Preview", upload_to=upload_to("uploads/albums/previews"), null=True, blank=True
     )
+    size = models.IntegerField(blank=True, verbose_name='Size preview (KB)', null=True)
     title = models.CharField(
         verbose_name="Title", null=False, blank=False, max_length=255
     )
@@ -57,10 +60,15 @@ class Album(models.Model):
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
 
     date = models.DateTimeField(auto_now_add=True)
+    preview_date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name = "Album"
         verbose_name_plural = "Albums"
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_preview = self.preview
 
     def __str__(self):
         return self.title
@@ -68,16 +76,19 @@ class Album(models.Model):
     def save(self, *args, **kwargs):
         if not self.blog.is_private and self.level_access:
             self.level_access = None
-
+            
+        if self.preview and self.preview.path != self.__original_preview.path:
+            self.size = self.preview.size
+            self.preview = change_size(self.preview)
+            self.preview_date = timezone.now()
+            
         if not self.slug:
             title = default_slugify(self.title)  # title on english language
             if not title:
                 title = slugify(self.title)  # title on russian language
-
             strtime = "".join(str(time.time()).split("."))
             self.slug = "%s-%s" % (strtime[7:], title)
-
-        super(Album, self).save()
+        super(Album, self).save(*args, **kwargs)
         
 
 class AlbumLike(models.Model):
@@ -87,8 +98,21 @@ class AlbumLike(models.Model):
 
 class AlbumPhoto(models.Model):
     album = models.ForeignKey(to=Album, on_delete=models.CASCADE, verbose_name='Album')
-    photo = models.ImageField(verbose_name="Preview", upload_to="album_photos/")
-
+    photo = models.ImageField(verbose_name="Preview", upload_to=upload_to("uploads/albums/photos"))
+    size = models.IntegerField(blank=True, verbose_name='Size photo (KB)', null=True)
+    photo_date = models.DateTimeField(auto_now_add=True)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_photo = self.photo
+    
+    def save(self, *args, **kwargs):
+        if self.photo and self.photo.path != self.__original_photo.path:
+            self.size = self.photo.size
+            self.photo = change_size(self.photo.path)
+            self.photo_date = timezone.now()
+        super(AlbumPhoto, self).save(*args, **kwargs)
+        
 
 class AlbumWeekView(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='user_album_week')
@@ -130,7 +154,7 @@ class AlbumTag(models.Model):
 @cleanup.ignore
 class DraftAlbum(models.Model):
     preview = models.ImageField(
-        verbose_name="Preview", upload_to="uploads_drafts/", null=True, blank=True
+        verbose_name="Preview", upload_to=upload_to("uploads/albums/drafts/previews"), null=True, blank=True
     )
     title = models.CharField(
         verbose_name="Title", null=True, blank=True, max_length=255
@@ -153,10 +177,11 @@ class DraftAlbum(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+        if self.preview:
+            self.preview = change_size(self.preview)
         if not self.blog.is_private and self.level_access:
             self.level_access = 0
-
-        super(DraftAlbum, self).save()
+        super(DraftAlbum, self).save(*args, **kwargs)
         
 
 class DraftAlbumTag(models.Model):
@@ -177,4 +202,9 @@ class DraftAlbumTag(models.Model):
         
 class DraftAlbumPhoto(models.Model):
     draft_album = models.ForeignKey(to=DraftAlbum, on_delete=models.CASCADE, verbose_name='Draft album')
-    photo = models.ImageField(verbose_name="Preview", upload_to="album_draft_photos/")
+    photo = models.ImageField(verbose_name="Preview", upload_to=upload_to("uploads/albums/drafts/photos"))
+    
+    def save(self, *args, **kwargs):
+        if self.photo:
+            self.photo = change_size(self.photo.path)
+        super(DraftAlbumPhoto, self).save(*args, **kwargs)

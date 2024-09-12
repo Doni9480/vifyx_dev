@@ -1,14 +1,12 @@
 from django.db import models
 from django.conf import settings
-
 from blog.managers import TestShowManager
-
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from blogs.models import Blog, LevelAccess
-
 from custom_tests.managers import LevelAccessManager
-
+from blog.utils import upload_to, change_size
+from django.utils import timezone
 import time
 
 
@@ -42,10 +40,11 @@ class Test(models.Model):
     )
     preview = models.ImageField(
         verbose_name="Preview",
-        upload_to="uploads/",
+        upload_to=upload_to("uploads/tests/previews"),
         null=True,
         blank=True,
     )
+    size = models.IntegerField(verbose_name='Size preview (KB)', null=True, blank=True)
     title = models.CharField(
         verbose_name="Title",
         null=False,
@@ -114,14 +113,22 @@ class Test(models.Model):
     date = models.DateTimeField(
         auto_now_add=True
     )
+    preview_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_preview = self.preview
 
     def save(self, *args, **kwargs):
+        if self.preview and self.preview.path != self.__original_preview.path:
+            self.size = self.preview.size
+            self.preview = change_size(self.preview.path)
+            self.preview_date = timezone.now()
         if not self.blog.is_private and self.level_access:
             self.level_access = None
-        
         if not self.slug:
             title = default_slugify(self.title)  # title on english language
             if not title:
@@ -129,8 +136,7 @@ class Test(models.Model):
 
             strtime = "".join(str(time.time()).split("."))
             self.slug = "%s-%s" % (strtime[7:], title)
-
-        super(Test, self).save()
+        super(Test, self).save(*args, **kwargs)
         
 
 class TestLike(models.Model):

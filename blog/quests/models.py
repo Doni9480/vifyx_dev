@@ -5,7 +5,8 @@ from blogs.models import Blog, LevelAccess
 from blog.managers import LevelAccessManager
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
-
+from blog.utils import upload_to, change_size
+from django.utils import timezone
 import time
 
 
@@ -38,10 +39,11 @@ class Quest(models.Model):
     )
     preview = models.ImageField(
         verbose_name="Preview",
-        upload_to="quests/",
+        upload_to=upload_to("uploads/quests/previews"),
         null=True,
         blank=True,
     )
+    size = models.IntegerField(verbose_name='Size preview (KB)', null=True, blank=True)
     title = models.CharField(
         verbose_name="Title",
         max_length=255,
@@ -103,11 +105,22 @@ class Quest(models.Model):
     date = models.DateTimeField(
         auto_now_add=True
     )
+    preview_date = models.DateTimeField(
+        auto_now_add=True
+    )
 
     def __str__(self):
         return self.title
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_preview = self.preview
+    
     def save(self, *args, **kwargs):
+        if self.preview and self.preview.path != self.__original_preview.path:
+            self.size = self.preview.size        
+            self.preview = change_size(self.preview.path)
+            self.preview_date = timezone.now()
         if not self.blog.is_private and self.level_access:
             self.level_access = None
 
@@ -119,7 +132,7 @@ class Quest(models.Model):
             strtime = "".join(str(time.time()).split("."))
             self.slug = "%s-%s" % (strtime[7:], title)
 
-        super(Quest, self).save()
+        super(Quest, self).save(*args, **kwargs)
         
 
 class QuestTag(models.Model):

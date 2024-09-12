@@ -10,7 +10,6 @@ from blog.validators import check_language
 from blogs.models import LevelAccess, BlogFollow
 
 from django.shortcuts import get_object_or_404
-from django.http import Http404
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -165,7 +164,6 @@ class SurveySerializer(serializers.ModelSerializer):
                         follower=follow.follower, blog=survey.blog, user=survey.user, get_notifications_blog=True
                     ):
                         Notification.objects.create(survey=survey, user=follow.follower)
-
         return survey
 
 

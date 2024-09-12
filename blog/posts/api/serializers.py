@@ -4,9 +4,7 @@ from posts.models import Post, PostTag, PostRadio, DraftPostRadio, Subcategory
 from posts.api.utils import create_test
 from notifications.models import Notification, NotificationBlog
 from blogs.models import LevelAccess, BlogFollow
-
 from blog.validators import check_language
-
 from django.shortcuts import get_object_or_404
 
 

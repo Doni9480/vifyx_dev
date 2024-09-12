@@ -1,5 +1,5 @@
 import time
-
+from blog.utils import upload_to, change_size
 from django.db import models
 from django.conf import settings
 from django_cleanup import cleanup
@@ -7,6 +7,7 @@ from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from blogs.models import Blog, LevelAccess
 from blog.managers import LevelAccessManager
+from django.utils import timezone
 
 
 class Category(models.Model):
@@ -31,7 +32,8 @@ class Survey(models.Model):
     level_access_objects = LevelAccessManager()
     
     slug = models.SlugField(verbose_name='URL', max_length=255, unique=True, db_index=True)
-    preview = models.ImageField(verbose_name='Preview', upload_to='uploads/', null=True, blank=True)
+    preview = models.ImageField(verbose_name='Preview', upload_to=upload_to('uploads/surveys/previews'), null=True, blank=True)
+    size = models.IntegerField(blank=True, verbose_name='Size preview (KB)', null=True)
     title = models.CharField(verbose_name='Title', null=False, blank=False, max_length=255)
     description = models.TextField(verbose_name='Description', null=True, blank=True)
     content = models.TextField(verbose_name='Content', blank=True, null=True)
@@ -46,6 +48,7 @@ class Survey(models.Model):
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
     
     date = models.DateTimeField(auto_now_add=True)
+    preview_date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name = 'Survey'
@@ -54,7 +57,15 @@ class Survey(models.Model):
     def __str__(self):
         return self.title
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_preview = self.preview
+    
     def save(self, *args, **kwargs):
+        if self.preview and self.__original_preview.path != self.preview.path:
+            self.size = self.preview.size
+            self.preview = change_size(self.preview)
+            self.preview_date = timezone.now()
         if not self.blog.is_private and self.level_access:
             self.level_access = None
             
@@ -65,8 +76,7 @@ class Survey(models.Model):
                 
             strtime = "".join(str(time.time()).split("."))
             self.slug = "%s-%s" % (strtime[7:], title)
-            
-        super(Survey, self).save()
+        super(Survey, self).save(*args, **kwargs)
         
 
 class SurveyTag(models.Model):
@@ -127,10 +137,11 @@ class SurveyVote(models.Model):
 class DraftSurvey(models.Model):
     preview = models.ImageField(
         verbose_name="Preview",
-        upload_to="uploads_drafts_survey/",
+        upload_to=upload_to("uploads/surveys/drafts/previews"),
         null=True,
         blank=True,
     )
+    size = models.IntegerField(blank=True, verbose_name='Size preview (KB)', null=True)
     title = models.CharField(
         verbose_name="Title", null=True, blank=True, max_length=255
     )
@@ -150,10 +161,12 @@ class DraftSurvey(models.Model):
         verbose_name_plural = "Drafts"
 
     def save(self, *args, **kwargs):
+        if self.preview:
+            self.size = self.preview.size
+            self.preview = change_size(self.preview.path)
         if not self.blog.is_private and self.level_access:
             self.level_access = 0
-
-        super(DraftSurvey, self).save()
+        super(DraftSurvey, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.title

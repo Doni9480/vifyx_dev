@@ -1,6 +1,5 @@
 import os
 import time
-
 from django.db import models
 from django.conf import settings
 from django_cleanup import cleanup
@@ -9,10 +8,10 @@ from django.db.models.signals import post_delete
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
 from django.core.exceptions import ValidationError
-
 from blogs.models import Blog, LevelAccess
-
 from custom_tests.models import Test
+from blog.utils import upload_to, change_size
+from django.utils import timezone
 
 
 class LevelAccessManager(models.Manager):
@@ -45,8 +44,9 @@ class Post(models.Model):
         verbose_name="URL", max_length=255, unique=True, db_index=True
     )
     preview = models.ImageField(
-        verbose_name="Preview", upload_to="uploads/", null=True, blank=True
+        verbose_name="Preview", upload_to=upload_to("uploads/posts/previews"), null=True, blank=True
     )
+    size = models.IntegerField(blank=True, verbose_name='Size preview (KB)', null=True)
     title = models.CharField(
         verbose_name="Title", null=False, blank=False, max_length=255
     )
@@ -75,18 +75,28 @@ class Post(models.Model):
     level_access = models.ForeignKey(to=LevelAccess, on_delete=models.CASCADE, verbose_name='Level access', null=True, blank=True)
 
     date = models.DateTimeField(auto_now_add=True)
+    preview_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Post"
         verbose_name_plural = "Posts"
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_preview = self.preview
 
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
+        if self.preview and self.preview.path != self.__original_preview.path:
+            self.size = self.preview.size
+            self.preview = change_size(self.preview)
+            self.preview_date = timezone.now()
+            
         if not self.blog.is_private and self.level_access:
             self.level_access = None
-
+            
         if not self.slug:
             title = default_slugify(self.title)  # title on english language
             if not title:
@@ -94,8 +104,8 @@ class Post(models.Model):
 
             strtime = "".join(str(time.time()).split("."))
             self.slug = "%s-%s" % (strtime[7:], title)
-
-        super(Post, self).save()
+            
+        super(Post, self).save(*args, **kwargs)
         
 
 class PostLike(models.Model):
@@ -196,8 +206,9 @@ def on_delete(sender, **kwargs):
 @cleanup.ignore
 class DraftPost(models.Model):
     preview = models.ImageField(
-        verbose_name="Preview", upload_to="uploads_drafts/", null=True, blank=True
+        verbose_name="Preview", upload_to=upload_to("uploads/posts/drafts/previews"), null=True, blank=True
     )
+    size = models.IntegerField(blank=True, verbose_name='Size preview (KB)', null=True)
     title = models.CharField(
         verbose_name="Title", null=True, blank=True, max_length=255
     )
@@ -223,9 +234,11 @@ class DraftPost(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+        if self.preview:
+            self.preview = change_size(self.preview.path)
+            self.size = self.preview.size       
         if not self.blog.is_private and self.level_access:
             self.level_access = 0
-
         super(DraftPost, self).save()
 
 

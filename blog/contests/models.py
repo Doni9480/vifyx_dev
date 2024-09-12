@@ -9,6 +9,8 @@ from contests.api.validators import check_item_type, check_criteries
 from posts.models import Post
 from quests.models import Quest
 from albums.models import Album
+from blog.utils import upload_to, change_size
+from django.utils import timezone
 import time
 
 
@@ -29,8 +31,9 @@ class Contest(models.Model):
     )
     
     preview = models.ImageField(
-        verbose_name="Preview", upload_to="uploads/", null=True, blank=True
+        verbose_name="Preview", upload_to=upload_to("uploads/contests/previews"), null=True, blank=True
     )
+    size = models.IntegerField(verbose_name='Size preview (KB)', null=True, blank=True)
     title = models.CharField(
         verbose_name="Title", null=False, blank=False, max_length=255
     )
@@ -57,15 +60,24 @@ class Contest(models.Model):
         choices=CRITERIES_CHOICES
     )
     is_end = models.BooleanField(verbose_name='Is end', default=False)
+    preview_date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name = "Contest"
         verbose_name_plural = "Contests"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_preview = self.preview
+
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
+        if self.preview and self.preview.path != self.__original_preview.path:
+            self.size = self.preview.size
+            self.preview = change_size(self.preview.path)
+            self.preview_date = timezone.now()
         if not self.slug:
             title = default_slugify(self.title)  # title on english language
             if not title:
@@ -73,8 +85,7 @@ class Contest(models.Model):
 
             strtime = "".join(str(time.time()).split("."))
             self.slug = "%s-%s" % (strtime[7:], title)
-
-        super(Contest, self).save()
+        super(Contest, self).save(*args, **kwargs)
         
 
 class PostElement(models.Model):

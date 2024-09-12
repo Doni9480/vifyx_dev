@@ -1,12 +1,11 @@
-from django.utils.timezone import now
-from typing import Iterable
 from django.db import models
 from django.db.models import Count
 from django.conf import settings
 from django.template.defaultfilters import slugify as default_slugify
 from transliterate import slugify
-from django.core.exceptions import ValidationError
+from blog.utils import upload_to, change_size
 from users.models import User
+from django.utils import timezone
 
 
 class Campaign(models.Model):
@@ -18,7 +17,8 @@ class Campaign(models.Model):
     slug = models.SlugField(max_length=50, unique=True, null=True)
     description = models.TextField()
     prize_fund = models.IntegerField(null=True, blank=True)
-    image = models.ImageField(upload_to="campaign_images/", blank=True)
+    image = models.ImageField(upload_to=upload_to("uploads/campaigns/previews"), blank=True)
+    size = models.IntegerField(verbose_name='Size preview (KB)', null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     is_active = models.BooleanField(default=True, verbose_name="is active")
@@ -28,14 +28,23 @@ class Campaign(models.Model):
         default="owner",
         verbose_name="Источник награды кампании",
     )
+    image_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
 
     def system_source_of_reward(self):
         return self.reward_source == "endless"
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_image = self.image
 
     def save(self, *args, **kwargs):
+        if self.image and self.__original_image.path != self.image.path:
+            self.size = self.image.size
+            self.image = change_size(self.image.path)
+            self.image_date = timezone.now()
         if not self.slug:
             slug_name = default_slugify(self.name)
             if not slug_name:
