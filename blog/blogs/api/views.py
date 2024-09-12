@@ -1,6 +1,7 @@
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
@@ -55,6 +56,7 @@ class BlogViewSet(
     permission_classes_by_action = dict.fromkeys(['search', 'search_tags', 'main', 'preview_popular', 'show'], [AllowAny])
     parser_classes = [MultiPartParser, FormParser]
     pagination_class = MyPagination
+    authentication_classes = [TokenAuthentication] 
 
     def get_serializer_class(self):
         if self.action == "pay":
@@ -77,6 +79,8 @@ class BlogViewSet(
         filter_kwargs = get_filter_kwargs(request)
         q = request.GET.get('q')
         if q == 'tracked':
+            if str(request.user) == "AnonymousUser":
+                return Response({"detail": "Authentication credentials were not provided."}, status=403)
             notification_blogs = NotificationBlog.objects.filter(follower=request.user)
             blog_list = []
             for notification_blog in notification_blogs:

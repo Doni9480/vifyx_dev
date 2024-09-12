@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     'django_cleanup.apps.CleanupConfig',
     'django_apscheduler',
     'storages',
-    # 'corsheaders',
+    'corsheaders',
     'guardian',
 
     'configs',
@@ -99,9 +99,7 @@ MIDDLEWARE = [
     'blog.middlewares.TimezoneMiddleware',
     # for no authentication users
     'blog.middlewares.LanguageMiddleware',
-    # notifications
-    'blog.middlewares.NotificationsMiddleware',
-    # 'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'blog.urls'
@@ -125,6 +123,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'blog.wsgi.application'
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES' : [ 
+        'rest_framework.authentication.TokenAuthentication' ,
+    ], 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 5
 }
@@ -650,7 +651,7 @@ ADMIN_MENU = [
 
 # CSRF_TRUSTED_ORIGINS = ['http://localhost:8080', 'https://d991-185-138-186-34.ngrok-free.app']
 
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 # SECURE_SSL_REDIRECT = True  # Перенаправление всех HTTP-запросов на HTTPS
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Убедитесь, что Django знает, что находится за прокси, который использует HTTPS

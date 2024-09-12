@@ -19,9 +19,11 @@ from users.api.serializers import BlogFollowSerializer, HideSerializer, EditProf
 from notifications.models import Notification, Ban, Unban
 from users.api.utils import N_DICT
 from referrals.api.utils import ReferralHandler
+from rest_framework.authentication import TokenAuthentication
 
 
 class RegisterViewSet(viewsets.GenericViewSet):
+    authentication_classes = [TokenAuthentication]
     serializer_class = RegisterSerializer
     # parser_classes = [MultiPartParser, FormParser]
 
