@@ -77,10 +77,11 @@ class Album(models.Model):
         if not self.blog.is_private and self.level_access:
             self.level_access = None
             
-        if self.preview and self.preview.path != self.__original_preview.path:
-            self.size = self.preview.size
-            self.preview = change_size(self.preview)
-            self.preview_date = timezone.now()
+        if self.preview:
+            if self.pk is None or self.preview.path != self.__original_preview.path:
+                self.size = self.preview.size
+                self.preview = change_size(self.preview)
+                self.preview_date = timezone.now()
             
         if not self.slug:
             title = default_slugify(self.title)  # title on english language
@@ -107,10 +108,12 @@ class AlbumPhoto(models.Model):
         self.__original_photo = self.photo
     
     def save(self, *args, **kwargs):
-        if self.photo and self.photo.path != self.__original_photo.path:
-            self.size = self.photo.size
-            self.photo = change_size(self.photo.path)
-            self.photo_date = timezone.now()
+        if self.photo:
+            if self.pk is None or self.photo.path != self.__original_photo.path:
+                self.size = self.photo.size
+                self.photo = change_size(self.photo)
+                self.photo_date = timezone.now()
+                
         super(AlbumPhoto, self).save(*args, **kwargs)
         
 

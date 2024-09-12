@@ -62,10 +62,12 @@ class Survey(models.Model):
         self.__original_preview = self.preview
     
     def save(self, *args, **kwargs):
-        if self.preview and self.__original_preview.path != self.preview.path:
-            self.size = self.preview.size
-            self.preview = change_size(self.preview)
-            self.preview_date = timezone.now()
+        if self.preview:
+            if self.pk is None or self.preview.path != self.__original_preview.path:
+                self.size = self.preview.size
+                self.preview = change_size(self.preview)
+                self.preview_date = timezone.now()
+                
         if not self.blog.is_private and self.level_access:
             self.level_access = None
             

@@ -74,10 +74,12 @@ class Contest(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        if self.preview and self.preview.path != self.__original_preview.path:
-            self.size = self.preview.size
-            self.preview = change_size(self.preview.path)
-            self.preview_date = timezone.now()
+        if self.preview:
+            if self.pk is None or self.preview.path != self.__original_preview.path:
+                self.size = self.preview.size
+                self.preview = change_size(self.preview)
+                self.preview_date = timezone.now()
+                
         if not self.slug:
             title = default_slugify(self.title)  # title on english language
             if not title:

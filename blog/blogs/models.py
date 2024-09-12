@@ -36,10 +36,12 @@ class Blog(models.Model):
         return self.title
     
     def save(self, *args, **kwargs):
-        if self.preview and self.preview.path != self.__original_preview:
-            self.size = self.preview.size
-            self.preview = change_size(self.preview.path)
-            self.preview_date = timezone.now()
+        if self.preview:
+            if self.pk is None or self.preview.path != self.__original_preview.path:
+                self.size = self.preview.size
+                self.preview = change_size(self.preview)
+                self.preview_date = timezone.now()
+                
         self.slug = "_".join(self.slug.split())
         super(Blog, self).save()
     
@@ -67,10 +69,12 @@ class LevelAccess(models.Model):
         self.__original_preview = self.preview
     
     def save(self, *args, **kwargs):
-        if self.preview and self.preview.path != self.__original_preview.path:
-            self.size = self.preview.size
-            self.preview = change_size(self.preview.path)
-            self.preview_date = timezone.now()
+        if self.preview:
+            if self.pk is None or self.preview.path != self.__original_preview.path:
+                self.size = self.preview.size
+                self.preview = change_size(self.preview)
+                self.preview_date = timezone.now()
+                
         super(LevelAccess, self).save()
 
 

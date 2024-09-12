@@ -41,10 +41,12 @@ class Campaign(models.Model):
         self.__original_image = self.image
 
     def save(self, *args, **kwargs):
-        if self.image and self.__original_image.path != self.image.path:
-            self.size = self.image.size
-            self.image = change_size(self.image.path)
-            self.image_date = timezone.now()
+        if self.image:
+            if self.pk is None or self.image.path != self.__original_image.path:
+                self.size = self.image.size
+                self.image = change_size(self.image)
+                self.image_date = timezone.now()
+                
         if not self.slug:
             slug_name = default_slugify(self.name)
             if not slug_name:
