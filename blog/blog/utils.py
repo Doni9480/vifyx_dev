@@ -14,12 +14,17 @@ from django.http import Http404
 from rest_framework.pagination import PageNumberPagination
 from django.core.files.base import ContentFile
 from django.utils.deconstruct import deconstructible
+from django.utils import timezone
 
 
 @deconstructible
 class UploadToClass(object):
     def __init__(self, sub_path):
-        self.path = sub_path
+        self.path = sub_path + '/{}/{}/{}'.format(
+            timezone.now().year, 
+            timezone.now().month, 
+            timezone.now().day
+        )
         
     def __call__(self, instance, filename):
         ext = filename.split('.')[-1]
