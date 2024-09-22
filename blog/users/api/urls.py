@@ -1,3 +1,4 @@
+from rest_framework.authtoken import views
 from django.urls import re_path, path
 from users.api.views import (
     RegisterViewSet,
@@ -31,3 +32,6 @@ urlpatterns = router.urls
 #     path("profile/posts/<str:username>/", PostsShowView.as_view()),
 #     path("profile/surveys/<str:username>/", SurveysShowView.as_view()),
 # ]
+urlpatterns += [
+    path('api-token-auth/', views.obtain_auth_token)
+]

@@ -53,9 +53,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'rest_framework',
+    'rest_framework.authtoken',
     'mptt',
     'drf_yasg',
-    'rest_framework',
     'django_summernote',
     'django_cleanup.apps.CleanupConfig',
     'django_apscheduler',
@@ -78,6 +79,7 @@ INSTALLED_APPS = [
     'albums',
     'contests',
     'transactions',
+
 ]
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -123,9 +125,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'blog.wsgi.application'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES' : [ 
-        'rest_framework.authentication.TokenAuthentication' ,
-    ], 
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 5
 }
